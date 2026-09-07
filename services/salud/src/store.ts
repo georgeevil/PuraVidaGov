@@ -1,4 +1,4 @@
-import type { SanitaryPermitResponse, VaccinationRecordResponse } from '@pvg/shared';
+import type { MedicalCertificateResponse, SanitaryPermitResponse, VaccinationRecordResponse } from '@pvg/shared';
 
 export interface SanitaryPermit extends SanitaryPermitResponse {
   citizenId: string;
@@ -16,7 +16,18 @@ export interface VaccinationRecord extends VaccinationRecordResponse {
   edusId: string;
 }
 
+/** Dictamen médico for a driving licence (SEDIMEC simulated under this mock, docs/CONTRACTS.md v3). */
+export interface MedicalCertificate extends MedicalCertificateResponse {
+  citizenId: string;
+  fullName: string;
+  dateOfBirth: string;
+  usesGlasses: boolean;
+  issueDate: string;
+}
+
 class SaludStore {
+  private certificates = new Map<string, MedicalCertificate>(); // keyed by citizenId (latest)
+  private certificateCounters = new Map<number, number>();
   private permits = new Map<string, SanitaryPermit>(); // keyed by taxId
   private records = new Map<string, VaccinationRecord>(); // keyed by childId
   private permitCounters = new Map<number, number>(); // year -> last sequence
@@ -27,6 +38,27 @@ class SaludStore {
     this.records.clear();
     this.permitCounters.clear();
     this.recordCounters.clear();
+    this.certificates.clear();
+    this.certificateCounters.clear();
+  }
+
+  findCertificate(citizenId: string): MedicalCertificate | undefined {
+    return this.certificates.get(citizenId);
+  }
+
+  nextCertificateSequence(year: number): number {
+    const next = (this.certificateCounters.get(year) ?? 0) + 1;
+    this.certificateCounters.set(year, next);
+    return next;
+  }
+
+  saveCertificate(c: MedicalCertificate): MedicalCertificate {
+    this.certificates.set(c.citizenId, c);
+    return c;
+  }
+
+  listCertificates(): MedicalCertificate[] {
+    return [...this.certificates.values()];
   }
 
   findPermit(taxId: string): SanitaryPermit | undefined {

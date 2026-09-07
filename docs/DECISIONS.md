@@ -74,3 +74,13 @@ relief by law. The case page says all of this, because the audience will check.
 ## D-017 · Seven agencies, one more Dockerfile arg each
 Registro Nacional, Salud and CFIA are new services rather than new actions on existing ones because the demo's point
 is that institutions stay independent and the bus is the only thing that connects them.
+
+## D-018 · The argument is public, the portal is not
+`/por-que`, `/marco-legal` and `/arquitectura` render without a session so the case can be shared with legislators
+and press by URL. Everything that concerns a citizen (profile, transactions, audit) stays behind the simulated firma
+digital, because the identity step is part of what the demo shows.
+
+## D-019 · Every catalogue entry is now a real workflow
+Job loss, retirement and licence renewal became specs with three new agencies (operadora/SUPEN, MTSS, COSEVI). SEDIMEC
+(the medical college's certificate platform) is simulated inside the Salud mock rather than as an eleventh service; the
+legal note says so. José's date of birth moved to 1961 so one seed citizen qualifies for the IVM pension.

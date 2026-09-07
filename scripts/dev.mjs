@@ -10,6 +10,9 @@ const services = [
   ['reg-nacional', 'services/registro-nacional'],
   ['salud', 'services/salud'],
   ['cfia', 'services/cfia'],
+  ['supen', 'services/supen'],
+  ['mtss', 'services/mtss'],
+  ['cosevi', 'services/cosevi'],
   ['bus', 'services/bus'],
   ['api', 'apps/api'],
 ];

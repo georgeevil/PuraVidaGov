@@ -4,21 +4,24 @@ import {
   errorHandler,
   findActivity,
   issueSanitaryPermitSchema,
+  medicalCertificateSchema,
   openVaccinationRecordSchema,
   simulatedLatency,
   todayIso,
+  type MedicalCertificateResponse,
   type SanitaryPermitResponse,
   type VaccinationRecordResponse,
 } from '@pvg/shared';
 import type { Express } from 'express';
 import type { z } from 'zod';
 import { requireApiKey, validateBody, wrap } from './middleware.js';
-import { store, type SanitaryPermit, type VaccinationRecord } from './store.js';
+import { store, type MedicalCertificate, type SanitaryPermit, type VaccinationRecord } from './store.js';
 
 export const SERVICE_NAME = 'salud';
 
 type IssueSanitaryPermitBody = z.infer<typeof issueSanitaryPermitSchema>;
 type OpenVaccinationRecordBody = z.infer<typeof openVaccinationRecordSchema>;
+type MedicalCertificateBody = z.infer<typeof medicalCertificateSchema>;
 
 export type RiskGroup = SanitaryPermitResponse['riskGroup'];
 
@@ -39,6 +42,10 @@ export const VALIDITY_YEARS: Record<RiskGroup, number> = { A: 1, B: 3, C: 5 };
 
 export const VACCINATION_SCHEME = 'Esquema nacional de vacunación (CNVE)';
 
+/** Validity of the dictamen médico for a driving licence, in days. */
+export const MEDICAL_CERTIFICATE_DAYS = 180;
+export const GLASSES_RESTRICTION = 'Uso de lentes';
+
 export function riskGroupFor(activityCode: string): RiskGroup {
   return RISK_GROUP_BY_ACTIVITY[activityCode] ?? 'C';
 }
@@ -48,6 +55,18 @@ export function addMonthsIso(iso: string, months: number): string {
   const d = new Date(iso);
   d.setUTCMonth(d.getUTCMonth() + months);
   return d.toISOString().slice(0, 10);
+}
+
+/** ISO date `days` days after `iso` (UTC arithmetic). */
+export function addDaysIso(iso: string, days: number): string {
+  const d = new Date(iso);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function certificateToResponse(c: MedicalCertificate): MedicalCertificateResponse {
+  const { certificateNumber, result, restrictions, validUntil } = c;
+  return { certificateNumber, result, restrictions: [...restrictions], validUntil };
 }
 
 function permitToResponse(p: SanitaryPermit): SanitaryPermitResponse {
@@ -135,6 +154,41 @@ export function createApp(): Express {
         firstAppointment: addMonthsIso(body.birthDate, 2),
       });
       res.json(recordToResponse(record));
+    }),
+  );
+
+  // ---------------------------------------------------------------- v3
+
+  app.get('/salud/certificates', (_req, res) => {
+    res.json(store.listCertificates());
+  });
+
+  app.post(
+    '/salud/medicalCertificate',
+    validateBody(medicalCertificateSchema),
+    wrap(async (req, res) => {
+      const body = req.body as MedicalCertificateBody;
+      await simulatedLatency();
+
+      const issueDate = todayIso();
+      // Idempotent per citizenId while the previous dictamen is still valid (180 days).
+      const existing = store.findCertificate(body.citizenId);
+      if (existing && existing.validUntil >= issueDate) return res.json(certificateToResponse(existing));
+
+      const year = Number(issueDate.slice(0, 4));
+      const restrictions = body.usesGlasses ? [GLASSES_RESTRICTION] : [];
+      const certificate = store.saveCertificate({
+        citizenId: body.citizenId,
+        fullName: body.fullName,
+        dateOfBirth: body.dateOfBirth,
+        usesGlasses: body.usesGlasses,
+        issueDate,
+        certificateNumber: `SEDIMEC-${year}-${String(store.nextCertificateSequence(year)).padStart(6, '0')}`,
+        result: restrictions.length ? 'apto-con-restricciones' : 'apto',
+        restrictions,
+        validUntil: addDaysIso(issueDate, MEDICAL_CERTIFICATE_DAYS),
+      });
+      res.json(certificateToResponse(certificate));
     }),
   );
 

@@ -10,6 +10,9 @@ COPY services/bus/package.json services/bus/
 COPY services/registro-nacional/package.json services/registro-nacional/
 COPY services/salud/package.json services/salud/
 COPY services/cfia/package.json services/cfia/
+COPY services/supen/package.json services/supen/
+COPY services/mtss/package.json services/mtss/
+COPY services/cosevi/package.json services/cosevi/
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 RUN npm ci --include=dev --ignore-scripts

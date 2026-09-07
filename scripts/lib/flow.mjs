@@ -58,13 +58,13 @@ export async function runMariaJourney(apiBase, { log = console.log, pollMs = 300
   // registry: every agency healthy through the bus
   const registry = await get('/api/registry');
   const down = registry.filter((r) => !r.healthy).map((r) => r.service);
-  assert(registry.length === 7 && down.length === 0, `registry healthy (7 agencies; down: ${down.join(',') || 'none'})`);
+  assert(registry.length === 10 && down.length === 0, `registry healthy (10 agencies; down: ${down.join(',') || 'none'})`);
   log(`✓ registro de servicios: ${registry.map((r) => r.service).join(', ')} — todos disponibles`);
 
   // catalogue with legal status
   const workflows = await get('/api/workflows');
   const available = workflows.filter((w) => w.available).map((w) => w.id);
-  assert(['start-business', 'newborn', 'construction', 'move'].every((id) => available.includes(id)), 'four life events available');
+  assert(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license'].every((id) => available.includes(id)), 'seven life events available');
   assert(workflows.every((w) => w.legal?.status && w.legal.basis?.length), 'every life event carries a legal note with a Costa Rican basis');
   log(`✓ eventos de vida: ${workflows.map((w) => `${w.id}[${w.legal.status}${w.available ? '' : ', próximamente'}]`).join(' · ')}`);
 
@@ -137,22 +137,47 @@ export async function runMariaJourney(apiBase, { log = console.log, pollMs = 300
   assert(profile.citizen.canton === 'Curridabat', 'profile reflects the new canton after the move');
   log('✓ el perfil ya muestra el nuevo cantón: ' + profile.citizen.canton);
 
+  // 5. job loss — María's employer already reported the termination to the CCSS
+  const job = await runWorkflow(apiBase, auth, 'job-loss', {
+    lastOccupation: 'Contadora',
+    desiredArea: 'software',
+    declaredIncomeCrc: 300000,
+    iban: 'CR12345678901234567890',
+  }, opts);
+  const fcl = job.result.cards.find((c) => c.agency === 'supen');
+  assert(/^FCL-/.test(fcl.rows[0].value), 'FCL request number');
+  assert(job.result.onceOnly.some((o) => o.field === 'endDate'), 'proof of dismissal came from the CCSS, not from María');
+
+  // 6. driver licence — no fines, no marchamo debt
+  const lic = await runWorkflow(apiBase, auth, 'driver-license', { categories: 'A2,B1', validityYears: '6', usesGlasses: 'si' }, opts);
+  const renewed = lic.result.cards.find((c) => c.title === 'Licencia renovada');
+  assert(renewed.rows[1].value === 'A2, B1', 'licence categories');
+  assert(lic.result.cards[0].rows[1].value.includes('lentes'), 'medical restriction recorded');
+
+  // 7. retirement — as José (born 1961, 434 cuotas) so the IVM pension is approved
+  const jose = await login(apiBase, { id: '7-0123-0456', log: () => {} });
+  const ret = await runWorkflow(apiBase, jose.auth, 'retirement', { modality: 'vejez', ropModality: 'retiro-programado', iban: 'CR09876543210987654321' }, opts);
+  const ivm = ret.result.cards.find((c) => c.title === 'Pensión IVM');
+  assert(ivm.rows[1].value === 'Aprobada', `José's pension approved (got ${ivm.rows[1].value})`);
+  const joseAudit = await json(await fetch(`${apiBase}/api/audit`, { headers: jose.auth }));
+  assert(joseAudit.every((a) => a.subjectId === '7-0123-0456'), "José's audit shows only José");
+
   // legal endpoint and audit
   const legal = await get('/api/legal');
-  assert(legal.refs.length >= 15 && legal.workflows.length === 6, 'legal endpoint: refs + 6 workflows');
+  assert(legal.refs.length >= 15 && legal.workflows.length === 7, 'legal endpoint: refs + 7 workflows');
   const audit = await get('/api/audit');
   const agenciesSeen = new Set(audit.map((a) => a.service));
-  assert(agenciesSeen.size === 7, `audit covers 7 agencies (got ${[...agenciesSeen].join(',')})`);
+  assert(agenciesSeen.size === 10, `María's audit covers 10 agencies (got ${[...agenciesSeen].join(',')})`);
   assert(audit.every((a) => a.subjectId === citizen.id), 'audit scoped to the citizen');
   assert(audit.every((a) => Array.isArray(a.fieldsReturned)), 'audit carries field names only');
   log(`✓ auditoría: ${audit.length} intercambios, ${agenciesSeen.size} instituciones`);
   const mine = await get('/api/transactions');
-  assert(mine.length === 5, 'five transactions listed');
+  assert(mine.length === 7, `seven transactions listed for María (got ${mine.length}: ${mine.map((t) => t.workflowId).join(',')})`);
 
   const out = await fetch(`${apiBase}/api/logout`, { method: 'POST', headers: auth });
   assert(out.status === 204, 'logout 204');
   const elapsedMs = Date.now() - t0;
-  log(`✓ recorrido completo (5 trámites) en ${(elapsedMs / 1000).toFixed(1)} s (meta PRD: < 120 s por trámite)`);
+  log(`✓ recorrido completo (8 trámites, dos personas) en ${(elapsedMs / 1000).toFixed(1)} s (meta PRD: < 120 s por trámite)`);
   assert(elapsedMs < 120000, 'under 2 minutes');
   return { elapsedMs, transactions: mine.length, audit: audit.length };
 }

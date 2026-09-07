@@ -6,7 +6,7 @@ import { AGENCY_LABELS, type AgencyName, type RegistryEntry } from '@pvg/shared'
 
 /**
  * One routable action. `path` may contain `:param` segments and a GET action may declare `query`;
- * the router fills both from the request's `data` (docs/CONTRACTS.md v2 → "Bus registry additions").
+ * the router fills both from the request's `data` (docs/CONTRACTS.md v2/v3 → "Bus registry additions").
  */
 export interface ActionSpec {
   method: 'GET' | 'POST';
@@ -62,6 +62,9 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
       registerEmployer: { method: 'POST', path: '/ccss/registerEmployer' },
       insureDependent: { method: 'POST', path: '/ccss/insureDependent' },
       updateAddress: { method: 'POST', path: '/ccss/updateAddress' },
+      getEmployment: { method: 'GET', path: '/ccss/employment/:citizenId' },
+      applyPension: { method: 'POST', path: '/ccss/applyPension' },
+      enrollVoluntary: { method: 'POST', path: '/ccss/enrollVoluntary' },
     },
   },
   municipalidad: {
@@ -95,6 +98,7 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
     actions: {
       issueSanitaryPermit: { method: 'POST', path: '/salud/issueSanitaryPermit' },
       openVaccinationRecord: { method: 'POST', path: '/salud/openVaccinationRecord' },
+      medicalCertificate: { method: 'POST', path: '/salud/medicalCertificate' },
     },
   },
   cfia: {
@@ -104,6 +108,35 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
     defaultKey: 'demo-cfia-key',
     actions: {
       reviewPlans: { method: 'POST', path: '/cfia/reviewPlans' },
+    },
+  },
+  supen: {
+    urlEnv: 'SUPEN_URL',
+    defaultUrl: 'http://localhost:4008',
+    keyEnv: 'SUPEN_API_KEY',
+    defaultKey: 'demo-supen-key',
+    actions: {
+      withdrawFcl: { method: 'POST', path: '/supen/withdrawFcl' },
+      ropStatement: { method: 'POST', path: '/supen/ropStatement' },
+    },
+  },
+  mtss: {
+    urlEnv: 'MTSS_URL',
+    defaultUrl: 'http://localhost:4009',
+    keyEnv: 'MTSS_API_KEY',
+    defaultKey: 'demo-mtss-key',
+    actions: {
+      registerJobSeeker: { method: 'POST', path: '/mtss/registerJobSeeker' },
+    },
+  },
+  cosevi: {
+    urlEnv: 'COSEVI_URL',
+    defaultUrl: 'http://localhost:4010',
+    keyEnv: 'COSEVI_API_KEY',
+    defaultKey: 'demo-cosevi-key',
+    actions: {
+      checkFines: { method: 'POST', path: '/cosevi/checkFines' },
+      renewLicence: { method: 'POST', path: '/cosevi/renewLicence' },
     },
   },
 };

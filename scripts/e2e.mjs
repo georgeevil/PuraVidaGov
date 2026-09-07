@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { runMariaJourney, waitForHealth } from './lib/flow.mjs';
 
 const base = Number(process.env.E2E_BASE_PORT ?? 45000);
-const ports = { registro: base + 1, tributacion: base + 2, ccss: base + 3, municipalidad: base + 4, bus: base + 5, api: base + 6, registroNacional: base + 7, salud: base + 8, cfia: base + 9 };
+const ports = { registro: base + 1, tributacion: base + 2, ccss: base + 3, municipalidad: base + 4, bus: base + 5, api: base + 6, registroNacional: base + 7, salud: base + 8, cfia: base + 9, supen: base + 10, mtss: base + 11, cosevi: base + 12 };
 const env = {
   ...process.env,
   LOG_SILENT: process.env.E2E_VERBOSE ? '' : '1',
@@ -17,6 +17,9 @@ const env = {
   REGISTRO_NACIONAL_PORT: String(ports.registroNacional),
   SALUD_PORT: String(ports.salud),
   CFIA_PORT: String(ports.cfia),
+  SUPEN_PORT: String(ports.supen),
+  MTSS_PORT: String(ports.mtss),
+  COSEVI_PORT: String(ports.cosevi),
   BUS_PORT: String(ports.bus),
   API_PORT: String(ports.api),
   REGISTRO_URL: `http://127.0.0.1:${ports.registro}`,
@@ -26,6 +29,9 @@ const env = {
   REGISTRO_NACIONAL_URL: `http://127.0.0.1:${ports.registroNacional}`,
   SALUD_URL: `http://127.0.0.1:${ports.salud}`,
   CFIA_URL: `http://127.0.0.1:${ports.cfia}`,
+  SUPEN_URL: `http://127.0.0.1:${ports.supen}`,
+  MTSS_URL: `http://127.0.0.1:${ports.mtss}`,
+  COSEVI_URL: `http://127.0.0.1:${ports.cosevi}`,
   BUS_URL: `http://127.0.0.1:${ports.bus}`,
 };
 
@@ -37,6 +43,9 @@ const entries = [
   'services/registro-nacional',
   'services/salud',
   'services/cfia',
+  'services/supen',
+  'services/mtss',
+  'services/cosevi',
   'services/bus',
   'apps/api',
 ];
@@ -50,6 +59,8 @@ try {
   await Promise.all(Object.values(ports).map((p) => waitForHealth(`http://127.0.0.1:${p}/health`)));
   console.log('all services healthy');
   const apiBase = `http://127.0.0.1:${ports.api}`;
+  // Start from a clean slate even if a previous run left services behind.
+  await fetch(`${apiBase}/api/__demo/reset`, { method: 'POST' });
   await runMariaJourney(apiBase);
   // second run after a demo reset must also pass (idempotent seed)
   await fetch(`${apiBase}/api/__demo/reset`, { method: 'POST' });
