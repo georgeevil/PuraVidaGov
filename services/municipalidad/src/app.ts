@@ -3,20 +3,91 @@ import {
   createServiceApp,
   errorHandler,
   findActivity,
+  issueBuildingPermitSchema,
+  issueLandUseSchema,
   issueLicenseSchema,
   patenteNumber,
   simulatedLatency,
   todayIso,
+  updateAddressSchema,
+  type AddressUpdateResponse,
+  type BuildingPermitResponse,
+  type LandUseResponse,
   type MunicipalityResponse,
 } from '@pvg/shared';
 import type { Express } from 'express';
 import type { z } from 'zod';
 import { requireApiKey, validateBody, wrap } from './middleware.js';
-import { CANTONS, findCanton, store, type License } from './store.js';
+import {
+  CANTONS,
+  findCanton,
+  store,
+  type BuildingPermit,
+  type LandUseCertificate,
+  type License,
+  type ProjectType,
+} from './store.js';
 
 export const SERVICE_NAME = 'municipalidad';
+export const ADDRESS_REGISTRY = 'Municipalidad (contribuyente)';
+
+/** Impuesto de construcciones: 1 % of the declared value (Ley 833 / Código Municipal). */
+export const BUILDING_TAX_RATE = 0.01;
 
 type IssueLicenseBody = z.infer<typeof issueLicenseSchema>;
+type IssueLandUseBody = z.infer<typeof issueLandUseSchema>;
+type IssueBuildingPermitBody = z.infer<typeof issueBuildingPermitSchema>;
+type UpdateAddressBody = z.infer<typeof updateAddressSchema>;
+
+const normalizeUse = (s: string) =>
+  s
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+const LAND_USE_LABELS: Record<string, string> = {
+  residencial: 'Residencial',
+  comercial: 'Comercial',
+  mixto: 'Mixto',
+  agricola: 'Agrícola',
+};
+
+const PROJECT_LABELS: Record<ProjectType, string> = {
+  vivienda: 'vivienda unifamiliar',
+  comercial: 'local comercial',
+  ampliacion: 'ampliación de obra existente',
+};
+
+/** "Residencial: vivienda unifamiliar" — the use the certificate allows for the project. */
+export function allowedUseFor(landUse: string, projectType: ProjectType): string {
+  const key = normalizeUse(landUse);
+  const label = LAND_USE_LABELS[key] ?? landUse.trim().charAt(0).toUpperCase() + landUse.trim().slice(1);
+  return `${label}: ${PROJECT_LABELS[projectType]}`;
+}
+
+/** Agricultural land cannot host a commercial project (plan regulador, simplified for the demo). */
+export function isIncompatible(landUse: string, projectType: ProjectType): boolean {
+  return normalizeUse(landUse) === 'agricola' && projectType === 'comercial';
+}
+
+export function buildingTax(declaredValueCrc: number): number {
+  return Math.round(declaredValueCrc * BUILDING_TAX_RATE);
+}
+
+function landUseToResponse(c: LandUseCertificate): LandUseResponse {
+  const { certificateNumber, municipality, allowedUse, issueDate } = c;
+  return { certificateNumber, municipality, allowedUse, issueDate };
+}
+
+function permitToResponse(p: BuildingPermit): BuildingPermitResponse {
+  const { permitNumber, municipality, taxCrc, issueDate, expiryDate } = p;
+  return { permitNumber, municipality, taxCrc, issueDate, expiryDate };
+}
+
+function municipalityUnknown(name: string) {
+  return { error: { code: 'MUNICIPALITY_UNKNOWN', message: `La municipalidad de ${name} no está integrada al bus` } };
+}
 
 function toResponse(l: License): MunicipalityResponse {
   const { patenteNumber: p, municipality, issueDate, expiryDate, annualFeeCrc } = l;
@@ -49,11 +120,7 @@ export function createApp(): Express {
       await simulatedLatency();
 
       const canton = findCanton(body.municipality);
-      if (!canton) {
-        return res.status(422).json({
-          error: { code: 'MUNICIPALITY_UNKNOWN', message: `La municipalidad de ${body.municipality} no está integrada al bus` },
-        });
-      }
+      if (!canton) return res.status(422).json(municipalityUnknown(body.municipality));
       const activity = findActivity(body.activityCode);
       if (!activity) {
         return res.status(422).json({
@@ -79,6 +146,108 @@ export function createApp(): Express {
         annualFeeCrc: Math.round(activity.baseFeeCrc * canton.feeMultiplier),
       });
       res.json(toResponse(license));
+    }),
+  );
+
+  app.get('/municipalidad/landUses', (_req, res) => {
+    res.json(store.listLandUses());
+  });
+
+  app.get('/municipalidad/buildingPermits', (_req, res) => {
+    res.json(store.listPermits());
+  });
+
+  app.get('/municipalidad/addresses', (_req, res) => {
+    res.json(store.listAddresses());
+  });
+
+  app.post(
+    '/municipalidad/issueLandUse',
+    validateBody(issueLandUseSchema),
+    wrap(async (req, res) => {
+      const body = req.body as IssueLandUseBody;
+      await simulatedLatency();
+
+      const canton = findCanton(body.municipality);
+      if (!canton) return res.status(422).json(municipalityUnknown(body.municipality));
+      if (isIncompatible(body.landUse, body.projectType)) {
+        return res.status(422).json({
+          error: {
+            code: 'LAND_USE_INCOMPATIBLE',
+            message: `El uso de suelo ${body.landUse} no permite un proyecto ${body.projectType} en ${canton.name}`,
+          },
+        });
+      }
+
+      const existing = store.findLandUse(body.folio, body.projectType);
+      if (existing) return res.json(landUseToResponse(existing));
+
+      const issueDate = todayIso();
+      const year = Number(issueDate.slice(0, 4));
+      const certificate = store.saveLandUse({
+        citizenId: body.citizenId,
+        folio: body.folio,
+        projectType: body.projectType,
+        landUse: body.landUse,
+        certificateNumber: `US-${year}-${String(store.nextLandUseSequence(year)).padStart(5, '0')}`,
+        municipality: canton.name,
+        allowedUse: allowedUseFor(body.landUse, body.projectType),
+        issueDate,
+      });
+      res.json(landUseToResponse(certificate));
+    }),
+  );
+
+  app.post(
+    '/municipalidad/issueBuildingPermit',
+    validateBody(issueBuildingPermitSchema),
+    wrap(async (req, res) => {
+      const body = req.body as IssueBuildingPermitBody;
+      await simulatedLatency();
+
+      const canton = findCanton(body.municipality);
+      if (!canton) return res.status(422).json(municipalityUnknown(body.municipality));
+
+      const existing = store.findPermit(body.apcNumber);
+      if (existing) return res.json(permitToResponse(existing));
+
+      const issueDate = todayIso();
+      const year = Number(issueDate.slice(0, 4));
+      const permit = store.savePermit({
+        citizenId: body.citizenId,
+        folio: body.folio,
+        apcNumber: body.apcNumber,
+        landUseCertificate: body.landUseCertificate,
+        declaredValueCrc: body.declaredValueCrc,
+        areaM2: body.areaM2,
+        permitNumber: `PC-${year}-${String(store.nextPermitSequence(year)).padStart(5, '0')}`,
+        municipality: canton.name,
+        taxCrc: buildingTax(body.declaredValueCrc),
+        issueDate,
+        expiryDate: addYearsIso(issueDate, 1),
+      });
+      res.json(permitToResponse(permit));
+    }),
+  );
+
+  app.post(
+    '/municipalidad/updateAddress',
+    validateBody(updateAddressSchema),
+    wrap(async (req, res) => {
+      const body = req.body as UpdateAddressBody;
+      await simulatedLatency();
+      store.saveAddress({
+        citizenId: body.citizenId,
+        address: body.address.trim(),
+        province: body.province.trim(),
+        canton: body.canton.trim(),
+        district: body.district.trim(),
+        updated: true,
+        registry: ADDRESS_REGISTRY,
+        effectiveDate: body.effectiveDate,
+      });
+      const response: AddressUpdateResponse = { updated: true, registry: ADDRESS_REGISTRY, effectiveDate: body.effectiveDate };
+      res.json(response);
     }),
   );
 

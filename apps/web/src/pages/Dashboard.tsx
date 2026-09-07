@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Citizen } from '@pvg/shared';
-import { api, errorMessage, type ServiceCatalogueEntry } from '../api';
+import { AGENCY_SHORT, type Citizen, type WorkflowDefinition } from '@pvg/shared/data';
+import { api, errorMessage } from '../api';
 import { useAuth } from '../auth';
 import { Alert } from '../components/Alert';
+import { LegalBadge } from '../components/LegalBadge';
+import { LegalPanel } from '../components/LegalPanel';
 import { ProvenanceBadge } from '../components/ProvenanceBadge';
 import { Spinner } from '../components/Spinner';
 import { Tip } from '../components/Tip';
 import { formatDate } from '../format';
-import { AGENCY_SHORT } from '../labels';
+import { agencyLabelEn } from '../labels';
 
 const PROFILE_FIELDS: Array<{ key: keyof Citizen; label: string; en: string; format?: (v: string) => string }> = [
   { key: 'fullName', label: 'Nombre completo', en: 'Full name' },
@@ -18,17 +20,85 @@ const PROFILE_FIELDS: Array<{ key: keyof Citizen; label: string; en: string; for
   { key: 'canton', label: 'Cantón', en: 'Canton (municipality)' },
 ];
 
+export function AgencyChips({ agencies }: { agencies: string[] }) {
+  return (
+    <ul className="flex flex-wrap gap-1" aria-label="Instituciones">
+      {agencies.map((a) => (
+        <li
+          key={a}
+          title={agencyLabelEn(a)}
+          className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+        >
+          {(AGENCY_SHORT as Record<string, string>)[a] ?? a}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function WorkflowCard({ w }: { w: WorkflowDefinition }) {
+  const [why, setWhy] = useState(false);
+  return (
+    <article className={`card flex flex-col ${w.available ? '' : 'bg-slate-50'}`} title={w.titleEn}>
+      <div className="flex items-start justify-between gap-2">
+        <h3 className={`text-base font-semibold ${w.available ? 'text-slate-900' : 'text-slate-600'}`}>
+          {w.title}
+          {w.titleEn && <Tip en={w.titleEn} />}
+        </h3>
+        {w.legal && <LegalBadge status={w.legal.status} />}
+      </div>
+      <p className={`mt-1 flex-1 text-sm ${w.available ? 'text-slate-700' : 'text-slate-500'}`} title={w.descriptionEn}>
+        {w.description}
+      </p>
+      {w.agencies?.length > 0 && (
+        <div className="mt-3">
+          <AgencyChips agencies={w.agencies} />
+        </div>
+      )}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {w.available ? (
+          <Link to={`/tramite/${encodeURIComponent(w.id)}`} className="btn-primary">
+            Iniciar
+          </Link>
+        ) : (
+          <>
+            <span className="btn-secondary cursor-not-allowed opacity-60" aria-disabled="true">
+              Próximamente
+            </span>
+            {w.legal && (
+              <button
+                type="button"
+                className="text-sm text-primary-700 hover:underline"
+                aria-expanded={why}
+                onClick={() => setWhy((v) => !v)}
+                title="Why not today?"
+              >
+                {why ? 'Ocultar' : '¿Por qué no hoy?'}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+      {!w.available && why && w.legal && (
+        <div className="mt-3 rounded-md border border-slate-200 bg-white p-3">
+          <LegalPanel note={w.legal} compact />
+        </div>
+      )}
+    </article>
+  );
+}
+
 export function Dashboard() {
   const { citizen, provenance, updateProfile } = useAuth();
-  const [services, setServices] = useState<ServiceCatalogueEntry[] | null>(null);
+  const [workflows, setWorkflows] = useState<WorkflowDefinition[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     api
-      .services()
-      .then((s) => !cancelled && setServices(s))
+      .workflows()
+      .then((w) => !cancelled && setWorkflows(w))
       .catch((err) => !cancelled && setError(errorMessage(err)));
     return () => {
       cancelled = true;
@@ -87,11 +157,7 @@ export function Dashboard() {
                 <dd className="mt-0.5 text-sm text-slate-900">{f.format ? f.format(raw) : raw}</dd>
                 {provenance && (
                   <dd className="mt-1">
-                    <ProvenanceBadge
-                      source={provenance.source}
-                      exchangeId={provenance.exchangeId}
-                      fetchedAt={provenance.fetchedAt}
-                    />
+                    <ProvenanceBadge source={provenance.source} exchangeId={provenance.exchangeId} fetchedAt={provenance.fetchedAt} />
                   </dd>
                 )}
               </div>
@@ -100,8 +166,9 @@ export function Dashboard() {
         </dl>
         {provenance && (
           <p className="mt-4 text-xs text-slate-500">
-            Consultado a {AGENCY_SHORT[provenance.source]} el {new Date(provenance.fetchedAt).toLocaleString('es-CR')} ·
-            intercambio <span className="font-mono">{provenance.exchangeId}</span>. Cada consulta queda registrada en{' '}
+            Consultado a {AGENCY_SHORT[provenance.source] ?? provenance.source} el{' '}
+            {new Date(provenance.fetchedAt).toLocaleString('es-CR')} · intercambio{' '}
+            <span className="font-mono">{provenance.exchangeId}</span>. Cada consulta queda registrada en{' '}
             <Link to="/auditoria" className="text-primary-700 underline">
               Mis datos compartidos
             </Link>
@@ -111,67 +178,56 @@ export function Dashboard() {
       </section>
 
       <section aria-labelledby="eventos">
-        <h2 id="eventos" className="mb-3 text-lg font-semibold text-slate-900">
-          ¿Qué desea hacer hoy?
-          <Tip en="Life events — services organised around what happens in your life, not around agencies" />
-        </h2>
-        {!services ? (
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <h2 id="eventos" className="text-lg font-semibold text-slate-900">
+            ¿Qué desea hacer hoy?
+            <Tip en="Life events — services organised around what happens in your life, not around agencies" />
+          </h2>
+          <Link to="/marco-legal" className="text-sm text-primary-700 hover:underline" title="What does each badge mean?">
+            ¿Qué significa cada etiqueta?
+          </Link>
+        </div>
+        {!workflows ? (
           <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Spinner /> Cargando servicios…
+            <Spinner /> Cargando eventos de vida…
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => (
-              <article
-                key={s.id}
-                className={`card flex flex-col ${s.available ? '' : 'bg-slate-50 text-slate-500'}`}
-                title={s.titleEn}
-              >
-                <h3 className={`text-base font-semibold ${s.available ? 'text-slate-900' : 'text-slate-500'}`}>
-                  {s.title}
-                  {s.titleEn && <Tip en={s.titleEn} />}
-                </h3>
-                <p className="mt-1 flex-1 text-sm">{s.description}</p>
-                {s.agencies?.length > 0 && (
-                  <p className="mt-3 text-xs text-slate-500">
-                    Instituciones: {s.agencies.map((a) => AGENCY_SHORT[a] ?? a).join(', ')}
-                  </p>
-                )}
-                <div className="mt-4">
-                  {s.available ? (
-                    <Link to={s.id === 'start-business' ? '/negocio/nuevo' : '/'} className="btn-primary">
-                      Iniciar
-                    </Link>
-                  ) : (
-                    <span className="btn-secondary cursor-not-allowed opacity-60" aria-disabled="true">
-                      Próximamente
-                    </span>
-                  )}
-                </div>
-              </article>
+            {workflows.map((w) => (
+              <WorkflowCard key={w.id} w={w} />
             ))}
           </div>
         )}
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link to="/mis-tramites" className="card block transition-shadow hover:shadow-md">
+          <h3 className="font-semibold text-slate-900">
+            Mis trámites
+            <Tip en="My procedures — everything you have started here" />
+          </h3>
+          <p className="mt-1 text-sm text-slate-600">Los trámites que ha iniciado, su estado y sus constancias.</p>
+        </Link>
         <Link to="/auditoria" className="card block transition-shadow hover:shadow-md">
           <h3 className="font-semibold text-slate-900">
             Mis datos compartidos
             <Tip en="My shared data — who accessed what, when and why" />
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
-            Vea qué institución consultó sus datos, cuándo, con qué propósito y con qué consentimiento.
-          </p>
+          <p className="mt-1 text-sm text-slate-600">Qué institución consultó sus datos, cuándo, con qué propósito y consentimiento.</p>
+        </Link>
+        <Link to="/marco-legal" className="card block transition-shadow hover:shadow-md">
+          <h3 className="font-semibold text-slate-900">
+            Marco legal
+            <Tip en="Legal framework — what is possible in Costa Rica today" />
+          </h3>
+          <p className="mt-1 text-sm text-slate-600">Qué de todo esto se puede hacer hoy y qué necesita una ley.</p>
         </Link>
         <Link to="/arquitectura" className="card block transition-shadow hover:shadow-md">
           <h3 className="font-semibold text-slate-900">
             Cómo funciona
             <Tip en="How it works — the interoperability bus and the once-only principle" />
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
-            El bus de interoperabilidad, las instituciones conectadas y el principio de «una sola vez».
-          </p>
+          <p className="mt-1 text-sm text-slate-600">El bus de interoperabilidad, las instituciones y «una sola vez».</p>
         </Link>
       </section>
     </div>

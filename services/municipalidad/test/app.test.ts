@@ -126,3 +126,200 @@ describe('municipalidad', () => {
     expect(again.body.patenteNumber).toBe(`P-${year}-00001`);
   });
 });
+
+const landUse = {
+  citizenId: '1-2345-6789',
+  folio: '1-123456-000',
+  municipality: 'Montes de Oca',
+  projectType: 'vivienda',
+  landUse: 'residencial',
+};
+
+const permit = {
+  citizenId: '1-2345-6789',
+  folio: '1-123456-000',
+  municipality: 'Montes de Oca',
+  apcNumber: 'APC-2026-000001',
+  landUseCertificate: 'US-2026-00001',
+  declaredValueCrc: 45000000,
+  areaM2: 120,
+};
+
+const move = {
+  citizenId: '1-2345-6789',
+  address: 'Residencial Los Robles, San Rafael, Escazú, San José',
+  province: 'San José',
+  canton: 'Escazú',
+  district: 'San Rafael',
+  effectiveDate: '2026-09-01',
+};
+
+
+describe('municipalidad v2: issueLandUse', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('401 without key', async () => {
+    await request(app).post('/municipalidad/issueLandUse').send(landUse).expect(401);
+  });
+
+  it('issues a land-use certificate with the allowed use', async () => {
+    const r = await request(app).post('/municipalidad/issueLandUse').set('x-api-key', KEY).send(landUse).expect(200);
+    expect(r.body).toMatchObject({
+      certificateNumber: `US-${year}-00001`,
+      municipality: 'Montes de Oca',
+      allowedUse: 'Residencial: vivienda unifamiliar',
+    });
+    expect(r.body.issueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(Object.keys(r.body).sort()).toEqual(['allowedUse', 'certificateNumber', 'issueDate', 'municipality']);
+  });
+
+  it('builds allowedUse from landUse + projectType and normalises the canton', async () => {
+    const r = await request(app)
+      .post('/municipalidad/issueLandUse')
+      .set('x-api-key', KEY)
+      .send({ ...landUse, folio: '7-045678-000', municipality: 'talamanca', projectType: 'comercial', landUse: 'mixto' })
+      .expect(200);
+    expect(r.body.municipality).toBe('Talamanca');
+    expect(r.body.allowedUse).toBe('Mixto: local comercial');
+    const amp = await request(app)
+      .post('/municipalidad/issueLandUse')
+      .set('x-api-key', KEY)
+      .send({ ...landUse, projectType: 'ampliacion', landUse: 'agrícola' })
+      .expect(200);
+    expect(amp.body.allowedUse).toBe('Agrícola: ampliación de obra existente');
+  });
+
+  it('is idempotent per (folio, projectType) and numbers certificates sequentially', async () => {
+    const a = await request(app).post('/municipalidad/issueLandUse').set('x-api-key', KEY).send(landUse).expect(200);
+    const b = await request(app).post('/municipalidad/issueLandUse').set('x-api-key', KEY).send(landUse).expect(200);
+    expect(b.body).toEqual(a.body);
+    const other = await request(app)
+      .post('/municipalidad/issueLandUse')
+      .set('x-api-key', KEY)
+      .send({ ...landUse, folio: '1-654321-000', projectType: 'comercial', landUse: 'comercial' })
+      .expect(200);
+    expect(other.body.certificateNumber).toBe(`US-${year}-00002`);
+    const list = await request(app).get('/municipalidad/landUses').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(2);
+  });
+
+  it('422 MUNICIPALITY_UNKNOWN and 422 LAND_USE_INCOMPATIBLE', async () => {
+    const m = await request(app)
+      .post('/municipalidad/issueLandUse')
+      .set('x-api-key', KEY)
+      .send({ ...landUse, municipality: 'Nicoya' })
+      .expect(422);
+    expect(m.body.error.code).toBe('MUNICIPALITY_UNKNOWN');
+    const i = await request(app)
+      .post('/municipalidad/issueLandUse')
+      .set('x-api-key', KEY)
+      .send({ ...landUse, landUse: 'agricola', projectType: 'comercial' })
+      .expect(422);
+    expect(i.body.error.code).toBe('LAND_USE_INCOMPATIBLE');
+    // agricola + vivienda is fine
+    await request(app)
+      .post('/municipalidad/issueLandUse')
+      .set('x-api-key', KEY)
+      .send({ ...landUse, landUse: 'agricola', projectType: 'vivienda' })
+      .expect(200);
+  });
+
+  it('400 VALIDATION_ERROR on a bad body', async () => {
+    const r = await request(app)
+      .post('/municipalidad/issueLandUse')
+      .set('x-api-key', KEY)
+      .send({ ...landUse, projectType: 'torre' })
+      .expect(400);
+    expect(r.body.error.code).toBe('VALIDATION_ERROR');
+  });
+});
+
+describe('municipalidad v2: issueBuildingPermit', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('issues a permit with 1 % tax and 1-year expiry', async () => {
+    const r = await request(app).post('/municipalidad/issueBuildingPermit').set('x-api-key', KEY).send(permit).expect(200);
+    expect(r.body).toMatchObject({
+      permitNumber: `PC-${year}-00001`,
+      municipality: 'Montes de Oca',
+      taxCrc: 450000,
+    });
+    expect(Number(r.body.expiryDate.slice(0, 4)) - Number(r.body.issueDate.slice(0, 4))).toBe(1);
+    expect(r.body.expiryDate.slice(4)).toBe(r.body.issueDate.slice(4));
+    expect(Object.keys(r.body).sort()).toEqual(['expiryDate', 'issueDate', 'municipality', 'permitNumber', 'taxCrc']);
+  });
+
+  it('is idempotent per apcNumber', async () => {
+    const a = await request(app).post('/municipalidad/issueBuildingPermit').set('x-api-key', KEY).send(permit).expect(200);
+    const b = await request(app)
+      .post('/municipalidad/issueBuildingPermit')
+      .set('x-api-key', KEY)
+      .send({ ...permit, declaredValueCrc: 1 })
+      .expect(200);
+    expect(b.body).toEqual(a.body);
+    const other = await request(app)
+      .post('/municipalidad/issueBuildingPermit')
+      .set('x-api-key', KEY)
+      .send({ ...permit, apcNumber: 'APC-2026-000002' })
+      .expect(200);
+    expect(other.body.permitNumber).toBe(`PC-${year}-00002`);
+    const list = await request(app).get('/municipalidad/buildingPermits').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(2);
+  });
+
+  it('422 MUNICIPALITY_UNKNOWN and 400 VALIDATION_ERROR', async () => {
+    const m = await request(app)
+      .post('/municipalidad/issueBuildingPermit')
+      .set('x-api-key', KEY)
+      .send({ ...permit, municipality: 'Nicoya' })
+      .expect(422);
+    expect(m.body.error.code).toBe('MUNICIPALITY_UNKNOWN');
+    const v = await request(app)
+      .post('/municipalidad/issueBuildingPermit')
+      .set('x-api-key', KEY)
+      .send({ ...permit, declaredValueCrc: -5 })
+      .expect(400);
+    expect(v.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('reset clears permits and land-use certificates and restarts counters', async () => {
+    await request(app).post('/municipalidad/issueBuildingPermit').set('x-api-key', KEY).send(permit).expect(200);
+    await request(app).post('/municipalidad/issueLandUse').set('x-api-key', KEY).send(landUse).expect(200);
+    await request(app).post('/__demo/reset').expect(200);
+    expect((await request(app).get('/municipalidad/buildingPermits').set('x-api-key', KEY)).body).toEqual([]);
+    expect((await request(app).get('/municipalidad/landUses').set('x-api-key', KEY)).body).toEqual([]);
+    const again = await request(app).post('/municipalidad/issueBuildingPermit').set('x-api-key', KEY).send(permit).expect(200);
+    expect(again.body.permitNumber).toBe(`PC-${year}-00001`);
+  });
+});
+
+describe('municipalidad v2: updateAddress', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('updates the contribuyente address', async () => {
+    const r = await request(app).post('/municipalidad/updateAddress').set('x-api-key', KEY).send(move).expect(200);
+    expect(r.body).toEqual({ updated: true, registry: 'Municipalidad (contribuyente)', effectiveDate: '2026-09-01' });
+    const list = await request(app).get('/municipalidad/addresses').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0]).toMatchObject({ citizenId: move.citizenId, canton: 'Escazú' });
+  });
+
+  it('400 VALIDATION_ERROR on a bad body and reset clears it', async () => {
+    const r = await request(app)
+      .post('/municipalidad/updateAddress')
+      .set('x-api-key', KEY)
+      .send({ ...move, canton: '' })
+      .expect(400);
+    expect(r.body.error.code).toBe('VALIDATION_ERROR');
+    await request(app).post('/municipalidad/updateAddress').set('x-api-key', KEY).send(move).expect(200);
+    await request(app).post('/__demo/reset').expect(200);
+    const list = await request(app).get('/municipalidad/addresses').set('x-api-key', KEY).expect(200);
+    expect(list.body).toEqual([]);
+  });
+});

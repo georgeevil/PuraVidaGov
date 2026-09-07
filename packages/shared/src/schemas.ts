@@ -15,7 +15,7 @@ export const businessRegistrationSchema = z.object({
 });
 
 export const busRequestSchema = z.object({
-  service: z.enum(['registro', 'tributacion', 'ccss', 'municipalidad']),
+  service: z.enum(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia']),
   action: z.string().min(1),
   data: z.unknown(),
   requester: z.string().min(1),
@@ -58,4 +58,87 @@ export const issueLicenseSchema = z.object({
   activityCode: z.string().regex(/^\d{4}$/),
   address: z.string().min(1),
   municipality: z.string().min(1),
+});
+
+// ---------------------------------------------------------------- v2 agency actions
+
+export const registerCompanySchema = z.object({
+  citizenId: cedulaSchema,
+  fullName: z.string().min(1),
+  legalName: z.string().min(3).max(120),
+  activityCode: z.string().regex(/^\d{4}$/),
+  address: z.string().min(1),
+});
+
+export const issueSanitaryPermitSchema = z.object({
+  citizenId: cedulaSchema,
+  taxId: z.string().min(1), // NITE or cédula jurídica
+  businessName: z.string().min(1),
+  activityCode: z.string().regex(/^\d{4}$/),
+  address: z.string().min(1),
+  municipality: z.string().min(1),
+});
+
+export const registerBirthSchema = z.object({
+  parentId: cedulaSchema,
+  parentFullName: z.string().min(1),
+  otherParentId: cedulaSchema.optional(),
+  childFirstName: z.string().min(1).max(60),
+  childLastName1: z.string().min(1).max(40),
+  childLastName2: z.string().min(1).max(40),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  hospital: z.string().min(1),
+  sex: z.enum(['F', 'M']),
+});
+
+export const insureDependentSchema = z.object({
+  insuredId: cedulaSchema, // the parent
+  dependentId: z.string().min(1), // the minor's new cédula
+  dependentName: z.string().min(1),
+  relationship: z.enum(['hijo', 'hija', 'conyuge']),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const openVaccinationRecordSchema = z.object({
+  childId: z.string().min(1),
+  childName: z.string().min(1),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  edusId: z.string().min(1),
+});
+
+export const reviewPlansSchema = z.object({
+  citizenId: cedulaSchema,
+  folio: z.string().min(1),
+  projectType: z.enum(['vivienda', 'comercial', 'ampliacion']),
+  areaM2: z.number().positive().max(100000),
+  declaredValueCrc: z.number().positive(),
+  professionalLicence: z.string().min(1),
+  landUseCertificate: z.string().min(1),
+});
+
+export const issueLandUseSchema = z.object({
+  citizenId: cedulaSchema,
+  folio: z.string().min(1),
+  municipality: z.string().min(1),
+  projectType: z.enum(['vivienda', 'comercial', 'ampliacion']),
+  landUse: z.string().min(1),
+});
+
+export const issueBuildingPermitSchema = z.object({
+  citizenId: cedulaSchema,
+  folio: z.string().min(1),
+  municipality: z.string().min(1),
+  apcNumber: z.string().min(1),
+  landUseCertificate: z.string().min(1),
+  declaredValueCrc: z.number().positive(),
+  areaM2: z.number().positive(),
+});
+
+export const updateAddressSchema = z.object({
+  citizenId: cedulaSchema,
+  address: z.string().min(5).max(200),
+  province: z.string().min(1),
+  canton: z.string().min(1),
+  district: z.string().min(1),
+  effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });

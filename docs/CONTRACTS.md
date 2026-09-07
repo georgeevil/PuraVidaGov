@@ -135,3 +135,113 @@ All copy es-CR; English via `title` tooltips on headings and key labels (small �
 
 `POST /api/__demo/reset` (no auth in demo) resets the API's transactions and asks the bus to reset itself and every
 agency (`POST /__demo/reset` cascade). Seed citizens are recreated. Used by `scripts/e2e.mjs`.
+
+---
+
+# v2 — life-event workflows, new agencies, legal status
+
+v2 generalises the single business-registration flow into a data-driven workflow engine with four implemented
+life events and three more agencies. Everything in v1 above still holds unless restated here.
+
+## New agencies
+
+| Package | Name | Dev port | Docker | Key env |
+|---|---|---|---|---|
+| `services/registro-nacional` | Registro Nacional (propiedades, personas jurídicas) | 4005 | `registro-nacional` | `REGISTRO_NACIONAL_URL/_API_KEY` (`demo-registro-nacional-key`) |
+| `services/salud` | Ministerio de Salud (PSF, vacunación) | 4006 | `salud` | `SALUD_URL/_API_KEY` (`demo-salud-key`) |
+| `services/cfia` | CFIA / plataforma APC (revisión de planos) | 4007 | `cfia` | `CFIA_URL/_API_KEY` (`demo-cfia-key`) |
+
+`AgencyName` gains `'registro-nacional' | 'salud' | 'cfia'` (shared/types.ts). All v1 rules apply (createServiceApp,
+`/health`, `x-api-key`, `POST /__demo/reset`, `simulatedLatency()`, `{ error:{code,message} }`).
+
+### Registro Nacional
+- `GET /registro-nacional/properties?ownerId=<cédula>` → `Property[]` (may be empty). Seed: María owns
+  `1-123456-000` (Montes de Oca, residencial, 250 m², clean) and `1-654321-000` (Montes de Oca, comercial, 400 m², one
+  encumbrance "Hipoteca Banco Nacional"); José owns `7-045678-000` (Talamanca, mixto, 1 200 m², clean); Ana owns
+  `2-111222-000` (Grecia, residencial, 300 m², clean).
+- `GET /registro-nacional/property/:folio` → `Property`; 404 `PROPERTY_NOT_FOUND`.
+- `POST /registro-nacional/registerCompany` body `registerCompanySchema` → `CompanyResponse` (`cedulaJuridica`
+  `3-101-NNNNNN`, `tomo` like `2026-123456-1-1`). Idempotent per `(citizenId, legalName)`. List: `GET /registro-nacional/companies`.
+
+### Ministerio de Salud
+- `POST /salud/issueSanitaryPermit` body `issueSanitaryPermitSchema` → `SanitaryPermitResponse`. Risk group from
+  activity: 5610/5510 → B, 4711/9602/7911/6201 → C (declaración jurada), 4923/0111 → A. Expiry: C 5 years, B 3, A 1.
+  Idempotent per `taxId`. Unknown activity → 422 `ACTIVITY_UNKNOWN`. List `GET /salud/permits`.
+- `POST /salud/openVaccinationRecord` body `openVaccinationRecordSchema` → `VaccinationRecordResponse`
+  (`recordNumber` `CNV-<year>-NNNNNN`, `scheme` "Esquema nacional de vacunación (CNVE)", `firstAppointment` = birth
+  date + 2 months). Idempotent per `childId`. List `GET /salud/vaccination`.
+
+### CFIA (APC)
+- `POST /cfia/reviewPlans` body `reviewPlansSchema` → `PlanReviewResponse`: `apcNumber` `APC-<year>-NNNNNN`,
+  `reviews` for Ministerio de Salud, Bomberos, AyA, INVU (all `aprobado` in the demo; `reference` like `MS-…`,
+  `BOM-…`), `approvedAreaM2` = areaM2, `cfiaFeeCrc` = 0.265 % of declaredValueCrc (rounded). Unknown
+  `professionalLicence` (not in the seed list `IC-12345`, `A-23456`, `IE-34567`) → 422 `PROFESSIONAL_UNKNOWN`.
+  Idempotent per `(folio, professionalLicence)`. List `GET /cfia/reviews`. Also `GET /cfia/professionals` →
+  `[{ licence, name, discipline }]`.
+
+### New actions on existing agencies
+- Registro Civil: `POST /registro/registerBirth` body `registerBirthSchema` → `BirthRegistrationResponse` (the minor's
+  cédula is `<province digit of parent>-<4 random>-<4 random>`, `certificateNumber` `NAC-<year>-NNNNNN`); the minor is
+  added to the citizen store (so `GET /registro/citizen/:id` finds them, canton = parent's). Idempotent per
+  `(parentId, childFirstName, birthDate)`. `POST /registro/updateAddress` body `updateAddressSchema` →
+  `AddressUpdateResponse` (`registry: "Registro Civil (domicilio electoral)"`) and actually updates the citizen record.
+- Tributación: `POST /tributacion/updateAddress` → `AddressUpdateResponse` (`registry: "Tributación (domicilio fiscal)"`).
+- CCSS: `POST /ccss/insureDependent` body `insureDependentSchema` → `DependentInsuranceResponse` (`beneficiaryNumber`
+  `B-NNNNNNN`, `edusId` `EDUS-NNNNNNN`, `coveredFrom` = birthDate). Idempotent per `dependentId`.
+  `POST /ccss/updateAddress` → `AddressUpdateResponse` (`registry: "CCSS (SICERE)"`).
+- Municipalidad: `POST /municipalidad/issueLandUse` body `issueLandUseSchema` → `LandUseResponse` (`certificateNumber`
+  `US-<year>-NNNNN`, `allowedUse` from landUse+projectType, e.g. "Residencial: vivienda unifamiliar"); 422
+  `MUNICIPALITY_UNKNOWN`; 422 `LAND_USE_INCOMPATIBLE` when landUse is `agricola` and projectType is `comercial`.
+  `POST /municipalidad/issueBuildingPermit` body `issueBuildingPermitSchema` → `BuildingPermitResponse` (`permitNumber`
+  `PC-<year>-NNNNN`, `taxCrc` = 1 % of declaredValueCrc, expiry = issue + 1 year). Idempotent per `apcNumber`.
+  `POST /municipalidad/updateAddress` → `AddressUpdateResponse` (`registry: "Municipalidad (contribuyente)"`).
+
+### Bus registry additions
+`registro.registerBirth`, `registro.updateAddress`, `tributacion.updateAddress`, `ccss.insureDependent`,
+`ccss.updateAddress`, `municipalidad.issueLandUse`, `municipalidad.issueBuildingPermit`, `municipalidad.updateAddress`,
+`registro-nacional.listProperties` (GET `/registro-nacional/properties?ownerId=` — the bus maps `data.ownerId` to the
+query string), `registro-nacional.getProperty` (GET `/registro-nacional/property/:folio`, `data.folio`),
+`registro-nacional.registerCompany`, `salud.issueSanitaryPermit`, `salud.openVaccinationRecord`, `cfia.reviewPlans`.
+The registry entry for a GET action may declare `query: ['ownerId']` and/or a `:param` in the path; the router fills
+both from `data` (`RegistryEntry.actions[name].query?: string[]`). `busRequestSchema.service` accepts all seven agencies.
+
+## Workflow engine (apps/api)
+
+- Definitions live in `apps/api/src/workflows/<id>.ts` and are registered in `apps/api/src/workflows/index.ts`. Each
+  is a `WorkflowSpec` (`apps/api/src/workflows/types.ts`): the public `WorkflowDefinition` (shared types) plus
+  functions: `inputSchema` (zod), per-step `when?(ctx)` and `data(ctx)`, and `result(ctx)` returning headline, summary,
+  cards and onceOnly. `ctx = { citizen, input, results (by step id), exchangeIds (by step id) }`.
+- The engine always runs an implicit first step `identidad` (`registro.getCitizen`) and stores the citizen in `ctx`;
+  its legal note is the standard identity note (`IDENTITY_LEGAL` in the engine). Steps whose `when(ctx)` is false are
+  recorded with `status:'done', skipped:true`.
+- Benefits: the spec's `benefits`, overridden by env for `start-business` only (`BENEFIT_*`, PRD FR-20).
+- Implemented workflows: `start-business`, `newborn`, `construction`, `move`. Catalogue entries `driver-license` and
+  `pension` stay `available:false` but still carry a `legal` note and empty `fields`/`steps`.
+
+### Portal API (v2 routes; v1 `/api/business/*` and `/api/services` are removed)
+- `GET /api/workflows` → `WorkflowDefinition[]` (public part of every spec, available or not).
+- `GET /api/workflows/:id` → `WorkflowDefinition`; 404 `WORKFLOW_NOT_FOUND`.
+- `GET /api/options/:source` (auth) → `FormOption[]`. Sources: `activities` (from shared, label
+  `"5610 · Restaurantes…"`), `cantons` (static list of 12 cantons matching the municipal mock), `hospitals` (static:
+  Hospital Calderón Guardia, Hospital México, Hospital San Juan de Dios, Hospital de las Mujeres, Hospital Tony Facio
+  (Limón), Hospital San Rafael de Alajuela), `professionals` (via bus `cfia` `GET /cfia/professionals` is NOT a bus
+  action — keep a static copy in the API), `properties` (bus `registro-nacional.listProperties` for the logged-in
+  cédula, purpose "Listar propiedades de la persona", label `"1-123456-000 · Montes de Oca · 250 m² · residencial"`,
+  value = folio). 404 `OPTIONS_UNKNOWN`.
+- `POST /api/workflows/:id/start` body `{ input: {...}, consent: true }` → 202 `{ txnId }`; 400 `CONSENT_REQUIRED`;
+  400 `VALIDATION_ERROR` (zod flatten in `details`); 404; 409 `WORKFLOW_UNAVAILABLE` when `available:false`.
+- `GET /api/transactions` → the caller's transactions, newest first (`WorkflowTransaction` without `result`).
+- `GET /api/transactions/:txnId` → status view (no `result`); 404 `TXN_NOT_FOUND`.
+- `GET /api/transactions/:txnId/result` → full transaction; 409 `NOT_COMPLETED`; 422 `FAILED`.
+- `GET /api/transactions/:txnId/pdf` → generic PDF from `result.cards` (letter, Spanish, DEMO box, legal-status line
+  per step, audit references). Filename `PuraVidaGov-<txnId>.pdf`.
+- `GET /api/legal` → `{ refs: LegalRef[], workflows: [{ id, title, legal, steps:[{ id, label, agency, legal }] }] }`.
+- Unchanged: login/otp/logout, profile, activities, audit, registry, benefits, `__demo/reset`.
+
+### Frontend routes (v2)
+`/` dashboard (cards for every workflow with a legal-status badge; "Iniciar" when available) · `/tramite/:id`
+(generic form rendered from `fields`, consent box with the workflow's `consentText`, personal data read-only with
+provenance) · `/tramite/:id/:txnId` (generic tracker + result: cards, once-only table, benefits, PDF, and a "¿Se puede
+hoy?" panel per step) · `/mis-tramites` (list) · `/auditoria` · `/arquitectura` · `/marco-legal` (matrix of
+`LEGAL_REFS` by jurisdiction + per-workflow status table) · `/por-que` (the case for government: content in
+`apps/web/src/content/case.ts`). Old `/negocio/*` routes redirect to `/tramite/start-business`.
