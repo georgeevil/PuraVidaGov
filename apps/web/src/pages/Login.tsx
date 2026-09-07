@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, errorMessage, type LoginResponse } from '../api';
 import { useAuth } from '../auth';
 import { Alert } from '../components/Alert';
@@ -9,8 +9,6 @@ import { Tip } from '../components/Tip';
 export function Login() {
   const { isAuthenticated, signIn } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? '/';
 
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
@@ -20,8 +18,9 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated) navigate(from, { replace: true });
-  }, [isAuthenticated, from, navigate]);
+    // After login the citizen always lands on the dashboard.
+    if (isAuthenticated) navigate('/', { replace: true });
+  }, [isAuthenticated, navigate]);
 
   async function submitCredentials(e: FormEvent) {
     e.preventDefault();
@@ -53,7 +52,7 @@ export function Login() {
     try {
       const res = await api.loginOtp(challenge.challengeId, code.trim());
       signIn({ token: res.token, citizen: res.citizen, provenance: res.provenance });
-      navigate(from, { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -69,6 +68,17 @@ export function Login() {
           <Tip en="Sign in to the citizen portal" />
         </h1>
         <p className="mt-1 text-sm text-slate-600">Una identidad, todos los trámites del Estado.</p>
+        <p className="mt-3 text-xs text-slate-500" title="Just want to read the argument? See Why and Legal framework without signing in.">
+          ¿Solo quiere leer el argumento? Vea{' '}
+          <Link to="/por-que" className="text-primary-700 hover:underline">
+            Por qué
+          </Link>{' '}
+          y{' '}
+          <Link to="/marco-legal" className="text-primary-700 hover:underline">
+            Marco legal
+          </Link>{' '}
+          sin iniciar sesión.
+        </p>
       </div>
 
       <div className="card">

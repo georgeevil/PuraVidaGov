@@ -110,7 +110,7 @@ function ResultCard({ card }: { card: ResultCardData }) {
         {card.rows.map((r, i) => (
           <div key={`${r.label}-${i}`} className="flex justify-between gap-3">
             <dt className="text-slate-500">{r.label}</dt>
-            <dd className="text-right text-slate-900">{r.value}</dd>
+            <dd className="min-w-0 break-words text-right text-slate-900">{r.value}</dd>
           </div>
         ))}
       </dl>

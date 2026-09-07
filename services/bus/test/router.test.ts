@@ -7,6 +7,9 @@ describe('buildUrl', () => {
     expect(buildUrl('http://a', '/registro-nacional/property/:folio', 'GET', { folio: '1-123456-000' })).toBe(
       'http://a/registro-nacional/property/1-123456-000',
     );
+    expect(buildUrl('http://a', '/ccss/employment/:citizenId', 'GET', { citizenId: '7-0123-0456' })).toBe(
+      'http://a/ccss/employment/7-0123-0456',
+    );
   });
 
   it('appends declared query keys from data and URL-encodes them', () => {

@@ -10,9 +10,23 @@ export type AgencyName =
   | 'municipalidad'
   | 'registro-nacional'
   | 'salud'
-  | 'cfia';
+  | 'cfia'
+  | 'supen'
+  | 'mtss'
+  | 'cosevi';
 
-export const AGENCIES: AgencyName[] = ['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia'];
+export const AGENCIES: AgencyName[] = [
+  'registro',
+  'tributacion',
+  'ccss',
+  'municipalidad',
+  'registro-nacional',
+  'salud',
+  'cfia',
+  'supen',
+  'mtss',
+  'cosevi',
+];
 
 export const AGENCY_LABELS: Record<AgencyName, string> = {
   registro: 'Registro Civil (TSE)',
@@ -22,6 +36,9 @@ export const AGENCY_LABELS: Record<AgencyName, string> = {
   'registro-nacional': 'Registro Nacional',
   salud: 'Ministerio de Salud',
   cfia: 'CFIA (APC)',
+  supen: 'Operadora de pensiones (SUPEN)',
+  mtss: 'Ministerio de Trabajo (ANE)',
+  cosevi: 'COSEVI (MOPT)',
 };
 
 export const AGENCY_SHORT: Record<AgencyName, string> = {
@@ -32,6 +49,9 @@ export const AGENCY_SHORT: Record<AgencyName, string> = {
   'registro-nacional': 'Registro Nacional',
   salud: 'Salud',
   cfia: 'CFIA',
+  supen: 'Operadora (SUPEN)',
+  mtss: 'MTSS',
+  cosevi: 'COSEVI',
 };
 
 /** Citizen record held by the simulated Registro Civil. */
@@ -233,6 +253,80 @@ export interface AddressUpdateResponse {
   updated: true;
   registry: string;
   effectiveDate: string;
+}
+
+// ---------------------------------------------------------------- v3 payloads (job loss, retirement, licence)
+
+/** CCSS employment / contribution record of a worker. */
+export interface EmploymentRecord {
+  citizenId: string;
+  employerName: string;
+  employerNumber: string;
+  startDate: string;
+  endDate?: string; // set when the employer reported the termination
+  lastSalaryCrc: number;
+  /** IVM contributions (cuotas) on record. */
+  contributions: number;
+  status: 'activo' | 'cesado';
+}
+
+export interface PensionApplicationResponse {
+  applicationNumber: string; // "IVM-2026-000123"
+  regime: 'IVM';
+  contributions: number;
+  monthlyPensionCrc: number;
+  firstPaymentDate: string;
+  status: 'aprobada' | 'en-estudio';
+}
+
+export interface VoluntaryInsuranceResponse {
+  policyNumber: string; // "AV-2026-000123"
+  monthlyPremiumCrc: number;
+  coveredFrom: string;
+}
+
+export interface FclWithdrawalResponse {
+  requestNumber: string; // "FCL-2026-000123"
+  balanceCrc: number;
+  paymentDate: string;
+  operator: string;
+}
+
+export interface RopStatementResponse {
+  operator: string;
+  balanceCrc: number;
+  modality: 'retiro-programado' | 'renta-permanente';
+  monthlyPaymentCrc: number;
+  firstPaymentDate: string;
+}
+
+export interface JobSeekerResponse {
+  registrationNumber: string; // "ANE-2026-000123"
+  platform: string;
+  trainingOffer: string; // INA course suggestion
+  firstAppointment: string;
+}
+
+export interface MedicalCertificateResponse {
+  certificateNumber: string; // "SEDIMEC-2026-000123"
+  result: 'apto' | 'apto-con-restricciones';
+  restrictions: string[];
+  validUntil: string;
+}
+
+export interface FinesCheckResponse {
+  pendingFines: number;
+  pendingAmountCrc: number;
+  marchamoPaid: boolean;
+}
+
+export interface LicenceRenewalResponse {
+  licenceNumber: string;
+  categories: string[];
+  issueDate: string;
+  expiryDate: string;
+  points: number;
+  feeCrc: number;
 }
 
 // ---------------------------------------------------------------- Legal status (v2)

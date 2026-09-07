@@ -114,11 +114,11 @@ export function createApp(): Express {
     }),
   );
 
-  app.get('/api/activities', requireAuth, (_req, res) => {
+  app.get('/api/activities', (_req, res) => {
     res.json(ACTIVITIES);
   });
 
-  app.get('/api/benefits', requireAuth, (_req, res) => {
+  app.get('/api/benefits', (_req, res) => {
     res.json({ ...config.benefits });
   });
 
@@ -243,7 +243,6 @@ export function createApp(): Express {
 
   app.get(
     '/api/registry',
-    requireAuth,
     wrap(async (_req, res) => {
       res.json(await busRegistry());
     }),

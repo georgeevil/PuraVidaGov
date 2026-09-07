@@ -24,7 +24,7 @@ const SEED: Citizen[] = [
     firstName: 'José Alberto',
     lastName1: 'Mora',
     lastName2: 'Salazar',
-    dateOfBirth: '1984-11-02',
+    dateOfBirth: '1961-06-01',
     nationality: 'CR',
     address: '200 m sur de la escuela, Puerto Viejo, Cahuita, Talamanca, Limón',
     province: 'Limón',

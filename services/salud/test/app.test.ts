@@ -1,7 +1,7 @@
 process.env.AGENCY_LATENCY_MS = '0';
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import { addMonthsIso, createApp, VACCINATION_SCHEME } from '../src/app.js';
+import { addDaysIso, addMonthsIso, createApp, GLASSES_RESTRICTION, VACCINATION_SCHEME } from '../src/app.js';
 
 const KEY = 'demo-salud-key';
 const app = createApp();
@@ -160,5 +160,83 @@ describe('salud', () => {
     expect((await request(app).get('/salud/vaccination').set('x-api-key', KEY)).body).toEqual([]);
     const again = await request(app).post('/salud/issueSanitaryPermit').set('x-api-key', KEY).send(permitBody).expect(200);
     expect(again.body.permitNumber).toBe(`PSF-${year}-000001`);
+  });
+});
+
+// ---------------------------------------------------------------- v3
+
+const today = new Date().toISOString().slice(0, 10);
+const certBody = {
+  citizenId: '1-2345-6789',
+  fullName: 'María Fernández Gómez',
+  dateOfBirth: '1990-05-14',
+  usesGlasses: false,
+};
+
+describe('salud v3: medicalCertificate', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('401 without key', async () => {
+    await request(app).post('/salud/medicalCertificate').send(certBody).expect(401);
+    await request(app).get('/salud/certificates').expect(401);
+  });
+
+  it('issues an "apto" dictamen valid 180 days', async () => {
+    const r = await request(app).post('/salud/medicalCertificate').set('x-api-key', KEY).send(certBody).expect(200);
+    expect(r.body).toEqual({
+      certificateNumber: `SEDIMEC-${year}-000001`,
+      result: 'apto',
+      restrictions: [],
+      validUntil: addDaysIso(today, 180),
+    });
+    expect(addDaysIso('2026-09-07', 180)).toBe('2027-03-06');
+  });
+
+  it('adds the glasses restriction', async () => {
+    const r = await request(app)
+      .post('/salud/medicalCertificate')
+      .set('x-api-key', KEY)
+      .send({ ...certBody, citizenId: '7-0123-0456', fullName: 'José Alberto Mora Salazar', dateOfBirth: '1961-06-01', usesGlasses: true })
+      .expect(200);
+    expect(r.body.result).toBe('apto-con-restricciones');
+    expect(r.body.restrictions).toEqual([GLASSES_RESTRICTION]);
+  });
+
+  it('is idempotent per citizenId while valid, numbers sequentially and lists', async () => {
+    const a = await request(app).post('/salud/medicalCertificate').set('x-api-key', KEY).send(certBody).expect(200);
+    const b = await request(app)
+      .post('/salud/medicalCertificate')
+      .set('x-api-key', KEY)
+      .send({ ...certBody, usesGlasses: true })
+      .expect(200);
+    expect(b.body).toEqual(a.body);
+    const other = await request(app)
+      .post('/salud/medicalCertificate')
+      .set('x-api-key', KEY)
+      .send({ ...certBody, citizenId: '2-0987-0654', fullName: 'Ana Lucía Chaves Rojas', dateOfBirth: '1996-03-27' })
+      .expect(200);
+    expect(other.body.certificateNumber).toBe(`SEDIMEC-${year}-000002`);
+    const list = await request(app).get('/salud/certificates').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(2);
+    expect(list.body[0]).toMatchObject({ citizenId: certBody.citizenId, usesGlasses: false, issueDate: today });
+  });
+
+  it('400 VALIDATION_ERROR on a bad body', async () => {
+    const r = await request(app)
+      .post('/salud/medicalCertificate')
+      .set('x-api-key', KEY)
+      .send({ ...certBody, usesGlasses: 'sí', dateOfBirth: '14/05/1990' })
+      .expect(400);
+    expect(r.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('reset clears certificates and restarts the counter', async () => {
+    await request(app).post('/salud/medicalCertificate').set('x-api-key', KEY).send(certBody).expect(200);
+    await request(app).post('/__demo/reset').expect(200);
+    expect((await request(app).get('/salud/certificates').set('x-api-key', KEY)).body).toEqual([]);
+    const again = await request(app).post('/salud/medicalCertificate').set('x-api-key', KEY).send(certBody).expect(200);
+    expect(again.body.certificateNumber).toBe(`SEDIMEC-${year}-000001`);
   });
 });

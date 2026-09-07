@@ -46,6 +46,8 @@ describe('registro-civil', () => {
   it('serves the other two seed citizens with their cantons', async () => {
     const jose = await request(app).get('/registro/citizen/7-0123-0456').set('x-api-key', KEY).expect(200);
     expect(jose.body).toMatchObject({ fullName: 'José Alberto Mora Salazar', canton: 'Talamanca', province: 'Limón' });
+    // v3: José is 65 so the IVM pension demo approves him (docs/CONTRACTS.md v3 → CCSS new actions).
+    expect(jose.body.dateOfBirth).toBe('1961-06-01');
     const ana = await request(app).get('/registro/citizen/2-0987-0654').set('x-api-key', KEY).expect(200);
     expect(ana.body).toMatchObject({ fullName: 'Ana Lucía Chaves Rojas', canton: 'Grecia', province: 'Alajuela' });
   });

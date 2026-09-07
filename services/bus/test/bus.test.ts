@@ -10,6 +10,7 @@ const BUS_KEY = 'test-bus-key';
 const REGISTRO_KEY = 'test-registro-key';
 const TRIB_KEY = 'test-trib-key';
 const RN_KEY = 'test-rn-key';
+const SUPEN_KEY = 'test-supen-key';
 
 let fake: Server;
 let fakeUrl: string;
@@ -48,6 +49,18 @@ function startFakeAgency(): Promise<void> {
       return res.status(404).json({ error: { code: 'PROPERTY_NOT_FOUND', message: 'No existe' } });
     }
     res.json({ folio: req.params.folio, ownerId: MARIA.id });
+  });
+  a.get('/ccss/employment/:citizenId', (req, res) => {
+    seenUrl = req.originalUrl;
+    if (req.params.citizenId !== MARIA.id) {
+      return res.status(404).json({ error: { code: 'EMPLOYMENT_NOT_FOUND', message: 'Sin registro' } });
+    }
+    res.json({ citizenId: MARIA.id, employerNumber: 'E-30001', contributions: 138, status: 'cesado' });
+  });
+  a.post('/supen/withdrawFcl', (req, res) => {
+    seenHeaders = { 'x-api-key': req.header('x-api-key') };
+    seenBody = req.body;
+    res.json({ requestNumber: 'FCL-2026-000001', balanceCrc: 1250000, paymentDate: '2026-09-22', operator: 'Operadora Demo de Pensiones' });
   });
   a.post('/tributacion/createTaxId', (req, res) => {
     seenHeaders = { 'x-api-key': req.header('x-api-key'), 'content-type': req.header('content-type') };
@@ -88,10 +101,14 @@ beforeAll(async () => {
   // Unreachable agencies (closed port) to exercise 502 and healthy:false.
   process.env.REGISTRO_NACIONAL_URL = fakeUrl;
   process.env.REGISTRO_NACIONAL_API_KEY = RN_KEY;
+  process.env.SUPEN_URL = fakeUrl;
+  process.env.SUPEN_API_KEY = SUPEN_KEY;
   process.env.CCSS_URL = 'http://127.0.0.1:1';
   process.env.MUNICIPALIDAD_URL = 'http://127.0.0.1:1';
   process.env.SALUD_URL = 'http://127.0.0.1:1';
   process.env.CFIA_URL = 'http://127.0.0.1:1';
+  process.env.MTSS_URL = 'http://127.0.0.1:1';
+  process.env.COSEVI_URL = 'http://127.0.0.1:1';
   const mod = await import('../src/app.js');
   app = mod.createApp();
 });
@@ -212,8 +229,33 @@ describe('POST /bus/request', () => {
     expect(nf.body.error.code).toBe('PROPERTY_NOT_FOUND');
   });
 
+  it('v3: ccss.getEmployment maps data.citizenId to the path (unreachable here → 502, but the URL is built)', async () => {
+    const { buildUrl } = await import('../src/router.js');
+    const { resolve } = await import('../src/registry.js');
+    const r = resolve('ccss', 'getEmployment');
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.resolved.method).toBe('GET');
+    expect(buildUrl(fakeUrl, r.resolved.path, r.resolved.method, { citizenId: MARIA.id }, r.resolved.query)).toBe(
+      `${fakeUrl}/ccss/employment/${MARIA.id}`,
+    );
+  });
+
+  it('v3: supen.withdrawFcl forwards the body with the SUPEN key', async () => {
+    const data = { citizenId: MARIA.id, fullName: MARIA.fullName, employerNumber: 'E-30001', terminationDate: '2026-08-31', iban: 'CR05015202001026284066' };
+    const r = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'supen', action: 'withdrawFcl', data, purpose: 'Retirar el FCL' });
+    expect(r.status).toBe(200);
+    expect((r.body as BusSuccess).data).toMatchObject({ requestNumber: 'FCL-2026-000001', balanceCrc: 1250000 });
+    expect(seenHeaders['x-api-key']).toBe(SUPEN_KEY);
+    expect(seenBody).toEqual(data);
+    const a = await authed(bus().get('/bus/audit'));
+    expect(a.body[0].service).toBe('supen');
+    expect(a.body[0].fieldsReturned.sort()).toEqual(['balanceCrc', 'operator', 'paymentDate', 'requestNumber']);
+    expect(JSON.stringify(a.body[0])).not.toContain('1250000');
+  });
+
   it('accepts the new agencies in the request schema (502 when unreachable)', async () => {
-    for (const [service, action] of [['salud', 'issueSanitaryPermit'], ['cfia', 'reviewPlans']] as const) {
+    for (const [service, action] of [['salud', 'issueSanitaryPermit'], ['cfia', 'reviewPlans'], ['mtss', 'registerJobSeeker'], ['cosevi', 'checkFines'], ['ccss', 'getEmployment']] as const) {
       const r = await authed(bus().post('/bus/request')).send({ ...baseReq, service, action, data: {} });
       expect(r.status).toBe(502);
       expect(r.body.error.code).toBe('AGENCY_UNAVAILABLE');
@@ -267,7 +309,7 @@ describe('GET /bus/registry', () => {
     const r = await authed(bus().get('/bus/registry'));
     expect(r.status).toBe(200);
     const entries = r.body as RegistryEntry[];
-    expect(entries.map((e) => e.service)).toEqual(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia']);
+    expect(entries.map((e) => e.service)).toEqual(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia', 'supen', 'mtss', 'cosevi']);
     const by = Object.fromEntries(entries.map((e) => [e.service, e]));
     expect(by.registro.healthy).toBe(true);
     expect(by.tributacion.healthy).toBe(true);
@@ -276,21 +318,29 @@ describe('GET /bus/registry', () => {
     expect(by.municipalidad.healthy).toBe(false);
     expect(by.salud.healthy).toBe(false);
     expect(by.cfia.healthy).toBe(false);
+    expect(by.supen.healthy).toBe(true);
+    expect(by.mtss.healthy).toBe(false);
+    expect(by.cosevi.healthy).toBe(false);
     expect(by.registro.baseUrl).toBe(fakeUrl);
     expect(by.registro.actions.getCitizen).toEqual({ method: 'GET', path: '/registro/citizen/:id' });
     expect(typeof by.registro.lastChecked).toBe('string');
   });
 
-  it('lists every v2 action per agency (docs/CONTRACTS.md → "Bus registry additions")', async () => {
+  it('lists every v2/v3 action per agency (docs/CONTRACTS.md → "Bus registry additions")', async () => {
     const r = await authed(bus().get('/bus/registry'));
     const by = Object.fromEntries((r.body as RegistryEntry[]).map((e) => [e.service, e]));
     expect(Object.keys(by.registro.actions).sort()).toEqual(['getCitizen', 'registerBirth', 'updateAddress']);
     expect(Object.keys(by.tributacion.actions).sort()).toEqual(['createTaxId', 'updateAddress']);
-    expect(Object.keys(by.ccss.actions).sort()).toEqual(['insureDependent', 'registerEmployer', 'updateAddress']);
+    expect(Object.keys(by.ccss.actions).sort()).toEqual(['applyPension', 'enrollVoluntary', 'getEmployment', 'insureDependent', 'registerEmployer', 'updateAddress']);
     expect(Object.keys(by.municipalidad.actions).sort()).toEqual(['issueBuildingPermit', 'issueLandUse', 'issueLicense', 'updateAddress']);
     expect(Object.keys(by['registro-nacional'].actions).sort()).toEqual(['getProperty', 'listProperties', 'registerCompany']);
-    expect(Object.keys(by.salud.actions).sort()).toEqual(['issueSanitaryPermit', 'openVaccinationRecord']);
+    expect(Object.keys(by.salud.actions).sort()).toEqual(['issueSanitaryPermit', 'medicalCertificate', 'openVaccinationRecord']);
     expect(Object.keys(by.cfia.actions).sort()).toEqual(['reviewPlans']);
+    expect(Object.keys(by.supen.actions).sort()).toEqual(['ropStatement', 'withdrawFcl']);
+    expect(Object.keys(by.mtss.actions).sort()).toEqual(['registerJobSeeker']);
+    expect(Object.keys(by.cosevi.actions).sort()).toEqual(['checkFines', 'renewLicence']);
+    expect(by.ccss.actions.getEmployment).toEqual({ method: 'GET', path: '/ccss/employment/:citizenId' });
+    expect(by.supen.baseUrl).toBe(fakeUrl);
     expect(by['registro-nacional'].actions.listProperties).toEqual({ method: 'GET', path: '/registro-nacional/properties', query: ['ownerId'] });
     expect(by['registro-nacional'].actions.getProperty).toEqual({ method: 'GET', path: '/registro-nacional/property/:folio' });
     for (const e of r.body as RegistryEntry[]) {
@@ -314,8 +364,11 @@ describe('POST /__demo/reset', () => {
       'registro-nacional': true,
       salud: false,
       cfia: false,
+      supen: true,
+      mtss: false,
+      cosevi: false,
     });
-    expect(resetCalls).toBe(3);
+    expect(resetCalls).toBe(4);
     const a = await authed(bus().get('/bus/audit'));
     expect(a.body).toEqual([]);
   });
