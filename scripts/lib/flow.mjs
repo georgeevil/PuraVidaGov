@@ -36,6 +36,12 @@ export async function runMariaJourney(apiBase, { log = console.log, pollMs = 300
   const auth = { authorization: `Bearer ${otp.token}`, 'content-type': 'application/json' };
   log(`✓ identidad: ${otp.citizen.fullName} (${otp.citizen.id}) vía ${otp.provenance.source} ${otp.provenance.exchangeId}`);
 
+  // 2b. registry: every agency must be healthy through the bus
+  const registry = await json(await fetch(`${apiBase}/api/registry`, { headers: auth }));
+  const down = registry.filter((r) => !r.healthy).map((r) => r.service);
+  assert(registry.length === 4 && down.length === 0, `registry healthy (down: ${down.join(',') || 'none'})`);
+  log(`✓ registro de servicios: ${registry.map((r) => r.service).join(', ')} — todos disponibles`);
+
   // 3. services catalogue
   const services = await json(await fetch(`${apiBase}/api/services`, { headers: auth }));
   const start = services.find((s) => s.id === 'start-business');
