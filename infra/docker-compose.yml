@@ -39,6 +39,27 @@ services:
     healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4004/health"], interval: 5s, timeout: 3s, retries: 10 }
     ports: ["127.0.0.1:4004:4004"]
 
+  registro-nacional:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/registro-nacional } }
+    environment: { REGISTRO_NACIONAL_PORT: 4005 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4005/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4005:4005"]
+
+  salud:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/salud } }
+    environment: { SALUD_PORT: 4006 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4006/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4006:4006"]
+
+  cfia:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/cfia } }
+    environment: { CFIA_PORT: 4007 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4007/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4007:4007"]
+
   bus:
     <<: *service
     build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/bus } }
@@ -48,12 +69,18 @@ services:
       TRIBUTACION_URL: http://tributacion:4002
       CCSS_URL: http://ccss:4003
       MUNICIPALIDAD_URL: http://municipalidad:4004
+      REGISTRO_NACIONAL_URL: http://registro-nacional:4005
+      SALUD_URL: http://salud:4006
+      CFIA_URL: http://cfia:4007
     healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"], interval: 5s, timeout: 3s, retries: 10 }
     depends_on:
       registro: { condition: service_healthy }
       tributacion: { condition: service_healthy }
       ccss: { condition: service_healthy }
       municipalidad: { condition: service_healthy }
+      registro-nacional: { condition: service_healthy }
+      salud: { condition: service_healthy }
+      cfia: { condition: service_healthy }
     ports: ["127.0.0.1:4000:4000"]
 
   api:

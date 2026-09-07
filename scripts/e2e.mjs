@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { runMariaJourney, waitForHealth } from './lib/flow.mjs';
 
 const base = Number(process.env.E2E_BASE_PORT ?? 45000);
-const ports = { registro: base + 1, tributacion: base + 2, ccss: base + 3, municipalidad: base + 4, bus: base + 5, api: base + 6 };
+const ports = { registro: base + 1, tributacion: base + 2, ccss: base + 3, municipalidad: base + 4, bus: base + 5, api: base + 6, registroNacional: base + 7, salud: base + 8, cfia: base + 9 };
 const env = {
   ...process.env,
   LOG_SILENT: process.env.E2E_VERBOSE ? '' : '1',
@@ -14,12 +14,18 @@ const env = {
   TRIBUTACION_PORT: String(ports.tributacion),
   CCSS_PORT: String(ports.ccss),
   MUNICIPALIDAD_PORT: String(ports.municipalidad),
+  REGISTRO_NACIONAL_PORT: String(ports.registroNacional),
+  SALUD_PORT: String(ports.salud),
+  CFIA_PORT: String(ports.cfia),
   BUS_PORT: String(ports.bus),
   API_PORT: String(ports.api),
   REGISTRO_URL: `http://127.0.0.1:${ports.registro}`,
   TRIBUTACION_URL: `http://127.0.0.1:${ports.tributacion}`,
   CCSS_URL: `http://127.0.0.1:${ports.ccss}`,
   MUNICIPALIDAD_URL: `http://127.0.0.1:${ports.municipalidad}`,
+  REGISTRO_NACIONAL_URL: `http://127.0.0.1:${ports.registroNacional}`,
+  SALUD_URL: `http://127.0.0.1:${ports.salud}`,
+  CFIA_URL: `http://127.0.0.1:${ports.cfia}`,
   BUS_URL: `http://127.0.0.1:${ports.bus}`,
 };
 
@@ -28,6 +34,9 @@ const entries = [
   'services/tributacion',
   'services/ccss',
   'services/municipalidad',
+  'services/registro-nacional',
+  'services/salud',
+  'services/cfia',
   'services/bus',
   'apps/api',
 ];
