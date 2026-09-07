@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import type { Citizen } from '@pvg/shared';
+import type { Citizen } from '@pvg/shared/data';
 import { api, TOKEN_KEY, type Provenance } from './api';
 
 const SESSION_KEY = 'pvg.session';

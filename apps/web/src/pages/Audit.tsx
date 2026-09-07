@@ -1,17 +1,29 @@
 import { useEffect, useState } from 'react';
-import type { AuditEntry } from '@pvg/shared';
+import type { AuditEntry } from '@pvg/shared/data';
 import { api, errorMessage } from '../api';
 import { Alert } from '../components/Alert';
 import { Spinner } from '../components/Spinner';
 import { Tip } from '../components/Tip';
 import { formatDateTime, formatMs } from '../format';
-import { AGENCY_SHORT, agencyLabel } from '../labels';
+import { AGENCY_SHORT } from '@pvg/shared/data';
+import { agencyLabel } from '../labels';
 
 const ACTION_ES: Record<string, string> = {
   getCitizen: 'Consulta de identidad',
   createTaxId: 'Inscripción tributaria',
   registerEmployer: 'Registro patronal',
   issueLicense: 'Emisión de patente',
+  registerBirth: 'Inscripción de nacimiento',
+  updateAddress: 'Actualización de domicilio',
+  insureDependent: 'Aseguramiento de dependiente',
+  issueLandUse: 'Certificado de uso de suelo',
+  issueBuildingPermit: 'Permiso de construcción',
+  listProperties: 'Consulta de propiedades',
+  getProperty: 'Consulta de propiedad',
+  registerCompany: 'Constitución de sociedad',
+  issueSanitaryPermit: 'Permiso sanitario de funcionamiento',
+  openVaccinationRecord: 'Apertura de carné de vacunación',
+  reviewPlans: 'Revisión de planos (APC)',
 };
 
 const REQUESTER_ES: Record<string, string> = {
@@ -82,7 +94,7 @@ export function Audit() {
                   </td>
                   <td className="px-3 py-2 text-slate-700">{REQUESTER_ES[e.requester] ?? e.requester}</td>
                   <td className="px-3 py-2 text-slate-900" title={agencyLabel(e.service)}>
-                    {AGENCY_SHORT[e.service] ?? e.service}
+                    {(AGENCY_SHORT as Record<string, string>)[e.service] ?? e.service}
                   </td>
                   <td className="px-3 py-2 text-slate-700" title={e.action}>
                     {ACTION_ES[e.action] ?? e.action}

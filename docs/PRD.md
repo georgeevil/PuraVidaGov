@@ -111,3 +111,9 @@ Scope creep (4 agencies, 1 life event) · demo data only · Docker for reproduci
 simple gateway rather than full X-Road.
 
 ## 16. Open questions → resolved in `docs/DECISIONS.md`
+
+## 17. Version 2 additions (September 2026)
+Four life events (start a business with sanitary permit and company formation, newborn, construction, change of
+address), three more agencies (Registro Nacional, Ministerio de Salud, CFIA/APC), a legal status on every workflow and
+step with sources (`docs/LEGAL.md`), and the case for government support (`docs/CASE.md`, `/por-que`). Note: the
+"Pase Digital" reference in §17 Appendix could not be verified; the actual Costa Rican digital identity is the TSE's IDC.

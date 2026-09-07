@@ -9,6 +9,7 @@ import type { Express } from 'express';
 const BUS_KEY = 'test-bus-key';
 const REGISTRO_KEY = 'test-registro-key';
 const TRIB_KEY = 'test-trib-key';
+const RN_KEY = 'test-rn-key';
 
 let fake: Server;
 let fakeUrl: string;
@@ -16,6 +17,7 @@ let app: Express;
 let resetCalls = 0;
 let seenHeaders: Record<string, string | undefined> = {};
 let seenBody: unknown;
+let seenUrl = '';
 
 const MARIA = { id: '1-2345-6789', fullName: 'María Fernández Gómez', canton: 'Montes de Oca' };
 
@@ -33,6 +35,19 @@ function startFakeAgency(): Promise<void> {
       return res.status(404).json({ error: { code: 'CITIZEN_NOT_FOUND', message: 'No existe' } });
     }
     res.json(MARIA);
+  });
+  a.get('/registro-nacional/properties', (req, res) => {
+    seenHeaders = { 'x-api-key': req.header('x-api-key') };
+    seenUrl = req.originalUrl;
+    const ownerId = String(req.query.ownerId ?? '');
+    res.json(ownerId === MARIA.id ? [{ folio: '1-123456-000', ownerId }] : []);
+  });
+  a.get('/registro-nacional/property/:folio', (req, res) => {
+    seenUrl = req.originalUrl;
+    if (req.params.folio !== '1-123456-000') {
+      return res.status(404).json({ error: { code: 'PROPERTY_NOT_FOUND', message: 'No existe' } });
+    }
+    res.json({ folio: req.params.folio, ownerId: MARIA.id });
   });
   a.post('/tributacion/createTaxId', (req, res) => {
     seenHeaders = { 'x-api-key': req.header('x-api-key'), 'content-type': req.header('content-type') };
@@ -71,8 +86,12 @@ beforeAll(async () => {
   process.env.TRIBUTACION_URL = fakeUrl;
   process.env.TRIBUTACION_API_KEY = TRIB_KEY;
   // Unreachable agencies (closed port) to exercise 502 and healthy:false.
+  process.env.REGISTRO_NACIONAL_URL = fakeUrl;
+  process.env.REGISTRO_NACIONAL_API_KEY = RN_KEY;
   process.env.CCSS_URL = 'http://127.0.0.1:1';
   process.env.MUNICIPALIDAD_URL = 'http://127.0.0.1:1';
+  process.env.SALUD_URL = 'http://127.0.0.1:1';
+  process.env.CFIA_URL = 'http://127.0.0.1:1';
   const mod = await import('../src/app.js');
   app = mod.createApp();
 });
@@ -159,6 +178,48 @@ describe('POST /bus/request', () => {
     expect(r.body.error.code).toBe('ACTIVITY_UNKNOWN');
   });
 
+  it('listProperties maps data.ownerId to the query string and sends the registro-nacional key', async () => {
+    const r = await authed(bus().post('/bus/request')).send({
+      ...baseReq,
+      service: 'registro-nacional',
+      action: 'listProperties',
+      data: { ownerId: MARIA.id, ignored: 'x' },
+    });
+    expect(r.status).toBe(200);
+    expect(r.body.ok).toBe(true);
+    expect(r.body.data).toEqual([{ folio: '1-123456-000', ownerId: MARIA.id }]);
+    expect(seenUrl).toBe(`/registro-nacional/properties?ownerId=${encodeURIComponent(MARIA.id)}`);
+    expect(seenHeaders['x-api-key']).toBe(RN_KEY);
+    const a = await authed(bus().get('/bus/audit'));
+    expect(a.body[0].fieldsReturned).toEqual([]); // arrays carry no top-level field names
+    expect(JSON.stringify(a.body[0])).not.toContain('1-123456-000');
+  });
+
+  it('listProperties without ownerId sends no query string', async () => {
+    const r = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'registro-nacional', action: 'listProperties', data: {} });
+    expect(r.status).toBe(200);
+    expect(r.body.data).toEqual([]);
+    expect(seenUrl).toBe('/registro-nacional/properties');
+  });
+
+  it('getProperty substitutes :folio and maps 404 PROPERTY_NOT_FOUND', async () => {
+    const ok = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'registro-nacional', action: 'getProperty', data: { folio: '1-123456-000' } });
+    expect(ok.status).toBe(200);
+    expect(ok.body.data.folio).toBe('1-123456-000');
+    expect(seenUrl).toBe('/registro-nacional/property/1-123456-000');
+    const nf = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'registro-nacional', action: 'getProperty', data: { folio: '9-999999-000' } });
+    expect(nf.status).toBe(404);
+    expect(nf.body.error.code).toBe('PROPERTY_NOT_FOUND');
+  });
+
+  it('accepts the new agencies in the request schema (502 when unreachable)', async () => {
+    for (const [service, action] of [['salud', 'issueSanitaryPermit'], ['cfia', 'reviewPlans']] as const) {
+      const r = await authed(bus().post('/bus/request')).send({ ...baseReq, service, action, data: {} });
+      expect(r.status).toBe(502);
+      expect(r.body.error.code).toBe('AGENCY_UNAVAILABLE');
+    }
+  });
+
   it('404 UNKNOWN_ACTION for an action not registered', async () => {
     const r = await authed(bus().post('/bus/request')).send({ ...baseReq, action: 'deleteCitizen' });
     expect(r.status).toBe(404);
@@ -206,15 +267,35 @@ describe('GET /bus/registry', () => {
     const r = await authed(bus().get('/bus/registry'));
     expect(r.status).toBe(200);
     const entries = r.body as RegistryEntry[];
-    expect(entries.map((e) => e.service)).toEqual(['registro', 'tributacion', 'ccss', 'municipalidad']);
+    expect(entries.map((e) => e.service)).toEqual(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia']);
     const by = Object.fromEntries(entries.map((e) => [e.service, e]));
     expect(by.registro.healthy).toBe(true);
     expect(by.tributacion.healthy).toBe(true);
+    expect(by['registro-nacional'].healthy).toBe(true);
     expect(by.ccss.healthy).toBe(false);
     expect(by.municipalidad.healthy).toBe(false);
+    expect(by.salud.healthy).toBe(false);
+    expect(by.cfia.healthy).toBe(false);
     expect(by.registro.baseUrl).toBe(fakeUrl);
     expect(by.registro.actions.getCitizen).toEqual({ method: 'GET', path: '/registro/citizen/:id' });
     expect(typeof by.registro.lastChecked).toBe('string');
+  });
+
+  it('lists every v2 action per agency (docs/CONTRACTS.md → "Bus registry additions")', async () => {
+    const r = await authed(bus().get('/bus/registry'));
+    const by = Object.fromEntries((r.body as RegistryEntry[]).map((e) => [e.service, e]));
+    expect(Object.keys(by.registro.actions).sort()).toEqual(['getCitizen', 'registerBirth', 'updateAddress']);
+    expect(Object.keys(by.tributacion.actions).sort()).toEqual(['createTaxId', 'updateAddress']);
+    expect(Object.keys(by.ccss.actions).sort()).toEqual(['insureDependent', 'registerEmployer', 'updateAddress']);
+    expect(Object.keys(by.municipalidad.actions).sort()).toEqual(['issueBuildingPermit', 'issueLandUse', 'issueLicense', 'updateAddress']);
+    expect(Object.keys(by['registro-nacional'].actions).sort()).toEqual(['getProperty', 'listProperties', 'registerCompany']);
+    expect(Object.keys(by.salud.actions).sort()).toEqual(['issueSanitaryPermit', 'openVaccinationRecord']);
+    expect(Object.keys(by.cfia.actions).sort()).toEqual(['reviewPlans']);
+    expect(by['registro-nacional'].actions.listProperties).toEqual({ method: 'GET', path: '/registro-nacional/properties', query: ['ownerId'] });
+    expect(by['registro-nacional'].actions.getProperty).toEqual({ method: 'GET', path: '/registro-nacional/property/:folio' });
+    for (const e of r.body as RegistryEntry[]) {
+      for (const a of Object.values(e.actions)) expect(a.path.startsWith(`/${e.service}/`)).toBe(true);
+    }
   });
 });
 
@@ -225,8 +306,16 @@ describe('POST /__demo/reset', () => {
     const r = await bus().post('/__demo/reset');
     expect(r.status).toBe(200);
     expect(r.body.ok).toBe(true);
-    expect(r.body.agencies).toEqual({ registro: true, tributacion: true, ccss: false, municipalidad: false });
-    expect(resetCalls).toBe(2);
+    expect(r.body.agencies).toEqual({
+      registro: true,
+      tributacion: true,
+      ccss: false,
+      municipalidad: false,
+      'registro-nacional': true,
+      salud: false,
+      cfia: false,
+    });
+    expect(resetCalls).toBe(3);
     const a = await authed(bus().get('/bus/audit'));
     expect(a.body).toEqual([]);
   });

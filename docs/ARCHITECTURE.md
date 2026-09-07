@@ -63,4 +63,4 @@
 | In-memory audit | Signed, append-only, replicated log with citizen self-service access |
 | In-process workflow | Durable workflow engine (e.g. Temporal) with retries and compensation |
 | Mock agencies | Adapters in front of TSE, ATV/Hacienda, SICERE (CCSS), municipal systems |
-| Shown OTP | Firma digital certificate / Pase Digital |
+| Shown OTP | Firma digital certificate / IDC (TSE digital identity) |
