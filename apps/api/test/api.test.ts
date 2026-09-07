@@ -236,10 +236,13 @@ describe('auth guard', () => {
     expect(r.body.error.code).toBe('TOKEN_EXPIRED');
   });
 
-  it('options require auth; workflows and legal do not', async () => {
+  it('options require auth; workflows, legal, registry, benefits and activities do not', async () => {
     await request(app).get('/api/options/cantons').expect(401);
     await request(app).get('/api/workflows').expect(200);
     await request(app).get('/api/legal').expect(200);
+    await request(app).get('/api/registry').expect(200);
+    await request(app).get('/api/benefits').expect(200);
+    await request(app).get('/api/activities').expect(200);
   });
 });
 
@@ -265,7 +268,7 @@ describe('workflow catalogue', () => {
   it('GET /api/workflows lists 6 definitions with legal notes and no functions', async () => {
     const r = await request(app).get('/api/workflows').expect(200);
     const defs = r.body as WorkflowDefinition[];
-    expect(defs.map((d) => d.id)).toEqual(['start-business', 'newborn', 'construction', 'move', 'driver-license', 'pension']);
+    expect(defs.map((d) => d.id)).toEqual(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license']);
     for (const d of defs) {
       expect(['hoy', 'parcial', 'ley']).toContain(d.legal.status);
       expect(d.legal.today.length).toBeGreaterThan(20);
@@ -281,11 +284,13 @@ describe('workflow catalogue', () => {
         expect((s as unknown as { data?: unknown }).data).toBeUndefined();
       }
     }
-    expect(defs.filter((d) => d.available).map((d) => d.id)).toEqual(['start-business', 'newborn', 'construction', 'move']);
+    expect(defs.every((d) => d.available)).toBe(true);
     const dl = defs.find((d) => d.id === 'driver-license')!;
-    expect(dl).toMatchObject({ available: false, fields: [], steps: [], legal: { status: 'parcial', basis: ['cr-9078', 'cr-8454'], model: ['sg-myinfo'] } });
-    const pension = defs.find((d) => d.id === 'pension')!;
-    expect(pension).toMatchObject({ available: false, fields: [], steps: [], legal: { status: 'parcial', basis: ['cr-7983', 'cr-17'], model: ['ee-pia', 'sg-myinfo'] } });
+    expect(dl).toMatchObject({ available: true, legal: { status: 'parcial', basis: ['cr-9078', 'cr-8454', 'cr-idc'] } });
+    expect(dl.steps.map((s) => s.agency)).toEqual(['salud', 'cosevi', 'cosevi']);
+    const retirement = defs.find((d) => d.id === 'retirement')!;
+    expect(retirement).toMatchObject({ available: true, legal: { status: 'parcial', basis: ['cr-17', 'cr-7983', 'cr-8220'] } });
+    expect(defs.find((d) => d.id === 'job-loss')!.legal.status).toBe('ley');
   });
 
   it('GET /api/workflows/:id', async () => {
@@ -352,8 +357,15 @@ describe('starting a workflow', () => {
 
   it('unavailable workflow → 409 WORKFLOW_UNAVAILABLE', async () => {
     const token = await login();
-    const r = await start(token, 'pension', {}).expect(409);
-    expect(r.body.error.code).toBe('WORKFLOW_UNAVAILABLE');
+    const { WORKFLOWS } = await import('../src/workflows/index.js');
+    const catalogueOnly = { ...WORKFLOWS[0], id: 'catalogue-only', available: false };
+    WORKFLOWS.push(catalogueOnly);
+    try {
+      const r = await start(token, 'catalogue-only', {}).expect(409);
+      expect(r.body.error.code).toBe('WORKFLOW_UNAVAILABLE');
+    } finally {
+      WORKFLOWS.splice(WORKFLOWS.indexOf(catalogueOnly), 1);
+    }
   });
 
   it('unknown workflow → 404 WORKFLOW_NOT_FOUND', async () => {
@@ -511,7 +523,7 @@ describe('legal', () => {
     const r = await request(app).get('/api/legal').expect(200);
     expect(r.body.refs.find((x: { id: string }) => x.id === 'cr-8220')).toMatchObject({ jurisdiction: 'CR', short: 'Ley 8220 arts. 2 y 8' });
     expect(r.body.refs.some((x: { jurisdiction: string }) => x.jurisdiction === 'EE')).toBe(true);
-    expect(r.body.workflows.map((w: { id: string }) => w.id)).toEqual(['start-business', 'newborn', 'construction', 'move', 'driver-license', 'pension']);
+    expect(r.body.workflows.map((w: { id: string }) => w.id)).toEqual(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license']);
     const sb = r.body.workflows.find((w: { id: string }) => w.id === 'start-business');
     expect(sb).toMatchObject({ title: 'Iniciar un negocio', legal: { status: 'parcial' } });
     expect(sb.steps[0]).toMatchObject({ id: 'identidad', agency: 'registro', legal: { status: 'hoy' } });
@@ -519,7 +531,7 @@ describe('legal', () => {
     for (const w of r.body.workflows) {
       for (const s of w.steps) expect(Object.keys(s).sort()).toEqual(['agency', 'id', 'label', 'legal']);
     }
-    expect(r.body.workflows.find((w: { id: string }) => w.id === 'pension').steps).toEqual([]);
+    expect(r.body.workflows.find((w: { id: string }) => w.id === 'retirement').steps.map((s: { id: string }) => s.id)).toEqual(['identidad', 'cuotas', 'pension', 'rop']);
   });
 });
 

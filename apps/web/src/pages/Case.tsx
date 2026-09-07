@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { WorkflowDefinition } from '@pvg/shared/data';
+import { api } from '../api';
+import { useAuth } from '../auth';
 import { LegalBadge } from '../components/LegalBadge';
 import { Tip } from '../components/Tip';
 import { CASE, type CaseContent } from '../content/case';
@@ -107,8 +110,78 @@ function Calculator({ calc, rule }: { calc: CaseContent['calculator']; rule: Cas
   );
 }
 
+/**
+ * The life events as a compact strip of links. Signed in → the trámite itself; anonymous → /login (the page is
+ * public, the trámites are not). Fetched from the public /api/workflows; silently omitted if it fails.
+ */
+function LifeEventsStrip({ workflows, isAuthenticated }: { workflows: WorkflowDefinition[]; isAuthenticated: boolean }) {
+  if (!workflows.length) return null;
+  return (
+    <nav aria-label="Eventos de vida" className="card !p-4">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        Eventos de vida en el demo
+        <Tip en="Life events in the demo — sign in to try one" />
+      </p>
+      <ul className="flex flex-wrap gap-2">
+        {workflows.map((w) => (
+          <li key={w.id}>
+            <Link
+              to={isAuthenticated ? `/tramite/${encodeURIComponent(w.id)}` : '/login'}
+              title={isAuthenticated ? w.titleEn : `${w.titleEn} — sign in to try it`}
+              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                w.available
+                  ? 'border-slate-200 bg-white text-slate-800 hover:border-primary-300 hover:bg-primary-50'
+                  : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              {w.title}
+              {w.legal && <LegalBadge status={w.legal.status} size="xs" />}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function DemoCta() {
+  return (
+    <section aria-labelledby="pruebe-demo" className="card border-primary-200 bg-gradient-to-br from-primary-50 to-white">
+      <h2 id="pruebe-demo" className="text-lg font-semibold text-slate-900">
+        Pruebe el demo como María
+        <Tip en="Try the demo as María — the fictional citizen of this proof of concept" />
+      </h2>
+      <p className="mt-2 max-w-3xl text-sm text-slate-700">
+        Inicie sesión con la cédula <code className="font-mono">1-2345-6789</code>, contraseña{' '}
+        <code className="font-mono">demo</code>, y abra un negocio, inscriba un nacimiento o pida un permiso de construcción
+        en segundos.
+      </p>
+      <div className="mt-4">
+        <Link to="/login" className="btn-primary" title="Try the demo">
+          Probar el demo
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export function Case() {
   const c = (CASE ?? {}) as Partial<CaseContent>;
+  const { isAuthenticated } = useAuth();
+  const [workflows, setWorkflows] = useState<WorkflowDefinition[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .workflows()
+      .then((w) => !cancelled && setWorkflows(w))
+      .catch(() => {
+        /* the strip is decorative on this page; the argument reads fine without it */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-10">
@@ -122,6 +195,8 @@ export function Case() {
           {c.hero.disclaimer && <p className="mt-4 text-xs italic text-slate-500">{c.hero.disclaimer}</p>}
         </header>
       )}
+
+      <LifeEventsStrip workflows={workflows} isAuthenticated={isAuthenticated} />
 
       {c.problem && (
         <Section id="problema" title={c.problem.title} en="The problem">
@@ -273,9 +348,11 @@ export function Case() {
         </Section>
       )}
 
+      <DemoCta />
+
       <p className="text-xs text-slate-500">
         Vea cómo se traduce esto en un trámite real:{' '}
-        <Link to="/" className="text-primary-700 hover:underline">
+        <Link to={isAuthenticated ? '/' : '/login'} className="text-primary-700 hover:underline">
           eventos de vida
         </Link>{' '}
         ·{' '}

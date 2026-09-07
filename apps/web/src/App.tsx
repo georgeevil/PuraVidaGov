@@ -29,9 +29,10 @@ export function App() {
         <Route path="/tramite/:id/:txnId" element={guarded(<Transaction />)} />
         <Route path="/mis-tramites" element={guarded(<MyTransactions />)} />
         <Route path="/auditoria" element={guarded(<Audit />)} />
-        <Route path="/arquitectura" element={guarded(<Architecture />)} />
-        <Route path="/marco-legal" element={guarded(<LegalFramework />)} />
-        <Route path="/por-que" element={guarded(<Case />)} />
+        {/* Public pages (v3): readable without a session. */}
+        <Route path="/arquitectura" element={<Architecture />} />
+        <Route path="/marco-legal" element={<LegalFramework />} />
+        <Route path="/por-que" element={<Case />} />
         {/* Legacy v1 routes */}
         <Route path="/negocio/nuevo" element={<Navigate to="/tramite/start-business" replace />} />
         <Route path="/negocio/:txnId" element={<LegacyBusinessRedirect />} />

@@ -15,7 +15,7 @@ export const businessRegistrationSchema = z.object({
 });
 
 export const busRequestSchema = z.object({
-  service: z.enum(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia']),
+  service: z.enum(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia', 'supen', 'mtss', 'cosevi']),
   action: z.string().min(1),
   data: z.unknown(),
   requester: z.string().min(1),
@@ -141,4 +141,63 @@ export const updateAddressSchema = z.object({
   canton: z.string().min(1),
   district: z.string().min(1),
   effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+// ---------------------------------------------------------------- v3 agency actions
+
+export const applyPensionSchema = z.object({
+  citizenId: cedulaSchema,
+  fullName: z.string().min(1),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  modality: z.enum(['vejez', 'anticipada']),
+  iban: z.string().regex(/^CR\d{20}$/, 'IBAN costarricense: CR + 20 dígitos'),
+});
+
+export const enrollVoluntarySchema = z.object({
+  citizenId: cedulaSchema,
+  fullName: z.string().min(1),
+  declaredIncomeCrc: z.number().int().min(0),
+});
+
+export const withdrawFclSchema = z.object({
+  citizenId: cedulaSchema,
+  fullName: z.string().min(1),
+  employerNumber: z.string().min(1),
+  terminationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  iban: z.string().regex(/^CR\d{20}$/),
+});
+
+export const ropStatementSchema = z.object({
+  citizenId: cedulaSchema,
+  fullName: z.string().min(1),
+  modality: z.enum(['retiro-programado', 'renta-permanente']),
+  pensionApplication: z.string().min(1),
+});
+
+export const registerJobSeekerSchema = z.object({
+  citizenId: cedulaSchema,
+  fullName: z.string().min(1),
+  canton: z.string().min(1),
+  lastOccupation: z.string().min(2).max(80),
+  desiredArea: z.string().min(2).max(80),
+  terminationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const medicalCertificateSchema = z.object({
+  citizenId: cedulaSchema,
+  fullName: z.string().min(1),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  usesGlasses: z.boolean(),
+});
+
+export const checkFinesSchema = z.object({
+  citizenId: cedulaSchema,
+});
+
+export const renewLicenceSchema = z.object({
+  citizenId: cedulaSchema,
+  fullName: z.string().min(1),
+  categories: z.array(z.enum(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2'])).min(1),
+  medicalCertificate: z.string().min(1),
+  validityYears: z.union([z.literal(2), z.literal(4), z.literal(6)]),
 });

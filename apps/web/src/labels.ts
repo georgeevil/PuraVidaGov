@@ -12,6 +12,9 @@ export const AGENCY_LABELS_EN: Record<AgencyName, string> = {
   'registro-nacional': 'National Registry (property and companies)',
   salud: 'Ministry of Health',
   cfia: 'Engineers and Architects Federation (plan review, APC)',
+  supen: 'Pension fund operator (ROP/FCL, supervised by SUPEN)',
+  mtss: 'Ministry of Labour (National Employment Agency)',
+  cosevi: 'Road Safety Council (COSEVI, MOPT): licences and fines',
 };
 
 export function agencyLabel(agency: string): string {
