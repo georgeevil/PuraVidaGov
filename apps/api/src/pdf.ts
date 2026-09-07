@@ -1,9 +1,9 @@
 import PDFDocument from 'pdfkit';
-import { AGENCY_LABELS, type WorkflowTransaction } from '@pvg/shared';
+import { AGENCY_LABELS, LEGAL_STATUS_LABELS, type Citizen, type FormField, type WorkflowTransaction } from '@pvg/shared';
 
 // Built-in Helvetica (WinAnsi) has no ₡ glyph, so amounts are written as "CRC 85 000".
 const NUM = new Intl.NumberFormat('es-CR', { maximumFractionDigits: 0 });
-const CRC = { format: (n: number) => `CRC ${NUM.format(n)}` };
+const CRC = (n: number) => `CRC ${NUM.format(n)}`;
 const DATE = new Intl.DateTimeFormat('es-CR', { dateStyle: 'long', timeZone: 'America/Costa_Rica' });
 
 function fmtDate(iso: string | undefined): string {
@@ -12,15 +12,27 @@ function fmtDate(iso: string | undefined): string {
   return Number.isNaN(d.getTime()) ? iso : DATE.format(d);
 }
 
-const REGIME: Record<string, string> = { simplified: 'Simplificado', traditional: 'Tradicional' };
-const REGISTRATION: Record<string, string> = { employer: 'Patrono', 'self-employed': 'Trabajador independiente' };
-const BUSINESS_TYPE: Record<string, string> = { natural: 'Persona física', legal: 'Persona jurídica' };
+/** Card values may carry "₡12 345"; Helvetica cannot render the colón sign. */
+function safe(value: unknown): string {
+  if (value === undefined || value === null || value === '') return '—';
+  return String(value).replace(/₡\s?/g, 'CRC ');
+}
+
+/** Renders an input value for the PDF using the field definition when there is one. */
+function inputValue(field: FormField | undefined, value: unknown): string {
+  if (field?.options) {
+    const opt = field.options.find((o) => o.value === String(value));
+    if (opt) return opt.label;
+  }
+  if (typeof value === 'number') return NUM.format(value);
+  return safe(value);
+}
 
 /**
- * Renders the registration summary as a letter-size PDF (Costa Rica uses carta, not A4).
+ * Generic constancia for any workflow, rendered from `result.cards` (letter size — Costa Rica uses carta, not A4).
  * The document is returned un-ended; the caller pipes it and calls `end()`.
  */
-export function renderSummaryPdf(txn: WorkflowTransaction): PDFKit.PDFDocument {
+export function renderSummaryPdf(txn: WorkflowTransaction, fields: FormField[] = []): PDFKit.PDFDocument {
   const doc = new PDFDocument({
     size: 'LETTER',
     margins: { top: 54, bottom: 54, left: 54, right: 54 },
@@ -34,13 +46,16 @@ export function renderSummaryPdf(txn: WorkflowTransaction): PDFKit.PDFDocument {
     doc.moveTo(left, doc.y + 2).lineTo(left + width, doc.y + 2).lineWidth(0.5).strokeColor('#0b3d2e').stroke();
     doc.moveDown(0.4).fillColor('#000');
   };
-  const row = (label: string, value: string | number | undefined) => {
+  const row = (label: string, value: unknown) => {
     doc.font('Helvetica-Bold').fontSize(10).text(`${label}: `, { continued: true });
-    doc.font('Helvetica').text(value === undefined || value === '' ? '—' : String(value));
+    doc.font('Helvetica').text(safe(value));
+  };
+  const note = (text: string) => {
+    doc.font('Helvetica').fontSize(9).fillColor('#444').text(text).fillColor('#000');
   };
 
   // Title
-  doc.font('Helvetica-Bold').fontSize(18).fillColor('#0b3d2e').text('PuraVidaGov — Constancia de inscripción de negocio');
+  doc.font('Helvetica-Bold').fontSize(18).fillColor('#0b3d2e').text(`PuraVidaGov — Constancia: ${txn.workflowTitle}`);
   doc.font('Helvetica').fontSize(9).fillColor('#444').text(`Transacción ${txn.txnId} · emitida el ${fmtDate(txn.completedAt ?? txn.createdAt)}`);
   doc.moveDown(0.6);
 
@@ -55,11 +70,16 @@ export function renderSummaryPdf(txn: WorkflowTransaction): PDFKit.PDFDocument {
   doc.x = left;
   doc.fillColor('#000');
 
-  const r = txn.result;
-  const c = r?.citizen;
-  const req = txn.request;
+  const result = txn.result;
+  if (result) {
+    doc.moveDown(0.8).font('Helvetica-Bold').fontSize(14).fillColor('#000').text(safe(result.headline));
+    note(result.summary);
+  }
 
-  heading('Datos de la persona');
+  // Citizen block: from the identity step's result (fetched from the Registro Civil, never typed by the person).
+  const identity = txn.steps.find((s) => s.id === 'identidad');
+  const c = identity?.result as Citizen | undefined;
+  heading('Datos de la persona (Registro Civil)');
   row('Nombre completo', c?.fullName);
   row('Cédula', c?.id ?? txn.citizenId);
   row('Fecha de nacimiento', fmtDate(c?.dateOfBirth));
@@ -67,55 +87,54 @@ export function renderSummaryPdf(txn: WorkflowTransaction): PDFKit.PDFDocument {
   row('Dirección', c?.address);
   row('Provincia / cantón / distrito', c ? `${c.province} / ${c.canton} / ${c.district}` : undefined);
 
-  heading('Datos del negocio');
-  row('Nombre comercial', req.businessName);
-  row('Tipo', BUSINESS_TYPE[req.businessType] ?? req.businessType);
-  row('Actividad', r ? `${r.tax.activityCode} — ${r.tax.activityDescription}` : req.activityCode);
-  row('Dirección del negocio', req.address);
-  row('Cantón de la patente', r?.municipality.municipality ?? req.municipality);
-  row('Empleados estimados', req.estimatedEmployees);
+  // Input block: what the person actually typed.
+  const inputEntries = Object.entries(txn.input).filter(([, v]) => v !== undefined && v !== null && v !== '');
+  if (inputEntries.length) {
+    heading('Datos aportados por la persona');
+    for (const [name, value] of inputEntries) {
+      const field = fields.find((f) => f.name === name);
+      row(field?.label ?? name, inputValue(field, value));
+    }
+  }
 
-  const stepOf = (agency: string) => txn.steps.find((s) => s.agency === agency);
+  // Result cards
+  for (const card of result?.cards ?? []) {
+    heading(`${card.title} — ${AGENCY_LABELS[card.agency]}`);
+    for (const r of card.rows) row(r.label, r.value);
+    if (card.exchangeId) row('Referencia de intercambio', card.exchangeId);
+  }
 
-  heading(AGENCY_LABELS.registro);
-  row('Identidad validada', c ? 'Sí' : 'No');
-  row('Referencia de intercambio', stepOf('registro')?.exchangeId);
-
-  heading(AGENCY_LABELS.tributacion);
-  row('NITE', r?.tax.nite);
-  row('Régimen', r ? REGIME[r.tax.taxRegime] ?? r.tax.taxRegime : undefined);
-  row('Estado', r?.tax.status === 'active' ? 'Activo' : r?.tax.status);
-  row('Fecha de inscripción', fmtDate(r?.tax.registrationDate));
-  row('Referencia de intercambio', stepOf('tributacion')?.exchangeId);
-
-  heading(AGENCY_LABELS.ccss);
-  row('Número patronal', r?.ccss.employerNumber);
-  row('Tipo de inscripción', r ? REGISTRATION[r.ccss.registrationType] ?? r.ccss.registrationType : undefined);
-  row('Fecha de inscripción', fmtDate(r?.ccss.registrationDate));
-  row('Cuota mensual estimada', r ? CRC.format(r.ccss.monthlyContributionRateCrc) : undefined);
-  row('Referencia de intercambio', stepOf('ccss')?.exchangeId);
-
-  heading(`${AGENCY_LABELS.municipalidad}${r ? ` de ${r.municipality.municipality}` : ''}`);
-  row('Número de patente', r?.municipality.patenteNumber);
-  row('Fecha de emisión', fmtDate(r?.municipality.issueDate));
-  row('Vence el', fmtDate(r?.municipality.expiryDate));
-  row('Tarifa anual', r ? CRC.format(r.municipality.annualFeeCrc) : undefined);
-  row('Referencia de intercambio', stepOf('municipalidad')?.exchangeId);
-
-  heading('Beneficios estimados del trámite en línea');
-  row('Visitas presenciales evitadas', r?.benefits.tripsAvoided);
-  row('Horas ahorradas', r?.benefits.hoursSaved);
-  row('Costo evitado', r ? CRC.format(r.benefits.costSavedCrc) : undefined);
-  doc.moveDown(0.3).font('Helvetica').fontSize(9).fillColor('#444')
-    .text(`Datos reutilizados sin volver a digitarlos (principio «una sola vez»): ${r ? r.onceOnly.length : 0} campos.`)
-    .fillColor('#000');
-
-  heading('Referencias de auditoría');
-  doc.font('Helvetica').fontSize(9).fillColor('#444')
-    .text('Cada intercambio de datos entre instituciones pasó por el bus de interoperabilidad y quedó registrado con el identificador siguiente.')
-    .fillColor('#000').moveDown(0.3);
+  // Per-step legal status
+  heading('¿Se puede hoy? Estado legal de cada paso');
+  note('Para cada intercambio: si ya es posible con la normativa costarricense vigente, si lo es parcialmente o si requiere una ley.');
+  doc.moveDown(0.3);
   for (const s of txn.steps) {
-    doc.font('Helvetica').fontSize(10).text(`• ${s.exchangeId ?? '—'}  —  ${AGENCY_LABELS[s.agency]} · ${s.label} · ${fmtDate(s.finishedAt)}`);
+    const status = LEGAL_STATUS_LABELS[s.legal.status]?.es ?? s.legal.status;
+    const flag = s.legal.status === 'hoy' ? 'Hoy' : s.legal.status === 'parcial' ? 'Parcial' : 'Requiere ley';
+    doc.font('Helvetica-Bold').fontSize(10).text(`${flag} — `, { continued: true });
+    doc.font('Helvetica').text(`${s.label} (${AGENCY_LABELS[s.agency]})${s.skipped ? ' · omitido' : ''} · ${status}`);
+  }
+
+  // Benefits
+  if (result) {
+    heading('Beneficios estimados del trámite en línea');
+    row('Visitas presenciales evitadas', result.benefits.tripsAvoided);
+    row('Horas ahorradas', result.benefits.hoursSaved);
+    row('Costo evitado', CRC(result.benefits.costSavedCrc));
+    if (result.benefits.daysTraditional !== undefined && result.benefits.daysDigital !== undefined) {
+      row('Días calendario', `${result.benefits.daysTraditional} en el proceso tradicional · ${result.benefits.daysDigital} en línea`);
+    }
+    doc.moveDown(0.3);
+    note(`Datos reutilizados sin volver a digitarlos (principio «una sola vez»): ${result.onceOnly.length} campos.`);
+  }
+
+  // Audit references
+  heading('Referencias de auditoría');
+  note('Cada intercambio de datos entre instituciones pasó por el bus de interoperabilidad y quedó registrado con el identificador siguiente.');
+  doc.moveDown(0.3);
+  for (const s of txn.steps) {
+    const ref = s.skipped ? 'omitido' : (s.exchangeId ?? '—');
+    doc.font('Helvetica').fontSize(10).text(`• ${ref}  —  ${AGENCY_LABELS[s.agency]} · ${s.label} · ${fmtDate(s.finishedAt)}`);
   }
 
   doc.moveDown(1.5).font('Helvetica-Oblique').fontSize(8).fillColor('#666')

@@ -12,9 +12,11 @@ the PDF are es-CR; code, identifiers, comments and docs are English.
 - **Topology is the demo.** `apps/web` calls only `/api`. `apps/api` calls only the bus. Agencies call nobody.
   A shortcut that skips the bus also skips the audit log and breaks the once-only story.
 - **The audit log never contains values.** `fieldsReturned` is a list of field names. Do not "improve" it.
-- **Configs are data.** Registry (`services/bus/src/registry.ts`), life events (`apps/api/src/services-catalogue.ts`),
-  activities (`packages/shared/src/activities.ts`), cantons (`services/municipalidad/src/store.ts`). Never hardcode
-  an agency list in a route or a page.
+- **Configs are data.** Registry (`services/bus/src/registry.ts`), life events (`apps/api/src/workflows/*.ts`, one
+  `WorkflowSpec` each), legal catalogue (`packages/shared/src/legal.ts`), activities (`packages/shared/src/activities.ts`),
+  cantons (`services/municipalidad/src/store.ts`). Never hardcode an agency list in a route or a page.
+- **Legal claims are sourced.** Every `LegalNote` and `LegalRef` traces to `docs/research/*.md`. Do not add a status,
+  an article number or a figure without a source there; mark unverified items as such.
 - **Types and schemas live in `packages/shared` only.** Change `types.ts`, `schemas.ts` and `docs/CONTRACTS.md` together.
 - **No real personal data, ever.** Seed citizens are fictional; keep it that way. No persistence, no analytics.
 - **No secrets.** `.env` is git-ignored; `.env.example` documents every variable with demo values.
@@ -23,7 +25,7 @@ the PDF are es-CR; code, identifiers, comments and docs are English.
 
 ## Layout
 ```
-packages/shared · services/{registro-civil,tributacion,ccss,municipalidad,bus} · apps/{api,web}
+packages/shared · services/{registro-civil,tributacion,ccss,municipalidad,registro-nacional,salud,cfia,bus} · apps/{api,web}
 infra/ (Dockerfiles, compose, Caddyfile) · scripts/ (dev, e2e, smoke) · docs/ · .github/workflows/ci.yml
 ```
 

@@ -41,9 +41,9 @@ export const move: WorkflowSpec = {
   legal: {
     status: 'ley',
     today:
-      'Hoy son cuatro trámites separados que la mayoría de la gente no hace: el domicilio electoral en el TSE (en línea), el domicilio fiscal en TRIBU-CR (en línea), la dirección en la CCSS (presencial) y la del contribuyente municipal (presencial). Resultado: cuatro direcciones distintas de la misma persona y notificaciones que nunca llegan.',
+      'Hoy son cuatro trámites separados que la mayoría de la gente no hace: el domicilio electoral en el TSE (en línea solo para quienes viven en el exterior; presencial en el país), el domicilio fiscal en TRIBU-CR (en línea), la dirección del asegurado en la CCSS (autogestión en línea) y la del contribuyente municipal (según el cantón). Resultado: cuatro direcciones distintas de la misma persona y notificaciones que nunca llegan.',
     todayEn:
-      'Today these are four separate procedures most people never do: electoral address at the TSE (online), tax domicile in TRIBU-CR (online), address at the CCSS (in person) and at the municipality (in person). Result: four different addresses for the same person and notifications that never arrive.',
+      'Today these are four separate procedures most people never do: electoral address at the TSE (online only for citizens abroad; in person at home), tax domicile in TRIBU-CR (online), the insured\'s address at the CCSS (online self-service) and the municipal taxpayer address (depends on the canton). Result: four different addresses for the same person and notifications that never arrive.',
     gap: 'Este es el caso más puro de «una sola vez»: exige designar un registro base del domicilio y obligar a las demás instituciones a suscribirse a sus cambios, como el capítulo de bases de datos de la ley estonia. Ninguna norma costarricense lo prevé.',
     gapEn: 'The purest once-only case: it requires designating a base registry for the address and obliging the other institutions to subscribe to its changes, as in the databases chapter of the Estonian law. No Costa Rican rule provides for it.',
     basis: ['cr-3504', 'cr-8220', 'cr-8968'],
@@ -66,9 +66,9 @@ export const move: WorkflowSpec = {
       purpose: 'Actualizar domicilio electoral y registral',
       data: payload,
       legal: addressLegal(
-        'El cambio de domicilio electoral ya se hace en línea en el sitio del TSE con la cédula; el TSE es el candidato natural a registro base del domicilio.',
-        'The electoral address change is already done online on the TSE site with the id; the TSE is the natural candidate for the base address registry.',
-        'hoy',
+        'El cambio de domicilio electoral solo está en línea para quienes viven en el exterior; en Costa Rica se hace en las oficinas del TSE. Aun así el TSE es el candidato natural a registro base del domicilio: ya tiene la cédula, la IDC y el padrón.',
+        'The electoral address change is online only for citizens abroad; in Costa Rica it is done at TSE offices. Even so the TSE is the natural candidate for the base address registry: it already holds the id, the IDC and the roll.',
+        'parcial',
         ['cr-3504', 'cr-8454'],
       ),
     },
@@ -96,9 +96,9 @@ export const move: WorkflowSpec = {
       purpose: 'Actualizar dirección del asegurado',
       data: payload,
       legal: addressLegal(
-        'La dirección del asegurado se actualiza presencialmente en la sucursal, con comprobante de domicilio. Determina a qué EBAIS pertenece la persona.',
-        'The insured\'s address is updated in person at the branch, with proof of address. It determines which local clinic the person belongs to.',
-        'ley',
+        'La dirección del asegurado se puede actualizar en la Oficina Virtual de la CCSS, pero hay que hacerlo aparte: determina a qué EBAIS pertenece la persona y nadie se lo comunica a la Caja cuando cambia en el TSE.',
+        'The insured\'s address can be updated in the CCSS Oficina Virtual, but separately: it determines which local clinic the person belongs to and nobody tells the CCSS when it changes at the TSE.',
+        'parcial',
         ['cr-17', 'cr-8220'],
       ),
     },

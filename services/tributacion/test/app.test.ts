@@ -94,3 +94,50 @@ describe('tributacion', () => {
     expect(list.body).toEqual([]);
   });
 });
+
+const move = {
+  citizenId: '1-2345-6789',
+  address: 'Residencial Los Robles, San Rafael, Escazú, San José',
+  province: 'San José',
+  canton: 'Escazú',
+  district: 'San Rafael',
+  effectiveDate: '2026-09-01',
+};
+
+describe('tributacion v2: updateAddress', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('401 without key', async () => {
+    await request(app).post('/tributacion/updateAddress').send(move).expect(401);
+  });
+
+  it('updates the domicilio fiscal', async () => {
+    const r = await request(app).post('/tributacion/updateAddress').set('x-api-key', KEY).send(move).expect(200);
+    expect(r.body).toEqual({ updated: true, registry: 'Tributación (domicilio fiscal)', effectiveDate: '2026-09-01' });
+    const list = await request(app).get('/tributacion/addresses').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0]).toMatchObject({ citizenId: move.citizenId, canton: 'Escazú' });
+  });
+
+  it('keeps one record per citizen and is cleared by reset', async () => {
+    await request(app).post('/tributacion/updateAddress').set('x-api-key', KEY).send(move).expect(200);
+    await request(app).post('/tributacion/updateAddress').set('x-api-key', KEY).send({ ...move, canton: 'Curridabat' }).expect(200);
+    const list = await request(app).get('/tributacion/addresses').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0].canton).toBe('Curridabat');
+    await request(app).post('/__demo/reset').expect(200);
+    const after = await request(app).get('/tributacion/addresses').set('x-api-key', KEY).expect(200);
+    expect(after.body).toEqual([]);
+  });
+
+  it('400 VALIDATION_ERROR on a bad body', async () => {
+    const r = await request(app)
+      .post('/tributacion/updateAddress')
+      .set('x-api-key', KEY)
+      .send({ ...move, citizenId: 'x', effectiveDate: '1/9/2026' })
+      .expect(400);
+    expect(r.body.error.code).toBe('VALIDATION_ERROR');
+  });
+});

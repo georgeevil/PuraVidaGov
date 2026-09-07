@@ -1,21 +1,14 @@
 import cors from 'cors';
 import { type Express, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
-import {
-  ACTIVITIES,
-  HttpError,
-  businessRegistrationSchema,
-  createServiceApp,
-  errorHandler,
-  loginSchema,
-  otpSchema,
-  type Citizen,
-} from '@pvg/shared';
+import { ACTIVITIES, HttpError, LEGAL_REFS, createServiceApp, errorHandler, loginSchema, otpSchema, type Citizen } from '@pvg/shared';
 import { config } from './config.js';
 import { busAudit, busRegistry, busRequest, busReset } from './bus-client.js';
 import { citizenOf, consumeChallenge, createChallenge, issueToken, requireAuth, resetChallenges, verifyCredentials } from './auth.js';
-import { SERVICES } from './services-catalogue.js';
-import { getTransaction, reset as resetWorkflow, startRegistration, statusView } from './workflow.js';
+import { IDENTITY_STEP, getTransaction, listTransactions, reset as resetEngine, startTransaction, statusView } from './engine.js';
+import { WORKFLOWS, getWorkflow, listDefinitions } from './workflows/index.js';
+import { toDefinition } from './workflows/types.js';
+import { isOptionSource, loadOptions } from './options.js';
 import { renderSummaryPdf } from './pdf.js';
 
 type Handler = (req: Request, res: Response) => Promise<unknown> | unknown;
@@ -58,13 +51,20 @@ async function fetchCitizen(citizenId: string, purpose: string, reference: strin
   };
 }
 
-const registerBodySchema = businessRegistrationSchema
-  .omit({ citizenId: true })
-  .extend({
-    citizenId: z.string().optional(),
-    municipality: z.string().trim().max(60).optional().default(''),
-    consent: z.boolean().optional(),
-  });
+/** 400 VALIDATION_ERROR carrying zod's flattened issues in `details` (CONTRACTS v2). */
+class ValidationError extends HttpError {
+  constructor(
+    message: string,
+    public details: unknown,
+  ) {
+    super(400, 'VALIDATION_ERROR', message);
+  }
+}
+
+const startBodySchema = z.object({
+  input: z.record(z.unknown()).optional().default({}),
+  consent: z.boolean().optional(),
+});
 
 export function createApp(): Express {
   const app = createServiceApp({ name: 'api' });
@@ -114,10 +114,6 @@ export function createApp(): Express {
     }),
   );
 
-  app.get('/api/services', requireAuth, (_req, res) => {
-    res.json(SERVICES);
-  });
-
   app.get('/api/activities', requireAuth, (_req, res) => {
     res.json(ACTIVITIES);
   });
@@ -126,34 +122,62 @@ export function createApp(): Express {
     res.json({ ...config.benefits });
   });
 
-  // ---------------------------------------------------------------- business registration workflow
+  // ---------------------------------------------------------------- workflows (v2)
+  app.get('/api/workflows', (_req, res) => {
+    res.json(listDefinitions());
+  });
+
+  app.get(
+    '/api/workflows/:id',
+    wrap((req, res) => {
+      const spec = getWorkflow(String(req.params.id));
+      if (!spec) throw new HttpError(404, 'WORKFLOW_NOT_FOUND', 'No existe ese trámite');
+      res.json(toDefinition(spec));
+    }),
+  );
+
+  app.get(
+    '/api/options/:source',
+    requireAuth,
+    wrap(async (req, res) => {
+      const source = String(req.params.source);
+      if (!isOptionSource(source)) throw new HttpError(404, 'OPTIONS_UNKNOWN', 'No existe esa lista de opciones');
+      res.json(await loadOptions(source, citizenOf(req)));
+    }),
+  );
+
   app.post(
-    '/api/business/register',
+    '/api/workflows/:id/start',
     requireAuth,
     wrap((req, res) => {
-      const body = parse(registerBodySchema, req.body);
+      const spec = getWorkflow(String(req.params.id));
+      if (!spec) throw new HttpError(404, 'WORKFLOW_NOT_FOUND', 'No existe ese trámite');
+      const body = parse(startBodySchema, req.body);
       if (body.consent !== true) {
         throw new HttpError(400, 'CONSENT_REQUIRED', 'Debe autorizar el intercambio de sus datos entre instituciones para continuar');
       }
-      const { consent: _consent, citizenId: _ignored, ...request } = body;
-      const txnId = startRegistration(citizenOf(req), { ...request, municipality: request.municipality ?? '', citizenId: citizenOf(req) });
+      if (!spec.available) throw new HttpError(409, 'WORKFLOW_UNAVAILABLE', 'Este trámite todavía no está disponible en la demostración');
+      const parsed = spec.inputSchema.safeParse(body.input);
+      if (!parsed.success) {
+        const first = parsed.error.issues[0];
+        const where = first?.path.length ? `${first.path.join('.')}: ` : '';
+        throw new ValidationError(`Datos inválidos — ${where}${first?.message ?? 'revise el formulario'}`, parsed.error.flatten());
+      }
+      const txnId = startTransaction(citizenOf(req), spec, parsed.data as Record<string, unknown>);
       res.status(202).json({ txnId });
     }),
   );
+
+  // ---------------------------------------------------------------- transactions (v2)
+  app.get('/api/transactions', requireAuth, (req, res) => {
+    res.json(listTransactions(citizenOf(req)));
+  });
 
   const ownedTxn = (req: Request) => {
     const txn = getTransaction(String(req.params.txnId), citizenOf(req));
     if (!txn) throw new HttpError(404, 'TXN_NOT_FOUND', 'No se encontró la transacción');
     return txn;
   };
-
-  app.get('/api/business/status/:txnId', requireAuth, (req, res, next) => {
-    try {
-      res.json(statusView(ownedTxn(req)));
-    } catch (e) {
-      next(e);
-    }
-  });
 
   const completedTxn = (req: Request) => {
     const txn = ownedTxn(req);
@@ -165,25 +189,46 @@ export function createApp(): Express {
     return txn;
   };
 
-  app.get('/api/business/result/:txnId', requireAuth, (req, res, next) => {
-    try {
-      res.json(completedTxn(req));
-    } catch (e) {
-      next(e);
-    }
-  });
+  app.get(
+    '/api/transactions/:txnId',
+    requireAuth,
+    wrap((req, res) => {
+      res.json(statusView(ownedTxn(req)));
+    }),
+  );
 
-  app.get('/api/business/result/:txnId/pdf', requireAuth, (req, res, next) => {
-    try {
+  app.get(
+    '/api/transactions/:txnId/result',
+    requireAuth,
+    wrap((req, res) => {
+      res.json(completedTxn(req));
+    }),
+  );
+
+  app.get(
+    '/api/transactions/:txnId/pdf',
+    requireAuth,
+    wrap((req, res) => {
       const txn = completedTxn(req);
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="PuraVidaGov-${txn.txnId}.pdf"`);
-      const doc = renderSummaryPdf(txn);
+      const doc = renderSummaryPdf(txn, getWorkflow(txn.workflowId)?.fields ?? []);
       doc.pipe(res);
       doc.end();
-    } catch (e) {
-      next(e);
-    }
+    }),
+  );
+
+  // ---------------------------------------------------------------- legal framework (v2)
+  app.get('/api/legal', (_req, res) => {
+    res.json({
+      refs: Object.values(LEGAL_REFS),
+      workflows: WORKFLOWS.map((w) => ({
+        id: w.id,
+        title: w.title,
+        legal: w.legal,
+        steps: [...(w.available ? [IDENTITY_STEP] : []), ...w.steps].map((s) => ({ id: s.id, label: s.label, agency: s.agency, legal: s.legal })),
+      })),
+    });
   });
 
   // ---------------------------------------------------------------- bus proxies
@@ -208,7 +253,7 @@ export function createApp(): Express {
   app.post(
     '/api/__demo/reset',
     wrap(async (_req, res) => {
-      resetWorkflow();
+      resetEngine();
       resetChallenges();
       let bus: 'ok' | 'unavailable' = 'ok';
       try {
@@ -230,6 +275,9 @@ export function createApp(): Express {
     if (err instanceof Error && !(err instanceof HttpError) && /^[A-Z_]+: /.test(err.message)) {
       const code = err.message.split(':')[0]!;
       return res.status(502).json({ error: { code, message: 'El bus de interoperabilidad no está disponible en este momento' } });
+    }
+    if (err instanceof ValidationError) {
+      return res.status(err.status).json({ error: { code: err.code, message: err.message, details: err.details } });
     }
     if (err && typeof err === 'object' && (err as { type?: string }).type === 'entity.parse.failed') {
       return res.status(400).json({ error: { code: 'INVALID_JSON', message: 'El cuerpo de la solicitud no es JSON válido' } });

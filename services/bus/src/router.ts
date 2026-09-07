@@ -20,11 +20,26 @@ function statusFromReason(reason: 'UNKNOWN_SERVICE' | 'UNKNOWN_ACTION'): { statu
     : { status: 404, message: 'Acción no registrada para este servicio' };
 }
 
-function buildUrl(baseUrl: string, path: string, method: 'GET' | 'POST', data: unknown): string {
+function field(data: unknown, key: string): unknown {
+  return data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>)[key] : undefined;
+}
+
+/**
+ * Fills `:param` segments (e.g. `/registro/citizen/:id`, `/registro-nacional/property/:folio`) and the
+ * declared `query` keys (e.g. `?ownerId=`) from `data`. Only GET actions carry data in the URL; POST
+ * actions send it as the JSON body.
+ */
+export function buildUrl(baseUrl: string, path: string, method: 'GET' | 'POST', data: unknown, query: string[] = []): string {
   let p = path;
-  if (method === 'GET' && p.includes(':id')) {
-    const id = data && typeof data === 'object' ? (data as { id?: unknown }).id : undefined;
-    p = p.replace(':id', encodeURIComponent(String(id ?? '')));
+  if (method === 'GET') {
+    p = p.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, (_m, name: string) => encodeURIComponent(String(field(data, name) ?? '')));
+    const qs = new URLSearchParams();
+    for (const key of query) {
+      const v = field(data, key);
+      if (v !== undefined && v !== null) qs.set(key, String(v));
+    }
+    const encoded = qs.toString();
+    if (encoded) p += (p.includes('?') ? '&' : '?') + encoded;
   }
   return baseUrl + p;
 }
@@ -92,8 +107,8 @@ export async function forward(req: BusRequest, opts: ForwardOptions = {}): Promi
     });
   }
 
-  const { entry, method, path, apiKey } = r.resolved;
-  const url = buildUrl(entry.baseUrl, path, method, req.data);
+  const { entry, method, path, query, apiKey } = r.resolved;
+  const url = buildUrl(entry.baseUrl, path, method, req.data, query);
   const headers: Record<string, string> = { 'x-api-key': apiKey, accept: 'application/json' };
   const init: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
   if (method === 'POST') {

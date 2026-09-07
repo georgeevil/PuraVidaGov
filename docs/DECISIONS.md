@@ -50,3 +50,27 @@ stabilises; it was left out to keep CI under a minute.
 
 ## D-012 · Letter size for the PDF
 Costa Rica uses carta, not A4.
+
+## D-013 · Workflows are data-driven specs (v2)
+One `WorkflowSpec` per life event: form fields, steps with `when`/`data` functions, a `result` builder and a legal
+note per step. The engine, the form, the tracker, the result page and the PDF are generic. Adding a life event is one
+file plus, if needed, one mock action.
+
+## D-014 · Legal status is a first-class field, sourced
+Every workflow and step carries `LegalNote { status: hoy | parcial | ley, today, gap, basis[], model[] }` pointing into
+`LEGAL_REFS`. Two research passes with web verification back the content (`docs/research/`). Where a fact could not be
+verified it is said so. This is the demo's political argument, so it must survive a lawyer reading it.
+
+## D-015 · "Pase Digital" replaced by IDC
+The PRD referenced pasedigital.go.cr. It could not be verified as an existing product. The TSE's Identidad Digital
+Costarricense (launched 9 September 2025, mandatory acceptance from 1 January 2027 by TSE resolution) is what exists;
+the demo and the docs say IDC.
+
+## D-016 · Honest numbers over impressive numbers
+Estonia's "2 % of GDP" is a 2002 expectation; RIA's own X-Road figure is about 1,000 working years a year on 3 % of
+traffic. The IDB's "74" is a time reduction, not a cost multiple. No country has tied verified digital savings to tax
+relief by law. The case page says all of this, because the audience will check.
+
+## D-017 · Seven agencies, one more Dockerfile arg each
+Registro Nacional, Salud and CFIA are new services rather than new actions on existing ones because the demo's point
+is that institutions stay independent and the bus is the only thing that connects them.

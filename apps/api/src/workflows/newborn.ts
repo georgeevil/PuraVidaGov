@@ -32,11 +32,11 @@ export const newborn: WorkflowSpec = {
   legal: {
     status: 'parcial',
     today:
-      'La mitad ya funciona: los hospitales de la CCSS declaran el nacimiento electrónicamente al TSE y el Registro Civil lo inscribe sin que la familia vaya a una oficina. La otra mitad no: asegurar al bebé como beneficiario exige presentarse en la sucursal de la CCSS con constancia de nacimiento, cédulas y comprobante de domicilio, y el carné de vacunas se abre aparte en el EBAIS.',
+      'La mitad ya funciona: los hospitales de la CCSS declaran el nacimiento electrónicamente al TSE y el Registro Civil lo inscribe sin que la familia vaya a una oficina. La otra mitad no: asegurar al bebé como beneficiario sigue siendo a solicitud de la familia (unos ocho días), y el carné de vacunas se abre aparte en el EBAIS. Desde 2016 el TSE inscribe el mismo día (~98 % de los partos son hospitalarios).',
     todayEn:
-      'Half already works: CCSS hospitals declare the birth electronically to the TSE and the Civil Registry records it without the family visiting an office. The other half does not: insuring the baby as a dependant requires going to a CCSS branch with the birth certificate, ids and proof of address, and the vaccination card is opened separately at the local clinic.',
-    gap: 'Que la CCSS tome la inscripción del propio Registro Civil (Ley 8220 art. 2 ya lo permite) y que un mandato de intercambio cubra a la institución autónoma, como en Singapur, donde el registro de nacimiento dispara automáticamente la cuenta de ahorro infantil y el seguro.',
-    gapEn: 'Let the CCSS take the registration from the Civil Registry itself (Ley 8220 art. 2 already allows it) and have a sharing mandate cover the autonomous institution, as in Singapore where the birth registration automatically triggers the child account and insurance.',
+      'Half already works: CCSS hospitals declare the birth electronically to the TSE and the Civil Registry records it without the family visiting an office. The other half does not: insuring the baby as a dependant is still on the family\'s request (about eight days), and the vaccination card is opened separately at the local clinic. Since 2016 the TSE registers same-day (~98 % of births are in hospital).',
+    gap: 'Que la CCSS tome la inscripción del propio Registro Civil (Ley 8220 art. 8 ya lo manda) y que un mandato de intercambio cubra a la institución autónoma, como en Singapur, donde el registro de nacimiento dispara automáticamente la cuenta de ahorro infantil y el seguro.',
+    gapEn: 'Let the CCSS take the registration from the Civil Registry itself (Ley 8220 art. 8 already mandates it) and have a sharing mandate cover the autonomous institution, as in Singapore where the birth registration automatically triggers the child account and insurance.',
     basis: ['cr-3504', 'cr-17', 'cr-8220', 'cr-8968'],
     model: ['sg-myinfo', 'sg-psga', 'ee-pia'],
   },
@@ -96,8 +96,8 @@ export const newborn: WorkflowSpec = {
       }),
       legal: {
         status: 'hoy',
-        today: 'Desde hace más de una década los hospitales declaran los nacimientos al TSE por vía electrónica y el Registro Civil asigna la cédula del menor en días; la familia solo firma la declaración en el hospital.',
-        todayEn: 'For over a decade hospitals have declared births electronically to the TSE and the Civil Registry assigns the minor\'s id within days; the family only signs the declaration at the hospital.',
+        today: 'Desde 2016 los hospitales declaran los nacimientos en línea al TSE y el Registro Civil inscribe el mismo día; la familia solo firma la declaración en el hospital.',
+        todayEn: 'Since 2016 hospitals have declared births online to the TSE and the Civil Registry registers the same day; the family only signs the declaration at the hospital.',
         basis: ['cr-3504', 'cr-8454'],
         model: [],
       },
@@ -117,9 +117,9 @@ export const newborn: WorkflowSpec = {
         birthDate: input(ctx).birthDate,
       }),
       legal: {
-        status: 'ley',
-        today: 'El aseguramiento de un beneficiario se hace presencialmente en la sucursal de la CCSS con constancia de nacimiento del Registro Civil, cédula del asegurado y comprobante de domicilio: tres documentos que el Estado ya tiene.',
-        todayEn: 'Insuring a dependant is done in person at the CCSS branch with the Civil Registry birth certificate, the insured\'s id and a proof of address: three documents the State already holds.',
+        status: 'parcial',
+        today: 'La CCSS no asegura al recién nacido de oficio: la familia debe solicitarlo (en el EBAIS o en línea) y la Caja verifica al menor electrónicamente en unos ocho días. El dato del nacimiento ya está en el TSE; nadie se lo manda a la CCSS.',
+        todayEn: 'The CCSS does not insure the newborn ex officio: the family must request it (at the clinic or online) and the CCSS verifies the minor electronically in about eight days. The birth is already at the TSE; nobody sends it to the CCSS.',
         gap: 'Un mandato de intercambio de datos que alcance a las instituciones autónomas y designe al Registro Civil como registro base del que la CCSS debe leer, no pedir copias.',
         gapEn: 'A data-sharing mandate reaching the autonomous institutions and designating the Civil Registry as the base registry the CCSS must read from instead of asking for copies.',
         basis: ['cr-17', 'cr-8220'],

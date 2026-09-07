@@ -1,5 +1,5 @@
-import type { AgencyName } from '@pvg/shared';
-import { AGENCY_SHORT, AGENCY_LABELS_EN } from '../labels';
+import { AGENCY_SHORT, type AgencyName } from '@pvg/shared/data';
+import { agencyLabelEn } from '../labels';
 
 interface Props {
   source: AgencyName;
@@ -9,7 +9,7 @@ interface Props {
 
 /** "Registro Civil · X-ABC123" — where a value on screen came from (principio «una sola vez»). */
 export function ProvenanceBadge({ source, exchangeId, fetchedAt }: Props) {
-  const title = `Fuente: ${AGENCY_LABELS_EN[source] ?? source}${exchangeId ? ` · exchange ${exchangeId}` : ''}${
+  const title = `Fuente: ${agencyLabelEn(source)}${exchangeId ? ` · exchange ${exchangeId}` : ''}${
     fetchedAt ? ` · ${fetchedAt}` : ''
   }`;
   return (

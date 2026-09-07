@@ -1,5 +1,15 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
+
+const NAV: Array<{ to: string; label: string; en: string; end?: boolean }> = [
+  { to: '/', label: 'Inicio', en: 'Home', end: true },
+  { to: '/mis-tramites', label: 'Mis trámites', en: 'My procedures' },
+  { to: '/auditoria', label: 'Mis datos compartidos', en: 'My shared data (audit log)' },
+  { to: '/marco-legal', label: 'Marco legal', en: 'Legal framework — what is possible today' },
+  { to: '/por-que', label: 'Por qué', en: 'Why — the case for a once-only government' },
+  { to: '/arquitectura', label: 'Cómo funciona', en: 'How it works' },
+];
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -31,7 +41,7 @@ function Logo() {
         PV
       </span>
       <span className="text-lg font-semibold tracking-tight text-slate-900">
-        PuraVidaGov<span className="hidden text-sm font-normal text-slate-500 sm:inline"> · Portal ciudadano</span>
+        PuraVidaGov<span className="hidden text-sm font-normal text-slate-500 lg:inline"> · Portal ciudadano</span>
       </span>
     </Link>
   );
@@ -40,43 +50,70 @@ function Logo() {
 export function Layout() {
   const { citizen, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+
+  // Close the small-screen menu on navigation.
+  useEffect(() => setOpen(false), [location.pathname]);
 
   async function handleLogout() {
     await signOut();
     navigate('/login', { replace: true });
   }
 
+  const links = NAV.map((n) => (
+    <NavLink key={n.to} to={n.to} end={n.end} className={navClass} title={n.en}>
+      {n.label}
+    </NavLink>
+  ));
+
   return (
     <div className="flex min-h-screen flex-col">
       <div className="tricolor h-1.5 w-full" aria-hidden="true" />
       <DemoBanner />
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <Logo />
           {isAuthenticated && (
-            <nav aria-label="Principal" className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto">
-              <NavLink to="/" end className={navClass} title="Home">
-                Inicio
-              </NavLink>
-              <NavLink to="/auditoria" className={navClass} title="My shared data (audit log)">
-                Mis datos compartidos
-              </NavLink>
-              <NavLink to="/arquitectura" className={navClass} title="How it works">
-                Cómo funciona
-              </NavLink>
+            <nav aria-label="Principal" className="hidden flex-wrap gap-1 md:flex">
+              {links}
             </nav>
           )}
-          {isAuthenticated && citizen ? (
-            <div className="flex items-center gap-3 text-sm">
-              <span className="hidden text-slate-600 md:inline" title="Signed in as">
-                {citizen.firstName} {citizen.lastName1}
-              </span>
-              <button type="button" onClick={handleLogout} className="btn-secondary !px-3 !py-1.5" title="Sign out">
-                Salir
-              </button>
-            </div>
-          ) : null}
+          <div className="flex items-center gap-2 text-sm">
+            {isAuthenticated && citizen ? (
+              <>
+                <span className="hidden text-slate-600 lg:inline" title="Signed in as">
+                  {citizen.firstName} {citizen.lastName1}
+                </span>
+                <button type="button" onClick={handleLogout} className="btn-secondary !px-3 !py-1.5" title="Sign out">
+                  Salir
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary !px-2 !py-1.5 md:hidden"
+                  aria-expanded={open}
+                  aria-controls="menu-movil"
+                  aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+                  title="Menu"
+                  onClick={() => setOpen((v) => !v)}
+                >
+                  <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true">
+                    {open ? (
+                      <path d="M5.3 4.3 10 9l4.7-4.7 1.4 1.4L11.4 10.4l4.7 4.7-1.4 1.4L10 11.8l-4.7 4.7-1.4-1.4 4.7-4.7-4.7-4.7z" />
+                    ) : (
+                      <path d="M3 5h14v2H3zm0 4h14v2H3zm0 4h14v2H3z" />
+                    )}
+                  </svg>
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
+        {isAuthenticated && open && (
+          <nav id="menu-movil" aria-label="Principal (móvil)" className="border-t border-slate-100 md:hidden">
+            <div className="mx-auto flex max-w-6xl flex-col gap-0.5 px-4 py-2">{links}</div>
+          </nav>
+        )}
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">
         <Outlet />

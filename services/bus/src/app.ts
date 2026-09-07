@@ -1,5 +1,6 @@
-import { busRequestSchema, createLogger, createServiceApp, errorHandler, type BusRequest, type RegistryEntry } from '@pvg/shared';
+import { AGENCIES, busRequestSchema, createLogger, createServiceApp, errorHandler, type BusRequest, type RegistryEntry } from '@pvg/shared';
 import type { Express, NextFunction, Request, Response } from 'express';
+import { z } from 'zod';
 import * as audit from './audit.js';
 import { getRegistry } from './registry.js';
 import { forward } from './router.js';
@@ -9,6 +10,14 @@ const HEALTH_TIMEOUT_MS = 1500;
 const HEALTH_CACHE_MS = 10_000;
 
 const OPEN_PATHS = new Set(['/health', '/__demo/reset']);
+
+/**
+ * The shared `busRequestSchema` still enumerates only the four v1 agencies; until it is updated in
+ * `packages/shared`, the bus accepts every `AgencyName` (registry membership is checked by the router).
+ */
+const requestSchema = busRequestSchema.extend({
+  service: z.enum(AGENCIES as [BusRequest['service'], ...BusRequest['service'][]]),
+});
 
 export function createApp(): Express {
   const log = createLogger(SERVICE_NAME);
@@ -26,7 +35,7 @@ export function createApp(): Express {
   // ---- POST /bus/request
   app.post('/bus/request', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsed = busRequestSchema.safeParse(req.body);
+      const parsed = requestSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({
           error: { code: 'VALIDATION_ERROR', message: 'Solicitud inválida', details: parsed.error.flatten() },

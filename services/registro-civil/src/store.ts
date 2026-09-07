@@ -1,4 +1,4 @@
-import type { Citizen } from '@pvg/shared';
+import type { BirthRegistrationResponse, Citizen } from '@pvg/shared';
 
 /** Seed citizens (docs/CONTRACTS.md §"Seed data"). All data is fictitious. */
 const SEED: Citizen[] = [
@@ -52,8 +52,20 @@ const SEED: Citizen[] = [
   },
 ];
 
+export interface BirthRegistration extends BirthRegistrationResponse {
+  parentId: string;
+  childFirstName: string;
+  birthDate: string;
+  hospital: string;
+}
+
+const birthKeyOf = (parentId: string, childFirstName: string, birthDate: string) =>
+  `${parentId}::${childFirstName.trim().toLowerCase()}::${birthDate}`;
+
 class RegistroStore {
   private citizens = new Map<string, Citizen>();
+  private births = new Map<string, BirthRegistration>();
+  private birthCounters = new Map<number, number>(); // year -> last certificate sequence
 
   constructor() {
     this.reset();
@@ -61,6 +73,37 @@ class RegistroStore {
 
   reset(): void {
     this.citizens = new Map(SEED.map((c) => [c.id, structuredClone(c)]));
+    this.births.clear();
+    this.birthCounters.clear();
+  }
+
+  has(id: string): boolean {
+    return this.citizens.has(id);
+  }
+
+  /** Adds or replaces a citizen record (used for newborns and address changes). */
+  put(citizen: Citizen): Citizen {
+    this.citizens.set(citizen.id, structuredClone(citizen));
+    return citizen;
+  }
+
+  findBirth(parentId: string, childFirstName: string, birthDate: string): BirthRegistration | undefined {
+    return this.births.get(birthKeyOf(parentId, childFirstName, birthDate));
+  }
+
+  nextBirthSequence(year: number): number {
+    const next = (this.birthCounters.get(year) ?? 0) + 1;
+    this.birthCounters.set(year, next);
+    return next;
+  }
+
+  saveBirth(b: BirthRegistration): BirthRegistration {
+    this.births.set(birthKeyOf(b.parentId, b.childFirstName, b.birthDate), b);
+    return b;
+  }
+
+  listBirths(): BirthRegistration[] {
+    return [...this.births.values()];
   }
 
   get(id: string): Citizen | undefined {
