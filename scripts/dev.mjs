@@ -7,6 +7,9 @@ const services = [
   ['tributacion', 'services/tributacion'],
   ['ccss', 'services/ccss'],
   ['municipalidad', 'services/municipalidad'],
+  ['reg-nacional', 'services/registro-nacional'],
+  ['salud', 'services/salud'],
+  ['cfia', 'services/cfia'],
   ['bus', 'services/bus'],
   ['api', 'apps/api'],
 ];
