@@ -6,6 +6,8 @@ import {
   niteFor,
   simulatedLatency,
   todayIso,
+  updateAddressSchema,
+  type AddressUpdateResponse,
   type TaxResponse,
 } from '@pvg/shared';
 import type { Express } from 'express';
@@ -14,8 +16,10 @@ import { requireApiKey, validateBody, wrap } from './middleware.js';
 import { store, type Taxpayer } from './store.js';
 
 export const SERVICE_NAME = 'tributacion';
+export const ADDRESS_REGISTRY = 'Tributación (domicilio fiscal)';
 
 type CreateTaxIdBody = z.infer<typeof createTaxIdSchema>;
+type UpdateAddressBody = z.infer<typeof updateAddressSchema>;
 
 function toResponse(t: Taxpayer): TaxResponse {
   const { nite, taxRegime, status, activityCode, activityDescription, registrationDate } = t;
@@ -76,6 +80,31 @@ export function createApp(): Express {
         registrationDate: todayIso(),
       });
       res.json(toResponse(taxpayer));
+    }),
+  );
+
+  app.get('/tributacion/addresses', (_req, res) => {
+    res.json(store.listAddresses());
+  });
+
+  app.post(
+    '/tributacion/updateAddress',
+    validateBody(updateAddressSchema),
+    wrap(async (req, res) => {
+      const body = req.body as UpdateAddressBody;
+      await simulatedLatency();
+      store.saveAddress({
+        citizenId: body.citizenId,
+        address: body.address.trim(),
+        province: body.province.trim(),
+        canton: body.canton.trim(),
+        district: body.district.trim(),
+        updated: true,
+        registry: ADDRESS_REGISTRY,
+        effectiveDate: body.effectiveDate,
+      });
+      const response: AddressUpdateResponse = { updated: true, registry: ADDRESS_REGISTRY, effectiveDate: body.effectiveDate };
+      res.json(response);
     }),
   );
 

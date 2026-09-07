@@ -1,37 +1,23 @@
 /**
- * Plain-data copies of the agency constants from @pvg/shared. The shared package's index also
- * exports Express helpers, so the browser bundle only uses `import type` from it and keeps
- * these constants locally (kept in sync with packages/shared/src/types.ts).
+ * Browser-side labels that do not exist in @pvg/shared (English tooltips) plus small helpers.
+ * Spanish agency labels come from `@pvg/shared/data` (AGENCY_LABELS, AGENCY_SHORT) — do not copy them here.
  */
-import type { AgencyName } from '@pvg/shared';
-
-export const AGENCIES: AgencyName[] = ['registro', 'tributacion', 'ccss', 'municipalidad'];
-
-export const AGENCY_LABELS: Record<AgencyName, string> = {
-  registro: 'Registro Civil (TSE)',
-  tributacion: 'Tributación (Ministerio de Hacienda)',
-  ccss: 'CCSS',
-  municipalidad: 'Municipalidad',
-};
-
-/** Short labels for badges and step trackers. */
-export const AGENCY_SHORT: Record<AgencyName, string> = {
-  registro: 'Registro Civil',
-  tributacion: 'Tributación',
-  ccss: 'CCSS',
-  municipalidad: 'Municipalidad',
-};
+import { AGENCY_LABELS, type AgencyName } from '@pvg/shared/data';
 
 export const AGENCY_LABELS_EN: Record<AgencyName, string> = {
   registro: 'Civil Registry (TSE)',
   tributacion: 'Tax Administration (Ministry of Finance)',
   ccss: 'Social Security (CCSS)',
   municipalidad: 'Municipality',
+  'registro-nacional': 'National Registry (property and companies)',
+  salud: 'Ministry of Health',
+  cfia: 'Engineers and Architects Federation (plan review, APC)',
 };
-
-/** Cantons served by the municipal mock (CONTRACTS.md §Municipalidad). */
-export const MUNICIPALITIES = ['Montes de Oca', 'San José', 'Talamanca', 'Grecia', 'Alajuela'];
 
 export function agencyLabel(agency: string): string {
   return (AGENCY_LABELS as Record<string, string>)[agency] ?? agency;
+}
+
+export function agencyLabelEn(agency: string): string {
+  return (AGENCY_LABELS_EN as Record<string, string>)[agency] ?? agency;
 }

@@ -19,7 +19,7 @@ export const CASE: CaseContent = {
   hero: {
     title: 'Un Estado organizado alrededor de la persona, no de sus ministerios',
     subtitle:
-      'Costa Rica ya tiene cédula digital, firma digital, SICOP, TRIBU-CR, EDUS y Pase Digital. Lo que no tiene es la capa que los une. Este demo muestra cómo se vería el país con esa capa, qué se puede hacer hoy y qué ley falta.',
+      'Costa Rica ya tiene cédula digital (IDC), firma digital, SICOP, TRIBU-CR, EDUS, la Agencia Nacional de Gobierno Digital y un piloto de X-Road. Lo que no tiene es la capa que los une. Este demo muestra cómo se vería el país con esa capa, qué se puede hacer hoy y qué ley falta.',
     disclaimer: 'Demostración con datos ficticios. No es un sistema del Gobierno de Costa Rica ni una propuesta oficial.',
   },
   problem: {
@@ -30,24 +30,27 @@ export const CASE: CaseContent = {
       'Estonia resolvió esto en 2001 con X-Road: una capa de intercambio obligatoria por ley, con cada consulta firmada y registrada. Singapur lo hizo con MyInfo y LifeSG: un perfil con lo que el Estado ya sabe y servicios organizados por momentos de vida. Ninguno de los dos inventó tecnología nueva; ambos aprobaron leyes que obligaron a usarla.',
     ],
     stats: [
-      { label: 'Horas promedio por trámite en América Latina', value: '5,4 h', source: 'BID, «El fin del trámite eterno» (2018)' },
-      { label: 'Trámites en la región que requieren más de una visita', value: '≈ 1 de cada 4', source: 'BID (2018)' },
-      { label: 'Costo de un trámite presencial frente a uno en línea', value: 'hasta 40× más', source: 'BID (2018), estimación regional' },
-      { label: 'Tiempo de trabajo que X-Road ahorra a Estonia cada año', value: '> 1 300 años', source: 'RIA / e-Estonia (cifra oficial vigente)' },
+      { label: 'Horas promedio por trámite en América Latina', value: '5,4 h', source: 'BID, «El fin del trámite eterno» (2018); Costa Rica es el segundo mejor de la región' },
+      { label: 'Trámites que exigen tres o más interacciones', value: '1 de cada 4', source: 'BID (2018); el 89 % se hace en persona y el 29 % reporta haber pagado un soborno' },
+      { label: 'Costo de un trámite presencial frente a uno en línea', value: '20 a 42× más', source: 'BID (2018): el trámite digital cuesta entre 1,5 % y 5 % del presencial' },
+      { label: 'Tiempo de trabajo que X-Road ahorra a Estonia cada año', value: '≈ 1 000 años', source: 'RIA, ficha oficial de X-tee: 15 min por consulta ciudadana, solo el 3 % del tráfico' },
+      { label: 'Costa Rica en el índice de gobierno digital de la OCDE (2023)', value: 'último de 33', source: 'OCDE Digital Government Index 2023: 0,22 frente a 0,61 de promedio' },
+      { label: 'Abrir un negocio en Costa Rica', value: '10 trámites · 23 días', source: 'Banco Mundial, Doing Business 2020 (puesto 144 de 190); permiso de construcción: 17 trámites, 138 días' },
     ],
   },
   foundations: {
     title: 'Costa Rica no parte de cero',
     intro: 'Estas piezas ya existen y tienen respaldo legal. El demo las simula tal cual; lo nuevo es el bus que las conecta y la obligación de usarlo.',
     items: [
-      { name: 'Cédula del TSE y firma digital (Ley 8454, 2005)', what: 'Identidad y firma con plena validez legal. Pase Digital la lleva al teléfono.', status: 'hoy' },
-      { name: 'Ley 8220 art. 2 (2002)', what: 'Ya prohíbe pedir lo que el Estado tiene. Es el «una sola vez» costarricense, sin plataforma ni sanción efectiva.', status: 'parcial' },
+      { name: 'Cédula del TSE, firma digital (Ley 8454, 2005) e IDC (2025)', what: 'Identidad y firma con plena validez legal. Desde septiembre de 2025 el TSE emite la cédula en el teléfono (IDC); aceptación obligatoria desde 2027, pero por reglamento del TSE, no por ley.', status: 'parcial' },
+      { name: 'Ley 8220 arts. 2 y 8 (2002)', what: 'Ya obliga a coordinar entre instituciones para no pedirle documentos a la persona. Es el «una sola vez» costarricense, sin plataforma ni sanción efectiva: solo el MEIC lo vigila.', status: 'parcial' },
       { name: 'SICOP obligatorio (Ley 9986, 2021)', what: 'Prueba de que el país sabe imponer una plataforma única por ley, incluso a municipalidades y autónomas.', status: 'hoy' },
       { name: 'APC del CFIA (Decreto 36550, 2011)', what: 'Ventanilla única de planos con Salud, Bomberos, AyA e INVU. La mejor prueba local de que funciona.', status: 'hoy' },
       { name: 'TRIBU-CR, Oficina Virtual CCSS, Crear Empresa, EDUS', what: 'Cada institución ya tiene su sistema en línea. Ninguno le pregunta al otro.', status: 'parcial' },
       { name: 'Ley 8968 de datos personales (2011)', what: 'Consentimiento y finalidad. Compatible con un bus auditado; falta el derecho a ver quién consultó mis datos.', status: 'parcial' },
-      { name: 'Plataforma nacional de interoperabilidad', what: 'No existe con carácter obligatorio. Es la pieza central que falta.', status: 'ley' },
-      { name: 'Autoridad de gobierno digital con presupuesto', what: 'MICITT coordina, pero no decide qué sistema compra cada institución.', status: 'ley' },
+      { name: 'Agencia Nacional de Gobierno Digital (Ley 9943, 2021) y proyecto Conecta (2026)', what: 'La ANGD opera desde 2025 y el Gobierno ya eligió X-Road: 30 instituciones en el proyecto Conecta y un primer piloto de salud en junio de 2026. Lo que falta es la ley que obligue a autónomas y municipalidades a conectarse.', status: 'parcial' },
+      { name: 'Plataforma nacional de interoperabilidad obligatoria', what: 'No existe con carácter obligatorio; el propio MICITT lo señala como riesgo. Es la pieza central que falta.', status: 'ley' },
+      { name: 'Autoridad de gobierno digital con presupuesto y sanción', what: 'La ANGD existe, pero se financia con el 10 % de la subejecución en TI (temporal) y no puede sancionar a quien no interopere.', status: 'ley' },
     ],
   },
   roadmap: {
@@ -67,7 +70,7 @@ export const CASE: CaseContent = {
       },
       {
         n: 2,
-        title: 'Una sola puerta: Pase Digital por eventos de vida',
+        title: 'Una sola puerta: un portal por eventos de vida',
         summary: 'En vez de veinte sitios de ministerios, un portal organizado por lo que le pasa a la gente.',
         actions: [
           '«Quiero abrir un negocio», «tuve un hijo», «voy a construir», «me mudé», «perdí el empleo», «me jubilo».',
@@ -153,18 +156,19 @@ export const CASE: CaseContent = {
   evidence: {
     title: 'Lo que dice la evidencia',
     items: [
-      { claim: 'Estonia estima que X-Road ahorra más de 1 300 años de tiempo de trabajo al año y el gobierno digital, alrededor del 2 % del PIB.', source: 'RIA / e-Estonia; la cifra del 2 % es una estimación gubernamental con supuestos generosos', url: 'https://x-road.global' },
-      { claim: 'La compra pública electrónica suele ahorrar entre 5 % y 15 % del gasto en compras (KONEPS en Corea, Prozorro en Ucrania, estudios de la OCDE).', source: 'OCDE; Banco Mundial' },
+      { claim: 'Estonia calcula que X-Road ahorra unos 1 000 años de trabajo al año contando solo las consultas iniciadas por ciudadanos (3 % del tráfico), a 15 minutos cada una. La cifra del «2 % del PIB» que circula es una expectativa de 2002, nunca medida.', source: 'RIA, ficha oficial X-tee; OCDE (2020) y e-Estonia (2020) sobre el origen del 2 %', url: 'https://www.x-tee.ee/factsheets/EE/' },
+      { claim: 'La compra pública electrónica reduce costos entre 5 % y 20 % (Comisión Europea); KONEPS en Corea reporta ahorros de 8 billones de wones al año y Prozorro en Ucrania más de 5 % en licitaciones y 10 % en su catálogo.', source: 'Comisión Europea COM(2010)571; OCDE sobre KONEPS; Kyiv School of Economics sobre Prozorro' },
       { claim: 'El sistema europeo «solo una vez» (OOTS) se justificó con ahorros estimados de unos 5 000 millones de euros al año para ciudadanos y empresas.', source: 'Comisión Europea, evaluación de impacto del Reglamento 2018/1724', url: 'https://eur-lex.europa.eu/eli/reg/2018/1724/oj' },
-      { claim: 'En América Latina un trámite toma 5,4 horas en promedio, uno de cada cuatro exige más de una visita y hacerlo en línea cuesta hasta 40 veces menos que en ventanilla.', source: 'BID, «El fin del trámite eterno» (2018)', url: 'https://publications.iadb.org/es/el-fin-del-tramite-eterno-ciudadanos-burocracia-y-gobierno-digital' },
-      { claim: 'La experiencia internacional apunta a reducciones de 15 % a 30 % del costo administrativo en los procesos que la digitalización toca de verdad.', source: 'OCDE, Digital Government Index; McKinsey Center for Government (síntesis)' },
-      { claim: 'Para Costa Rica, una meta creíble a 5–10 años es un ahorro de 0,5 % a 1,5 % del PIB al año; solo compras públicas podrían aportar 0,3 % a 0,7 %.', source: 'Estimación propia a partir de las cifras anteriores; ver docs/CASE.md' },
+      { claim: 'En América Latina un trámite toma 5,4 horas en promedio, uno de cada cuatro exige tres o más interacciones, el 89 % se hace en persona y hacerlo en línea cuesta entre 20 y 42 veces menos que en ventanilla. Costa Rica es el segundo mejor de la región en horas, pero solo el 7 % de la gente hizo su último trámite en línea.', source: 'BID, «El fin del trámite eterno» (2018)', url: 'https://publications.iadb.org/es/el-fin-del-tramite-eterno-ciudadanos-burocracia-y-gobierno-digital' },
+      { claim: 'Costa Rica gasta ₡2,9 billones al año en remuneraciones del Gobierno Central (5,5 % del PIB) y ₡2,3 billones en intereses (4,4 %), con una deuda del 60,4 % del PIB al cierre de 2025. Cada punto de eficiencia administrativa pesa.', source: 'Ministerio de Hacienda, cifras fiscales al cierre de 2025 (CP-06-2026); FMI, Artículo IV 2026', url: 'https://www.hacienda.go.cr/docs/CP062025cifrasfiscales.pdf' },
+      { claim: 'Ningún país ha atado por ley los ahorros digitales verificados a un fondo o a una rebaja de impuestos. El precedente más cercano es Dinamarca, que descontó por adelantado la mitad del ahorro estimado del correo digital obligatorio a municipios y regiones; su Contraloría concluyó después que el ahorro se había sobreestimado. Por eso la regla que proponemos reparte solo el ahorro verificado.', source: 'Rigsrevisionen, informe 9/2015; NAO (Reino Unido) 2017 sobre las cifras del GDS', url: 'https://www.uk.rigsrevisionen.dk/Media/7/1/9-2015.pdf' },
+      { claim: 'Para Costa Rica, una meta creíble a 5–10 años es un ahorro de 0,5 % a 1,5 % del PIB al año en los procesos que la integración toque; solo compras públicas podrían aportar 0,3 % a 0,7 %. Es una estimación propia, no una medición: la regla del dividendo existe precisamente para que se mida antes de repartir.', source: 'Estimación propia a partir de las cifras anteriores; ver docs/CASE.md' },
     ],
   },
   calculator: {
     title: '¿Cuánto es eso en colones?',
-    intro: 'Mueva el porcentaje de ahorro sobre el PIB y vea cómo se repartiría con la regla del dividendo. PIB de Costa Rica ≈ ₡50 billones al año (aprox., 2025).',
-    gdpCrcBillions: 50,
+    intro: 'Mueva el porcentaje de ahorro sobre el PIB y vea cómo se repartiría con la regla del dividendo. PIB nominal de Costa Rica 2025 ≈ ₡51,8 billones (≈ US$103 000 millones), según el FMI y Hacienda.',
+    gdpCrcBillions: 51.8,
     defaultSavingsPct: 0.5,
     minPct: 0.1,
     maxPct: 1.5,
@@ -175,7 +179,7 @@ export const CASE: CaseContent = {
       'A la Asamblea Legislativa: una Ley de Eficiencia Digital con interoperabilidad obligatoria, «una sola vez» con sanción, identidad digital que todos deban aceptar y una regla de dividendo digital.',
       'Al Poder Ejecutivo: un decreto que designe los registros base (TSE, Registro Nacional, Hacienda, CCSS) y una autoridad de gobierno digital con poder sobre el gasto en TI.',
       'A las instituciones autónomas y municipalidades: conectarse al bus como ya se conectaron a SICOP.',
-      'A la ciudadanía: exigir que se cumpla la Ley 8220. Cada vez que le pidan una copia de la cédula, el Estado está incumpliendo una ley de 2002.',
+      'A la ciudadanía: exigir que se cumpla la Ley 8220. Cada vez que le pidan una constancia que otra institución emite, el Estado está incumpliendo el artículo 8 de una ley de 2002.',
     ],
   },
 };

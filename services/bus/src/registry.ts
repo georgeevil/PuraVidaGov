@@ -4,10 +4,22 @@
  */
 import { AGENCY_LABELS, type AgencyName, type RegistryEntry } from '@pvg/shared';
 
+/**
+ * One routable action. `path` may contain `:param` segments and a GET action may declare `query`;
+ * the router fills both from the request's `data` (docs/CONTRACTS.md v2 → "Bus registry additions").
+ */
+export interface ActionSpec {
+  method: 'GET' | 'POST';
+  path: string;
+  /** Keys of `data` appended to the URL as a query string (GET actions only). */
+  query?: string[];
+}
+
 export interface ResolvedAction {
   entry: RegistryEntry;
   method: 'GET' | 'POST';
   path: string;
+  query: string[];
   apiKey: string;
 }
 
@@ -16,7 +28,7 @@ interface AgencyConfig {
   defaultUrl: string;
   keyEnv: string;
   defaultKey: string;
-  actions: Record<string, { method: 'GET' | 'POST'; path: string }>;
+  actions: Record<string, ActionSpec>;
 }
 
 const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
@@ -25,28 +37,74 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
     defaultUrl: 'http://localhost:4001',
     keyEnv: 'REGISTRO_API_KEY',
     defaultKey: 'demo-registro-key',
-    actions: { getCitizen: { method: 'GET', path: '/registro/citizen/:id' } },
+    actions: {
+      getCitizen: { method: 'GET', path: '/registro/citizen/:id' },
+      registerBirth: { method: 'POST', path: '/registro/registerBirth' },
+      updateAddress: { method: 'POST', path: '/registro/updateAddress' },
+    },
   },
   tributacion: {
     urlEnv: 'TRIBUTACION_URL',
     defaultUrl: 'http://localhost:4002',
     keyEnv: 'TRIBUTACION_API_KEY',
     defaultKey: 'demo-tributacion-key',
-    actions: { createTaxId: { method: 'POST', path: '/tributacion/createTaxId' } },
+    actions: {
+      createTaxId: { method: 'POST', path: '/tributacion/createTaxId' },
+      updateAddress: { method: 'POST', path: '/tributacion/updateAddress' },
+    },
   },
   ccss: {
     urlEnv: 'CCSS_URL',
     defaultUrl: 'http://localhost:4003',
     keyEnv: 'CCSS_API_KEY',
     defaultKey: 'demo-ccss-key',
-    actions: { registerEmployer: { method: 'POST', path: '/ccss/registerEmployer' } },
+    actions: {
+      registerEmployer: { method: 'POST', path: '/ccss/registerEmployer' },
+      insureDependent: { method: 'POST', path: '/ccss/insureDependent' },
+      updateAddress: { method: 'POST', path: '/ccss/updateAddress' },
+    },
   },
   municipalidad: {
     urlEnv: 'MUNICIPALIDAD_URL',
     defaultUrl: 'http://localhost:4004',
     keyEnv: 'MUNICIPALIDAD_API_KEY',
     defaultKey: 'demo-municipalidad-key',
-    actions: { issueLicense: { method: 'POST', path: '/municipalidad/issueLicense' } },
+    actions: {
+      issueLicense: { method: 'POST', path: '/municipalidad/issueLicense' },
+      issueLandUse: { method: 'POST', path: '/municipalidad/issueLandUse' },
+      issueBuildingPermit: { method: 'POST', path: '/municipalidad/issueBuildingPermit' },
+      updateAddress: { method: 'POST', path: '/municipalidad/updateAddress' },
+    },
+  },
+  'registro-nacional': {
+    urlEnv: 'REGISTRO_NACIONAL_URL',
+    defaultUrl: 'http://localhost:4005',
+    keyEnv: 'REGISTRO_NACIONAL_API_KEY',
+    defaultKey: 'demo-registro-nacional-key',
+    actions: {
+      listProperties: { method: 'GET', path: '/registro-nacional/properties', query: ['ownerId'] },
+      getProperty: { method: 'GET', path: '/registro-nacional/property/:folio' },
+      registerCompany: { method: 'POST', path: '/registro-nacional/registerCompany' },
+    },
+  },
+  salud: {
+    urlEnv: 'SALUD_URL',
+    defaultUrl: 'http://localhost:4006',
+    keyEnv: 'SALUD_API_KEY',
+    defaultKey: 'demo-salud-key',
+    actions: {
+      issueSanitaryPermit: { method: 'POST', path: '/salud/issueSanitaryPermit' },
+      openVaccinationRecord: { method: 'POST', path: '/salud/openVaccinationRecord' },
+    },
+  },
+  cfia: {
+    urlEnv: 'CFIA_URL',
+    defaultUrl: 'http://localhost:4007',
+    keyEnv: 'CFIA_API_KEY',
+    defaultKey: 'demo-cfia-key',
+    actions: {
+      reviewPlans: { method: 'POST', path: '/cfia/reviewPlans' },
+    },
   },
 };
 
@@ -62,7 +120,7 @@ export function getRegistry(): RegistryEntry[] {
       service,
       label: AGENCY_LABELS[service],
       baseUrl: baseUrlFor(cfg),
-      actions: { ...cfg.actions },
+      actions: Object.fromEntries(Object.entries(cfg.actions).map(([name, a]) => [name, { ...a }])),
     };
   });
 }
@@ -83,5 +141,8 @@ export function resolve(service: string, action: string): ResolveResult {
   const act = cfg.actions[action];
   if (!act) return { ok: false, reason: 'UNKNOWN_ACTION' };
   const entry = getRegistry().find((e) => e.service === service)!;
-  return { ok: true, resolved: { entry, method: act.method, path: act.path, apiKey: apiKeyFor(service as AgencyName) } };
+  return {
+    ok: true,
+    resolved: { entry, method: act.method, path: act.path, query: act.query ?? [], apiKey: apiKeyFor(service as AgencyName) },
+  };
 }

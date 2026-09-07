@@ -4,14 +4,23 @@
 > and institution response is simulated. Nothing is persisted.
 
 PuraVidaGov shows what a Costa Rican e-government built around **one digital identity**, the **once-only
-principle** and an **interoperability bus** (X-Road style) could feel like. One life event is implemented end to
-end: *Iniciar un negocio*. María logs in with her cédula and a simulated firma digital, her data arrives from the
-Registro Civil, she types only what the State does not already know, and in a few seconds Tributación issues a NITE,
-the CCSS registers her as patrona and her municipalidad issues the patente. She downloads a PDF, sees how much time
-and money the electronic process saved, and can inspect every data exchange made on her behalf.
+principle** and an **interoperability bus** (X-Road style) could feel like. Four life events run end to end across
+seven simulated institutions (Registro Civil, Registro Nacional, Tributación, CCSS, Municipalidad, Ministerio de Salud,
+CFIA/APC): *Iniciar un negocio*, *Tuve un hijo*, *Voy a construir* and *Cambié de domicilio*. María logs in with her
+cédula and a simulated firma digital, her data arrives from the registries, she types only what the State does not
+already know, and in seconds the institutions answer. She downloads a PDF, sees how much time and money the
+electronic process saved, and can inspect every data exchange made on her behalf.
+
+**Every step says whether it can be done in Costa Rica today.** Each workflow and each institutional step carries a
+legal note: *Posible hoy*, *Parcialmente hoy* or *Requiere ley*, with the Costa Rican basis (Ley 8220, 8454, 8968,
+9943, 9986, Decreto 36550…) and the foreign instrument that closes the gap (Estonia's Public Information Act and
+X-Road regulation, Singapore's PSGA, eIDAS 2, the EU once-only system, Uruguay, Brazil). The `/marco-legal` page
+shows the matrix; `/por-que` makes the case for government support, including a digital-dividend rule and a savings
+calculator. Research with sources: `docs/LEGAL.md`, `docs/CASE.md`, `docs/research/`.
 
 Documents: [PRD](docs/PRD.md) · [Architecture](docs/ARCHITECTURE.md) · [Contracts (binding interfaces)](docs/CONTRACTS.md) ·
-[Decisions](docs/DECISIONS.md) · [Demo script](docs/DEMO.md) · [Conventions](CLAUDE.md)
+[Legal status](docs/LEGAL.md) · [The case](docs/CASE.md) · [Decisions](docs/DECISIONS.md) · [Demo script](docs/DEMO.md) ·
+[Conventions](CLAUDE.md)
 
 ## Run it
 
@@ -28,7 +37,7 @@ docker compose -f infra/docker-compose.yml up --build
 | Portal ciudadano (HTTP) | http://localhost:3000 |
 | Backend / orquestador | http://localhost:3001/api/registry |
 | Bus de interoperabilidad | http://localhost:4000/health · `/bus/registry` (needs `x-api-key`) |
-| Agencies | http://localhost:4001–4004/health |
+| Agencies | http://localhost:4001–4007/health |
 
 **Without Docker (Node 22):**
 
@@ -44,7 +53,7 @@ Other citizens: `7-0123-0456` (Talamanca), `2-0987-0654` (Grecia).
 
 ```bash
 npm run typecheck && npm test        # unit tests per package (vitest + supertest)
-npm run e2e                          # boots all services and runs María's journey over HTTP, twice
+npm run e2e                          # boots all services and runs María's journey (5 trámites) over HTTP, twice
 npm run smoke -- http://localhost:3001   # same journey against a running stack (Docker)
 ```
 
@@ -55,10 +64,11 @@ Compose stack and smokes it.
 
 ```
 apps/web        React + Vite + Tailwind SPA (es-CR, English tooltips). Talks only to /api.
-apps/api        Express: login + OTP, signed session tokens, workflow orchestration, once-only provenance, PDF.
+apps/api        Express: login + OTP, signed session tokens, data-driven workflow engine (apps/api/src/workflows),
+                once-only provenance, legal notes per step, generic PDF.
 services/bus    Interoperability bus: data-driven registry, per-agency API keys, timeouts, append-only audit log.
-services/*      Registro Civil · Tributación · CCSS · Municipalidad — independent mocks with their own stores.
-packages/shared Types, zod schemas, activity catalogue, common Express bootstrap.
+services/*      Registro Civil · Tributación · CCSS · Municipalidad · Registro Nacional · Salud · CFIA — independent mocks.
+packages/shared Types, zod schemas, activity catalogue, legal catalogue (legal.ts), common Express bootstrap.
 infra/          Dockerfiles, Compose, Caddy (HTTPS).
 scripts/        dev.mjs, e2e.mjs, smoke.mjs.
 ```
@@ -73,10 +83,12 @@ which stores the **names** of the fields returned and never their values.
 POST /api/login              { id, password }          → { challengeId, otp:{ channel, maskedPhone, demoCode } }
 POST /api/login/otp          { challengeId, code }     → { token, citizen, provenance }
 GET  /api/profile                                      → { citizen, provenance }
-GET  /api/services                                     → life events (only start-business available)
-POST /api/business/register  { business…, consent }    → 202 { txnId }
-GET  /api/business/status/:txnId                       → WorkflowTransaction (steps with exchange ids)
-GET  /api/business/result/:txnId[/pdf]                 → result + onceOnly + benefits · PDF (carta)
+GET  /api/workflows[/:id]                              → life events with fields, steps and legal notes
+GET  /api/options/:source                              → form options (activities, cantons, properties via the bus…)
+POST /api/workflows/:id/start  { input, consent }      → 202 { txnId }
+GET  /api/transactions[/:txnId]                        → the citizen's transactions · status with exchange ids
+GET  /api/transactions/:txnId/result[/pdf]             → cards + onceOnly + benefits · PDF (carta)
+GET  /api/legal                                        → legal catalogue + per-workflow status
 GET  /api/audit                                        → the citizen's own exchanges
 GET  /api/registry                                     → bus registry with live health
 

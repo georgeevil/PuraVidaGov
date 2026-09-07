@@ -15,7 +15,7 @@ export const businessRegistrationSchema = z.object({
 });
 
 export const busRequestSchema = z.object({
-  service: z.enum(['registro', 'tributacion', 'ccss', 'municipalidad']),
+  service: z.enum(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia']),
   action: z.string().min(1),
   data: z.unknown(),
   requester: z.string().min(1),

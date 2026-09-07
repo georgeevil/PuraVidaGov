@@ -36,12 +36,12 @@ export const startBusiness: WorkflowSpec = {
   legal: {
     status: 'parcial',
     today:
-      'Cada pieza existe en línea por separado: Crear Empresa (Registro Nacional), TRIBU-CR (Hacienda), Oficina Virtual (CCSS), la patente en la web de cada municipalidad y el PSF en el Área Rectora. Ley 8220 art. 2 ya prohíbe que se le pidan los mismos documentos dos veces, pero no hay plataforma que conecte las cinco ventanillas.',
+      'Cada pieza existe en línea por separado: Crear Empresa (Registro Nacional), TRIBU-CR (Hacienda, desde octubre de 2025), Oficina Virtual (CCSS), la patente en la web de cada municipalidad y el PSF en línea (Decreto 43432-S). Crear Empresa y la VUI de PROCOMER ya encadenan varias de ellas, pero solo para las instituciones y los 54 cantones que adhirieron voluntariamente. Ley 8220 art. 8 ya obliga a coordinar para no pedirle documentos a la persona; no hay plataforma que lo haga posible.',
     todayEn:
-      'Each piece exists online separately: Crear Empresa (Registro Nacional), TRIBU-CR (tax), Oficina Virtual (CCSS), the patente on each municipality\'s site and the sanitary permit at the local Health Area. Ley 8220 art. 2 already forbids asking for the same documents twice, but no platform connects the five windows.',
+      'Each piece exists online separately: Crear Empresa (Registro Nacional), TRIBU-CR (tax, since October 2025), Oficina Virtual (CCSS), the patente on each municipality\'s site and the online sanitary permit (Decree 43432-S). Crear Empresa and PROCOMER\'s VUI already chain several of them, but only for the institutions and the 54 cantons that opted in. Ley 8220 art. 8 already obliges institutions to coordinate so as not to ask the citizen; there is no platform to make it possible.',
     gap: 'Un bus de interoperabilidad obligatorio y registros base designados (como el capítulo de bases de datos de la ley estonia de información pública) y una identidad digital que toda institución deba aceptar (como eIDAS 2 en la UE).',
     gapEn: 'A mandatory interoperability bus with designated base registries (as in the databases chapter of Estonia\'s Public Information Act) and a digital identity every institution must accept (as eIDAS 2 in the EU).',
-    basis: ['cr-8220', 'cr-8454', 'cr-crear-empresa', 'cr-9986'],
+    basis: ['cr-8220', 'cr-8454', 'cr-crear-empresa', 'cr-9943', 'cr-conecta'],
     model: ['ee-pia', 'eu-eidas2', 'br-14129'],
   },
   fields: [
@@ -112,8 +112,8 @@ export const startBusiness: WorkflowSpec = {
       }),
       legal: {
         status: 'hoy',
-        today: 'La inscripción se hace hoy en TRIBU-CR con firma digital, pero la persona vuelve a digitar nombre, domicilio y actividad. Que Hacienda los tome del Registro Civil y del Registro Nacional es lo que Ley 8220 art. 2 ya exige y nadie hace cumplir.',
-        todayEn: 'Registration is done today in TRIBU-CR with a digital signature, but the person retypes name, address and activity. Having the tax authority take them from the civil and national registries is what Ley 8220 art. 2 already requires and nobody enforces.',
+        today: 'La inscripción se hace hoy en TRIBU-CR con firma digital, pero la persona vuelve a digitar nombre, domicilio y actividad. Que Hacienda los tome del Registro Civil y del Registro Nacional es lo que Ley 8220 art. 8 ya manda y nadie hace cumplir.',
+        todayEn: 'Registration is done today in TRIBU-CR with a digital signature, but the person retypes name, address and activity. Having the tax authority take them from the civil and national registries is what Ley 8220 art. 8 already mandates and nobody enforces.',
         basis: ['cr-8220', 'cr-8454'],
         model: ['ee-pia'],
       },
@@ -159,8 +159,8 @@ export const startBusiness: WorkflowSpec = {
       }),
       legal: {
         status: 'ley',
-        today: 'Cada una de las 84 municipalidades tiene su propia ley de patentes y su propio sistema; varias piden el PSF antes de la patente y el Área Rectora pide la patente antes del PSF. Ninguna puede consultar hoy a Hacienda ni a la CCSS por un canal común.',
-        todayEn: 'Each of the 84 municipalities has its own patente law and system; several require the sanitary permit before the licence while the Health Area requires the licence before the permit. None can query the tax authority or the CCSS through a common channel today.',
+        today: 'Cada una de las 84 municipalidades tiene su propia ley de patentes y su propio sistema (San José todavía usa un PDF autenticado por abogado); 54 adhirieron a la VUI y el resto no. Varias piden el PSF antes de la patente y el Área Rectora pide la patente antes del PSF. Ninguna puede consultar hoy a Hacienda ni a la CCSS por un canal común.',
+        todayEn: 'Each of the 84 municipalities has its own patente law and system (San José still uses a lawyer-authenticated PDF); 54 joined the VUI and the rest did not. Several require the sanitary permit before the licence while the Health Area requires the licence before the permit. None can query the tax authority or the CCSS through a common channel today.',
         gap: 'Una ley que obligue a las municipalidades a usar la identidad digital nacional y el bus (como Ley 9986 lo hizo con SICOP), y una plataforma municipal compartida para los cantones pequeños.',
         gapEn: 'A law obliging municipalities to use the national digital identity and the bus (as Ley 9986 did with SICOP), plus a shared municipal platform for small cantons.',
         basis: ['cr-7794', 'cr-9986'],
@@ -184,8 +184,8 @@ export const startBusiness: WorkflowSpec = {
       }),
       legal: {
         status: 'parcial',
-        today: 'Para actividades de riesgo bajo (grupo C) el PSF es una declaración jurada que el Decreto 39472-S permite resolver de inmediato; para A y B hay inspección. Se entrega en el Área Rectora con copias de la cédula, la patente y el recibo.',
-        todayEn: 'For low-risk activities (group C) the permit is a sworn declaration that Decree 39472-S allows to be resolved immediately; A and B require inspection. It is filed at the Health Area with copies of the id, the licence and the receipt.',
+        today: 'Con el Decreto 43432-S la declaración jurada del PSF ya se presenta en línea y el permiso dura cinco años; para riesgo A y B hay inspección. Sigue siendo un trámite aparte que pide la patente y el recibo que la municipalidad y Hacienda ya tienen.',
+        todayEn: 'Under Decree 43432-S the sworn declaration for the permit is already filed online and the permit lasts five years; risk groups A and B require inspection. It remains a separate procedure asking for the licence and receipt the municipality and tax authority already hold.',
         gap: 'Solo un decreto: que el Ministerio de Salud reciba la declaración jurada firmada digitalmente y tome la patente de la municipalidad por el bus.',
         gapEn: 'Only a decree: let the Ministry receive the digitally signed declaration and take the licence from the municipality through the bus.',
         basis: ['cr-5395', 'cr-8454', 'cr-8220'],

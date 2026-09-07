@@ -203,7 +203,7 @@ life events and three more agencies. Everything in v1 above still holds unless r
 query string), `registro-nacional.getProperty` (GET `/registro-nacional/property/:folio`, `data.folio`),
 `registro-nacional.registerCompany`, `salud.issueSanitaryPermit`, `salud.openVaccinationRecord`, `cfia.reviewPlans`.
 The registry entry for a GET action may declare `query: ['ownerId']` and/or a `:param` in the path; the router fills
-both from `data`.
+both from `data` (`RegistryEntry.actions[name].query?: string[]`). `busRequestSchema.service` accepts all seven agencies.
 
 ## Workflow engine (apps/api)
 

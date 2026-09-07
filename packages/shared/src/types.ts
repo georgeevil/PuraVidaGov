@@ -154,7 +154,7 @@ export interface RegistryEntry {
   service: AgencyName;
   label: string;
   baseUrl: string;
-  actions: Record<string, { method: 'GET' | 'POST'; path: string }>;
+  actions: Record<string, { method: 'GET' | 'POST'; path: string; query?: string[] }>;
   healthy?: boolean;
   lastChecked?: string;
 }
