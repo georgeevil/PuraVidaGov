@@ -41,9 +41,6 @@ try {
   await Promise.all(Object.values(ports).map((p) => waitForHealth(`http://127.0.0.1:${p}/health`)));
   console.log('all services healthy');
   const apiBase = `http://127.0.0.1:${ports.api}`;
-  // bus registry must report every agency healthy
-  const reg = await (await fetch(`${apiBase}/api/registry`, { headers: {} })).json().catch(() => null);
-  if (Array.isArray(reg)) console.log('registry:', reg.map((r) => `${r.service}=${r.healthy ? 'up' : 'DOWN'}`).join(' '));
   await runMariaJourney(apiBase);
   // second run after a demo reset must also pass (idempotent seed)
   await fetch(`${apiBase}/api/__demo/reset`, { method: 'POST' });
