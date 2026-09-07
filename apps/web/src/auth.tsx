@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import type { Citizen } from '@pvg/shared/data';
 import { api, TOKEN_KEY, type Provenance } from './api';
 
@@ -102,12 +102,14 @@ export function useAuth(): AuthContextValue {
   return ctx;
 }
 
-/** Route guard: redirects to /login (remembering where the user wanted to go). */
+/**
+ * Route guard. An anonymous visitor is sent to the public case page (/por-que), not to /login: the argument
+ * is readable without a session and the layout offers "Probar el demo" from there.
+ */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
-  const location = useLocation();
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/por-que" replace />;
   }
   return <>{children}</>;
 }

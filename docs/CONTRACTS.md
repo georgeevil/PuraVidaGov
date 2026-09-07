@@ -245,3 +245,79 @@ provenance) · `/tramite/:id/:txnId` (generic tracker + result: cards, once-only
 hoy?" panel per step) · `/mis-tramites` (list) · `/auditoria` · `/arquitectura` · `/marco-legal` (matrix of
 `LEGAL_REFS` by jurisdiction + per-workflow status table) · `/por-que` (the case for government: content in
 `apps/web/src/content/case.ts`). Old `/negocio/*` routes redirect to `/tramite/start-business`.
+
+---
+
+# v3 — job loss, retirement, licence renewal; public case pages
+
+## New agencies
+
+| Package | Name | Dev port | Docker | Key env |
+|---|---|---|---|---|
+| `services/supen` | Operadora de pensiones (ROP/FCL bajo SUPEN) | 4008 | `supen` | `SUPEN_URL/_API_KEY` (`demo-supen-key`) |
+| `services/mtss` | Ministerio de Trabajo (Agencia Nacional de Empleo) | 4009 | `mtss` | `MTSS_URL/_API_KEY` (`demo-mtss-key`) |
+| `services/cosevi` | COSEVI (MOPT): licencias, multas | 4010 | `cosevi` | `COSEVI_URL/_API_KEY` (`demo-cosevi-key`) |
+
+`AgencyName` gains `'supen' | 'mtss' | 'cosevi'`. All v1/v2 rules apply.
+
+### CCSS — new actions
+- `GET /ccss/employment/:citizenId` → `EmploymentRecord`; 404 `EMPLOYMENT_NOT_FOUND`. Seed: María — employer
+  "Consultores Tica S.A." (`E-30001`), start 2015-03-01, `endDate` 2026-08-31, `status:'cesado'`, last salary
+  ₡950 000, 138 contributions; José — "Hotel Cahuita Ltda." (`E-30002`), start 1990-06-01, no endDate, `activo`,
+  salary ₡720 000, 434 contributions; Ana — "Café Grecia S.A." (`E-30003`), start 2020-01-15, activo, ₡610 000,
+  80 contributions.
+- `POST /ccss/applyPension` body `applyPensionSchema` → `PensionApplicationResponse`. Rules (demo simplification of
+  IVM): `contributions >= 300` and age ≥ 65 (or ≥ 62 with ≥ 360 for `anticipada`) → `aprobada`, else `en-estudio`;
+  `monthlyPensionCrc` = 60 % of last salary (rounded to hundreds); `firstPaymentDate` = first day of next month.
+  Idempotent per `citizenId`. 404 if no employment record. Note: the seed makes José the only one who qualifies
+  (born 1984 → he does NOT; fix: make José born **1961-06-01** in the Registro Civil seed so he is 65 — Registro
+  Civil agent: change José's `dateOfBirth` to `1961-06-01`). María (born 1990) → `en-estudio`.
+- `POST /ccss/enrollVoluntary` body `enrollVoluntarySchema` → `VoluntaryInsuranceResponse`; premium = max(₡25 000,
+  round(declaredIncome × 0.1233)); `coveredFrom` = today. Idempotent per `citizenId`.
+
+### Operadora (SUPEN)
+- `POST /supen/withdrawFcl` body `withdrawFclSchema` → `FclWithdrawalResponse`: `balanceCrc` = round(lastSalary × 1.5 %
+  × months worked) — the operator has its own table keyed by cédula (seed María ₡1 250 000, José ₡3 900 000, Ana
+  ₡480 000); `paymentDate` = today + 15 days (Ley 7983 art. 6); `operator` "Operadora Demo de Pensiones". Idempotent per
+  `(citizenId, terminationDate)`.
+- `POST /supen/ropStatement` body `ropStatementSchema` → `RopStatementResponse`: balances seed María ₡8 400 000,
+  José ₡31 200 000, Ana ₡2 100 000; `monthlyPaymentCrc` = balance / 240 for retiro-programado, / 300 for
+  renta-permanente; `firstPaymentDate` = first day of next month. Idempotent per `citizenId`.
+
+### MTSS (ANE)
+- `POST /mtss/registerJobSeeker` body `registerJobSeekerSchema` → `JobSeekerResponse`: `platform`
+  "Agencia Nacional de Empleo (ane.cr)", `trainingOffer` chosen from a small table by `desiredArea` keyword
+  (software → "INA: Desarrollo web full stack", turismo → "INA: Guía de turismo local", default → "INA: Habilidades
+  digitales básicas"), `firstAppointment` = today + 7 days. Idempotent per `citizenId`.
+
+### COSEVI
+- `POST /cosevi/checkFines` body `checkFinesSchema` → `FinesCheckResponse`: seed María 0 fines, marchamo paid;
+  José 1 fine ₡55 000, marchamo paid; Ana 0, marchamo NOT paid.
+- `POST /cosevi/renewLicence` body `renewLicenceSchema` → `LicenceRenewalResponse`: `licenceNumber` = cédula,
+  `expiryDate` = today + validityYears, `points` 12, `feeCrc` = 5 000 × validityYears + 5 000. 422
+  `PENDING_FINES` when the citizen has pending fines (COSEVI checks its own table); 422 `MARCHAMO_UNPAID` when the
+  marchamo is unpaid. Idempotent per `citizenId`.
+- Also `GET /cosevi/licences`.
+
+### Salud — new action
+- `POST /salud/medicalCertificate` body `medicalCertificateSchema` → `MedicalCertificateResponse` (SEDIMEC simulated
+  under the Ministerio de Salud mock for the demo; in reality the Colegio de Médicos runs it): `result` `apto`, or
+  `apto-con-restricciones` with `restrictions: ['Uso de lentes']` when `usesGlasses`; `validUntil` = today + 180 days.
+  Idempotent per `citizenId` for 180 days.
+
+### Bus registry additions
+`ccss.getEmployment` (GET `/ccss/employment/:citizenId`, `data.citizenId`), `ccss.applyPension`, `ccss.enrollVoluntary`,
+`supen.withdrawFcl`, `supen.ropStatement`, `mtss.registerJobSeeker`, `cosevi.checkFines`, `cosevi.renewLicence`,
+`salud.medicalCertificate`.
+
+## Workflows
+`job-loss` ("Perdí el empleo"), `retirement` ("Me jubilo"), `driver-license` ("Renovar licencia de conducir") become
+`available:true` specs in `apps/api/src/workflows/`. `pension` is renamed `retirement` (id change; the old id is gone).
+
+## Public pages (no login)
+- API: `GET /api/registry`, `GET /api/benefits` and `GET /api/activities` become public (no `requireAuth`), like
+  `/api/workflows` and `/api/legal` already are. Everything about a citizen stays behind auth.
+- Web: `/por-que`, `/marco-legal` and `/arquitectura` render without a session. An anonymous visitor landing on `/`
+  is sent to `/por-que` (not `/login`); the layout for anonymous visitors shows nav "Por qué · Marco legal · Cómo
+  funciona" and a primary button "Probar el demo" → `/login`. Logged-in users keep the full nav. `/por-que` ends with
+  a CTA card "Pruebe el demo como María" → `/login`.

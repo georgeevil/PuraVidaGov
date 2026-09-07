@@ -60,6 +60,27 @@ services:
     healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4007/health"], interval: 5s, timeout: 3s, retries: 10 }
     ports: ["127.0.0.1:4007:4007"]
 
+  supen:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/supen } }
+    environment: { SUPEN_PORT: 4008 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4008/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4008:4008"]
+
+  mtss:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/mtss } }
+    environment: { MTSS_PORT: 4009 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4009/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4009:4009"]
+
+  cosevi:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/cosevi } }
+    environment: { COSEVI_PORT: 4010 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4010/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4010:4010"]
+
   bus:
     <<: *service
     build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/bus } }
@@ -72,6 +93,9 @@ services:
       REGISTRO_NACIONAL_URL: http://registro-nacional:4005
       SALUD_URL: http://salud:4006
       CFIA_URL: http://cfia:4007
+      SUPEN_URL: http://supen:4008
+      MTSS_URL: http://mtss:4009
+      COSEVI_URL: http://cosevi:4010
     healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"], interval: 5s, timeout: 3s, retries: 10 }
     depends_on:
       registro: { condition: service_healthy }
@@ -81,6 +105,9 @@ services:
       registro-nacional: { condition: service_healthy }
       salud: { condition: service_healthy }
       cfia: { condition: service_healthy }
+      supen: { condition: service_healthy }
+      mtss: { condition: service_healthy }
+      cosevi: { condition: service_healthy }
     ports: ["127.0.0.1:4000:4000"]
 
   api:

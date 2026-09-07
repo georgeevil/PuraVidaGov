@@ -2,12 +2,27 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 
-const NAV: Array<{ to: string; label: string; en: string; end?: boolean }> = [
+interface NavItem {
+  to: string;
+  label: string;
+  en: string;
+  end?: boolean;
+}
+
+/** Full nav for a signed-in citizen. */
+const NAV: NavItem[] = [
   { to: '/', label: 'Inicio', en: 'Home', end: true },
   { to: '/mis-tramites', label: 'Mis trámites', en: 'My procedures' },
   { to: '/auditoria', label: 'Mis datos compartidos', en: 'My shared data (audit log)' },
   { to: '/marco-legal', label: 'Marco legal', en: 'Legal framework — what is possible today' },
   { to: '/por-que', label: 'Por qué', en: 'Why — the case for a once-only government' },
+  { to: '/arquitectura', label: 'Cómo funciona', en: 'How it works' },
+];
+
+/** Public pages (v3): what an anonymous visitor can read without a session. */
+const PUBLIC_NAV: NavItem[] = [
+  { to: '/por-que', label: 'Por qué', en: 'Why — the case for a once-only government' },
+  { to: '/marco-legal', label: 'Marco legal', en: 'Legal framework — what is possible today' },
   { to: '/arquitectura', label: 'Cómo funciona', en: 'How it works' },
 ];
 
@@ -34,9 +49,9 @@ export function Footer() {
   );
 }
 
-function Logo() {
+function Logo({ home }: { home: string }) {
   return (
-    <Link to="/" className="flex items-center gap-2" title="PuraVidaGov — citizen portal (demo)">
+    <Link to={home} className="flex items-center gap-2" title="PuraVidaGov — citizen portal (demo)">
       <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary-600 text-sm font-bold text-white">
         PV
       </span>
@@ -61,11 +76,31 @@ export function Layout() {
     navigate('/login', { replace: true });
   }
 
-  const links = NAV.map((n) => (
+  const links = (isAuthenticated ? NAV : PUBLIC_NAV).map((n) => (
     <NavLink key={n.to} to={n.to} end={n.end} className={navClass} title={n.en}>
       {n.label}
     </NavLink>
   ));
+
+  const menuButton = (
+    <button
+      type="button"
+      className="btn-secondary !px-2 !py-1.5 md:hidden"
+      aria-expanded={open}
+      aria-controls="menu-movil"
+      aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+      title="Menu"
+      onClick={() => setOpen((v) => !v)}
+    >
+      <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true">
+        {open ? (
+          <path d="M5.3 4.3 10 9l4.7-4.7 1.4 1.4L11.4 10.4l4.7 4.7-1.4 1.4L10 11.8l-4.7 4.7-1.4-1.4 4.7-4.7-4.7-4.7z" />
+        ) : (
+          <path d="M3 5h14v2H3zm0 4h14v2H3zm0 4h14v2H3z" />
+        )}
+      </svg>
+    </button>
+  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -73,12 +108,10 @@ export function Layout() {
       <DemoBanner />
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <Logo />
-          {isAuthenticated && (
-            <nav aria-label="Principal" className="hidden flex-wrap gap-1 md:flex">
-              {links}
-            </nav>
-          )}
+          <Logo home={isAuthenticated ? '/' : '/por-que'} />
+          <nav aria-label="Principal" className="hidden flex-wrap gap-1 md:flex">
+            {links}
+          </nav>
           <div className="flex items-center gap-2 text-sm">
             {isAuthenticated && citizen ? (
               <>
@@ -88,28 +121,16 @@ export function Layout() {
                 <button type="button" onClick={handleLogout} className="btn-secondary !px-3 !py-1.5" title="Sign out">
                   Salir
                 </button>
-                <button
-                  type="button"
-                  className="btn-secondary !px-2 !py-1.5 md:hidden"
-                  aria-expanded={open}
-                  aria-controls="menu-movil"
-                  aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
-                  title="Menu"
-                  onClick={() => setOpen((v) => !v)}
-                >
-                  <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true">
-                    {open ? (
-                      <path d="M5.3 4.3 10 9l4.7-4.7 1.4 1.4L11.4 10.4l4.7 4.7-1.4 1.4L10 11.8l-4.7 4.7-1.4-1.4 4.7-4.7-4.7-4.7z" />
-                    ) : (
-                      <path d="M3 5h14v2H3zm0 4h14v2H3zm0 4h14v2H3z" />
-                    )}
-                  </svg>
-                </button>
               </>
-            ) : null}
+            ) : (
+              <Link to="/login" className="btn-primary !px-3 !py-1.5" title="Try the demo — sign in as María">
+                Probar el demo
+              </Link>
+            )}
+            {menuButton}
           </div>
         </div>
-        {isAuthenticated && open && (
+        {open && (
           <nav id="menu-movil" aria-label="Principal (móvil)" className="border-t border-slate-100 md:hidden">
             <div className="mx-auto flex max-w-6xl flex-col gap-0.5 px-4 py-2">{links}</div>
           </nav>

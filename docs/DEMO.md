@@ -48,3 +48,16 @@ Click "¿Qué significa cada etiqueta?" once, then:
 
 Talking point: the Government already chose X-Road (project Conecta, 2026). This demo is not a different idea; it is
 what Conecta looks like from the citizen's side once a law obliges everyone to join.
+
+## Version 3: the argument without a login, and three more life events
+
+- Open the site logged out: it lands on **Por qué**. Share that URL with anyone; nothing there needs a session. "Probar
+  el demo" leads to the login.
+- **Perdí el empleo** (María): her employer already reported the termination to the CCSS. The FCL is paid without a
+  dismissal letter, the MTSS registers her and suggests an INA course, and her health coverage continues. The event as a
+  whole is red: there is no unemployment insurance and nothing lets the CCSS act on its own data.
+- **Me jubilo** (log in as José, `7-0123-0456`, born 1961 with 434 cuotas): the IVM pension is approved with the
+  contributions the CCSS already has (this is online since July 2025, the best recent Costa Rican example), and the ROP
+  payout is set at the operator in the same step, which today needs the printed resolution.
+- **Renovar licencia** (María): digital medical certificate, fines and marchamo check, renewal with the cédula photo.
+  Only a MOPT regulation stands in the way; the MOPT tendered the digital licence in 2026.

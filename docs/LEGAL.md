@@ -61,9 +61,27 @@ version that the portal renders is `packages/shared/src/legal.ts` (catalogue of 
 | CCSS | parcial | Online self-service, separately. | Same. |
 | Municipalidad | ley | Per canton; taxpayer rolls not connected. | Same, plus municipal harmonisation. |
 
-### Próximamente (catalogue only)
-- **Renovar licencia** — *parcial*: the medical certificate is digital (SEDIMEC) but renewal is in person; MOPT tendered a digital licence in 2026. Needs a decree, not a law, once IDC provides remote proofing.
-- **Pensión** — *parcial*: the IVM pension is online since 21 July 2025; the FCL payout (Ley 7983 art. 6) still needs proof of dismissal; there is no unemployment insurance.
+### Perdí el empleo — *ley*
+| Step | Status | Today | Gap |
+|---|---|---|---|
+| Cese (CCSS) | hoy | The employer reports the exit on the monthly payroll; the record exists. | Nobody else reads it. |
+| FCL (operadora) | parcial | Ley 7983 art. 6: payout within 15 days, but the worker must prove dismissal. | Operator reads the termination at the CCSS through the bus, with consent. |
+| Bolsa de empleo (MTSS) | parcial | Online job bank (Agencia Nacional de Empleo); self-registration, retyping known data. Detail not independently verified. | "Termination" life event offering registration and INA training. |
+| Seguro voluntario (CCSS) | ley | Coverage lapses; voluntary enrolment in person. | Automatic continuity and online enrolment by CCSS regulation under a statute. Unemployment insurance is a separate law. |
+
+### Me jubilo — *parcial*
+| Step | Status | Today | Gap |
+|---|---|---|---|
+| Cuotas (CCSS) | hoy | Checked internally since the online IVM application (21 July 2025). | — |
+| Pensión IVM (CCSS) | hoy | Online in the Oficina Virtual; IBAN; employer note if still working. | — |
+| ROP (operadora, SUPEN) | parcial | Operators have digital channels but require the CCSS resolution from the person. | SUPEN rule that operators receive the resolution through the bus. |
+
+### Renovar licencia de conducir — *parcial*
+| Step | Status | Today | Gap |
+|---|---|---|---|
+| Dictamen médico | hoy | Digital in SEDIMEC (Colegio de Médicos), 180 days. Simulated in the Salud mock. | — |
+| Multas y marchamo (COSEVI) | hoy | Online. | — |
+| Renovación (COSEVI) | parcial | In person at 42 BCR branches / 13 MOPT offices for the photo; MOPT tender 2026 for a digital licence; physical licence not mandatory since December 2025. | A MOPT/COSEVI regulation accepting the Civil Registry photo and the IDC as remote proof. No statute needed. |
 
 ## What a "Ley de Eficiencia Digital" would have to add
 
