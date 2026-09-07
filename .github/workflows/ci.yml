@@ -29,7 +29,8 @@ jobs:
       - run: docker compose -f infra/docker-compose.yml up -d --wait --wait-timeout 120
       - run: node scripts/smoke.mjs http://localhost:3001
       - run: curl -sSf http://localhost:3000/ | grep -q PuraVidaGov
-      - run: curl -sSfk https://localhost:8443/api/benefits
+      - run: curl -sSfk https://localhost:8443/ | grep -q PuraVidaGov
+      - run: curl -sSfk -X POST https://localhost:8443/api/__demo/reset | grep -q '"ok":true'
       - if: always()
         run: docker compose -f infra/docker-compose.yml logs --no-color | tail -200
       - if: always()
