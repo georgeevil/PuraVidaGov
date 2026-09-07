@@ -1,0 +1,14 @@
+# HTTPS front door for the demo (PRD §7.3): self-signed internal CA, https://localhost:8443
+{
+	auto_https disable_redirects
+}
+
+localhost:8443 {
+	tls internal
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+	handle {
+		reverse_proxy web:80
+	}
+}

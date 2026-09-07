@@ -1,0 +1,88 @@
+# One command demo: docker compose -f infra/docker-compose.yml up --build
+# Opens: https://localhost:8443 (portal, self-signed cert) · http://localhost:3000 (portal, plain)
+#        http://localhost:3001/api/registry (backend) · http://localhost:4000/health (bus)
+name: puravidagov
+
+x-service: &service
+  build:
+    context: ..
+    dockerfile: infra/Dockerfile.service
+  env_file: ../.env
+  restart: unless-stopped
+
+services:
+  registro:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/registro-civil } }
+    environment: { REGISTRO_PORT: 4001 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4001/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4001:4001"]
+
+  tributacion:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/tributacion } }
+    environment: { TRIBUTACION_PORT: 4002 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4002/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4002:4002"]
+
+  ccss:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/ccss } }
+    environment: { CCSS_PORT: 4003 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4003/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4003:4003"]
+
+  municipalidad:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/municipalidad } }
+    environment: { MUNICIPALIDAD_PORT: 4004 }
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4004/health"], interval: 5s, timeout: 3s, retries: 10 }
+    ports: ["127.0.0.1:4004:4004"]
+
+  bus:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: services/bus } }
+    environment:
+      BUS_PORT: 4000
+      REGISTRO_URL: http://registro:4001
+      TRIBUTACION_URL: http://tributacion:4002
+      CCSS_URL: http://ccss:4003
+      MUNICIPALIDAD_URL: http://municipalidad:4004
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"], interval: 5s, timeout: 3s, retries: 10 }
+    depends_on:
+      registro: { condition: service_healthy }
+      tributacion: { condition: service_healthy }
+      ccss: { condition: service_healthy }
+      municipalidad: { condition: service_healthy }
+    ports: ["127.0.0.1:4000:4000"]
+
+  api:
+    <<: *service
+    build: { context: .., dockerfile: infra/Dockerfile.service, args: { WORKSPACE: apps/api } }
+    environment:
+      API_PORT: 3001
+      BUS_URL: http://bus:4000
+      CORS_ORIGIN: http://localhost:3000
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/health"], interval: 5s, timeout: 3s, retries: 10 }
+    depends_on:
+      bus: { condition: service_healthy }
+    ports: ["127.0.0.1:3001:3001"]
+
+  web:
+    build: { context: .., dockerfile: infra/Dockerfile.web }
+    restart: unless-stopped
+    depends_on:
+      api: { condition: service_healthy }
+    ports: ["127.0.0.1:3000:80"]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [web, api]
+    ports: ["127.0.0.1:8443:8443"]
+
+volumes:
+  caddy_data:
