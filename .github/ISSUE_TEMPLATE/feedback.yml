@@ -1,0 +1,63 @@
+name: Feedback de una persona usuaria
+description: Algo que alguien reportó al usar el sitio — confuso, equivocado o roto.
+title: "Feedback: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Para pasar a este formato lo que llega por correo a `contact@sindarvueltas.org`.
+        Una persona por issue: dos personas confundidas por la misma página siguen siendo dos datos.
+  - type: input
+    id: pagina
+    attributes:
+      label: Página
+      description: La ruta, tal como venía en el asunto del correo.
+      placeholder: /por-que
+    validations:
+      required: true
+  - type: textarea
+    id: cita
+    attributes:
+      label: Lo que dijo, textual
+      description: >
+        Sin corregir ni resumir. La forma en que alguien describe su confusión es la mitad del dato;
+        parafrasearla la convierte en la opinión de quien transcribe.
+    validations:
+      required: true
+  - type: textarea
+    id: intencion
+    attributes:
+      label: Qué estaba tratando de hacer
+    validations:
+      required: false
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo
+      options:
+        - Confuso — funciona, pero no se entiende
+        - Equivocado — dice algo que no es cierto
+        - Roto — no funciona
+        - Falta — esperaba algo que no está
+    validations:
+      required: true
+  - type: dropdown
+    id: quien
+    attributes:
+      label: Perfil de quien lo dijo
+      description: Importa. Una persona sin contexto técnico confundida es una señal distinta de un colega confundido.
+      options:
+        - Persona usuaria sin contexto técnico
+        - Alguien con contexto del sector público
+        - Persona desarrolladora o técnica
+        - Prefiero no decir
+    validations:
+      required: false
+  - type: checkboxes
+    id: legal
+    attributes:
+      label: Antes de cerrar
+      options:
+        - label: Si toca una afirmación legal, la corrección tiene fuente en `docs/research/` — la regla de que toda cita se sostiene no se suspende porque alguien reclamó.
+          required: false

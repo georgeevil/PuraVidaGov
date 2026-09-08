@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { PortalLink } from './Portal';
+import { Feedback } from './Feedback';
 
 interface NavItem {
   to: string;
@@ -47,8 +48,11 @@ export function DemoBanner() {
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-4 text-center text-xs text-slate-500">
-        PuraVidaGov · prueba de concepto inspirada en X-Road (Estonia) y LifeSG (Singapur)
+      <div className="mx-auto max-w-6xl space-y-1 px-4 py-4 text-center text-xs text-slate-500">
+        <p>PuraVidaGov · prueba de concepto inspirada en X-Road (Estonia) y LifeSG (Singapur)</p>
+        <p>
+          <Feedback />
+        </p>
       </div>
     </footer>
   );
