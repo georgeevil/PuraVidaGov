@@ -12,7 +12,7 @@ export interface CaseContent {
   dividend: { title: string; intro: string; rule: { share: number; destination: string }[]; caveats: string[] };
   evidence: { title: string; items: { claim: string; source: string; url?: string }[] };
   calculator: { title: string; intro: string; gdpCrcBillions: number; defaultSavingsPct: number; minPct: number; maxPct: number };
-  asks: { title: string; items: string[] };
+  asks: { title: string; intro?: string; items: string[] };
 }
 
 export const CASE: CaseContent = {
@@ -175,12 +175,18 @@ export const CASE: CaseContent = {
     maxPct: 1.5,
   },
   asks: {
-    title: 'Lo que pedimos',
+    // Deliberately descriptive, not a petition. See docs/research/foreigner-advocacy-cr.md §6c: a foreign
+    // resident authoring an illustrative artefact is protected expression; "pedimos"/"exigimos" addressed to
+    // the Asamblea reads as promoting a legislative proposal, which is the phrasing that best fits the
+    // Sala IV's "influir en la formación de la política estatal". Same content, stated as analysis.
+    title: 'Qué haría falta para que esto funcionara de verdad',
+    intro:
+      'Esto no es una petición ni una propuesta que alguien esté impulsando: es la lista de piezas que, según la investigación de las páginas anteriores, tendrían que existir para que los doce trámites de este demo dejaran de ser una simulación. Se publica para que quien trabaje en el tema pueda discutirla, corregirla o descartarla.',
     items: [
-      'A la Asamblea Legislativa: una Ley de Eficiencia Digital con interoperabilidad obligatoria, «una sola vez» con sanción, identidad digital que todos deban aceptar y una regla de dividendo digital.',
-      'Al Poder Ejecutivo: un decreto que designe los registros base (TSE, Registro Nacional, Hacienda, CCSS) y una autoridad de gobierno digital con poder sobre el gasto en TI.',
-      'A las instituciones autónomas y municipalidades: conectarse al bus como ya se conectaron a SICOP.',
-      'A la ciudadanía: exigir que se cumpla la Ley 8220. Cada vez que le pidan una constancia que otra institución emite, el Estado está incumpliendo el artículo 8 de una ley de 2002.',
+      'En la ley: una norma de eficiencia digital que haga obligatoria la interoperabilidad, le dé al «una sola vez» una consecuencia cuando se incumple, obligue a toda institución a aceptar la identidad digital nacional y deje por escrito qué se hace con el ahorro una vez verificado.',
+      'En vía de decreto, sin necesidad de ley: designar los registros base —el TSE para identidad y domicilio, el Registro Nacional para bienes y sociedades, Hacienda para situación tributaria, la CCSS para aseguramiento— y darle a la autoridad de gobierno digital poder efectivo sobre el gasto en TI.',
+      'En las instituciones autónomas y las municipalidades: conectarse al bus. Ya ocurrió una vez, cuando la Ley 9986 hizo obligatorio SICOP para toda la Administración bajo pena de nulidad.',
+      'Y algo que no necesita norma nueva: el artículo 8 de la Ley 8220 ya obliga a cada institución a coordinar con las demás «para no solicitarla al administrado». Cada constancia que hoy se le pide a una persona, existiendo ya en otra oficina del Estado, es una ley de 2002 que no se está aplicando.',
     ],
   },
 };

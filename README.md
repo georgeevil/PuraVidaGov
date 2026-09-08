@@ -131,6 +131,22 @@ three benefit figures (`BENEFIT_TRIPS_AVOIDED`, `BENEFIT_HOURS_SAVED`, `BENEFIT_
 Not connected to TSE, Hacienda, CCSS or any municipality. Not legally valid. Not a data-protection-compliant system —
 it is a reference architecture to discuss one. See `docs/ARCHITECTURE.md` for what a production version would change.
 
-## License
+## Licensing
 
-MIT.
+| What | Licence |
+|---|---|
+| Source code | [PolyForm Noncommercial 1.0.0](LICENSE) |
+| The research and the argument — `docs/research/`, `docs/LEGAL.md`, `docs/CASE.md`, and the Spanish page copy | [CC BY-NC-SA 4.0](LICENSE-docs) |
+| The program's own technical docs — `docs/CONTRACTS.md`, `docs/PRD.md`, `docs/DECISIONS.md`, `docs/DEPLOY.md`, `CLAUDE.md` | PolyForm, with the code (Ley 6683 art. 4) |
+
+**Governments, universities, public research bodies and charities may use this freely**, including in
+production — the PolyForm licence names them as a permitted purpose "regardless of the source of funding".
+So may anyone using it personally or noncommercially. Distribution and modification are permitted.
+
+**A firm being paid to deliver, deploy or operate it needs a commercial licence**, even when the client is
+a ministry. That is the whole point of the choice: a ministry should be able to run this for free; a
+consultancy billing that ministry to deploy it should not get the work for free. See [COMMERCIAL.md](COMMERCIAL.md).
+
+Every version up to and including commit `7efbf07` was MIT licensed, and that grant stands for copies already
+distributed. It does not extend to anything after that commit. Code contributions need a copyright assignment or CLA, for the reason
+explained in [CONTRIBUTING.md](CONTRIBUTING.md). See [NOTICE](NOTICE) for the full statement.

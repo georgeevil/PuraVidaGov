@@ -127,3 +127,68 @@ portal.
 `.cr` was never an option — Cloudflare Registrar does not support it, and NIC.cr is the only path. Not
 registering anything under `.go.cr`, and staying visibly outside the government namespace, is itself a
 credibility asset for a project arguing that the government should change.
+
+## D-024 — PolyForm Noncommercial for the code, CC BY-NC-SA for the research
+
+**Status:** accepted · **Supersedes:** the MIT licence, which was never itself a recorded decision — the
+repository simply carried an MIT `LICENSE` from its first commit
+
+The demo was MIT. MIT lets a systems integrator take the whole thing, bill a ministry to deploy it, and owe
+nothing to anyone. That is precisely the outcome the project should not subsidise, and it is also the only
+leverage a single author has.
+
+**PolyForm Noncommercial 1.0.0** for the code, because it is the only reviewed licence surveyed in
+`docs/research/licensing-options.md` that both forbids commercial delivery *and* names the intended users in
+its own operative text: use by a government institution, educational institution, public research
+organization, public safety or health organization, environmental protection organization or charity is a
+permitted purpose "regardless of the source of funding". A ministry never has to read a FAQ to know it is
+allowed. Every other candidate — Elastic License, BUSL, FSL, AGPL, CC BY-NC — either permits paid delivery,
+converts to permissive on a timer, or is unsuited to software.
+
+**CC BY-NC-SA 4.0** for the research and the Spanish page copy, because they are prose, not software, and
+because ShareAlike is the point: adapting the analysis into a real policy document is the best thing that
+could happen to it, and the derived analysis should stay open in turn. The program's *technical*
+documentation stays under the code licence — Ley 6683 art. 4 treats it as part of the program.
+
+**The honest costs, recorded so nobody has to rediscover them.** PolyForm is not OSI-approved, so this is
+not open source and should never be called that. The project therefore fails the
+[Standard for Public Code](https://standard.publiccode.net/), which requires an OSI licence *and* that
+contributors not be asked to assign copyright — and `CONTRIBUTING.md` asks for exactly that, because the
+ability to sell a commercial licence dies the moment one outside contributor keeps their copyright. There is
+a real counter-argument in §6.7 of the research: X-Road itself is MIT and defends its position with a
+trademark rather than a licence, every government reference implementation verified is OSI-licensed, and
+both Elastic and Redis eventually reversed their relicensing. The trade is deliberate: a demo whose purpose
+is to be adopted by a government loses little from a licence that governments may freely use, and gains the
+only negotiating position its author has.
+
+**The MIT history is not withdrawn** and cannot be. Every version up to and including commit `7efbf07` was
+MIT; anyone may fork it. `COMMERCIAL.md` says so in public rather than leaving a lawyer to discover it.
+
+**The boundary is a commit, not a date.** An earlier draft of `NOTICE` said "published before 8 September
+2026", which the relicensing commit itself contradicted: it is dated 7 September in Costa Rica and 8
+September in UTC. A licence boundary that depends on the reader's time zone is exactly the kind of defect
+that is free to fix now and expensive to argue about later.
+
+## D-025 · The portal runs on Cloudflare Containers, and Render and Cloud Run stay documented as fallbacks
+Four hosts were compared for the all-in-one image. The choice was made on a measurement, not a preference:
+the container's footprint after a full thirteen-trámite journey is **79 MiB**, which fits the `lite` instance
+(1/16 vCPU, 256 MiB) with room to spare. Cold start is **20 s**, against Render's documented "about a minute"
+on 0.1 CPU.
+
+The cost is that this is the one option that is not free: it needs Workers Paid at $5/month. What the $5 buys
+is that DNS, the registrar, the static site, the container and TLS are all with one vendor already in use, so
+`demo.sindarvueltas.org` is a Worker Custom Domain rather than a hand-managed record, and there is no billing
+account with a card attached that a misconfiguration could run up.
+
+**`max_instances: 1` and `sleepAfter: 10m` are load-bearing, not tuning.** They are what make the $5 a
+ceiling rather than a floor; removing either turns a traffic spike into a bill. Anyone editing
+`infra/cloudflare/wrangler.jsonc` or `worker.ts` should treat them as part of the cost decision.
+
+**Render (`render.yaml`) and Cloud Run stay in `docs/DEPLOY.md` as fallbacks**, not as recommendations. They
+run the same image, so moving is a DNS change plus a redeploy. Render is the answer if the $5 ever has to go
+— it cannot bill you at all — at the cost of the slower wake. Cloud Run is genuinely always-free at this
+volume but requires a card, so it needs a $1 budget alert and a `max-instances` cap before it is safe.
+
+The earlier draft of `DEPLOY.md` listed Cloudflare Containers under "do not plan around these" because it is
+not free. That was written before the footprint was measured and before the domain moved to Cloudflare, and
+it is now wrong; the list no longer contains the option the project actually uses.
