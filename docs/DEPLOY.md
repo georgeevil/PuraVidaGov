@@ -4,8 +4,8 @@ Three targets, one codebase. Pick by what the audience needs, not by what is che
 
 | Target | What it is | Cold start | Cost | Use it for |
 |---|---|---|---|---|
-| **Compose** (`infra/docker-compose.yml`) | 12 containers, one per institution + Caddy | none | your machine | Local demos, CI, showing the architecture |
-| **All-in-one** (`infra/Dockerfile.allinone`) | the same 12 Express apps in **one** Node process | 10–60 s on free plans | free tier | The interactive portal on a public URL |
+| **Compose** (`infra/docker-compose.yml`) | 17 containers: 13 agencies + bus + API + web + Caddy | none | your machine | Local demos, CI, showing the architecture |
+| **All-in-one** (`infra/Dockerfile.allinone`) | the same 15 Express apps in **one** Node process | 10–60 s on free plans | free tier | The interactive portal on a public URL |
 | **Static** (`npm run build:static`) | the three public pages, **no backend** | none | free | The link you send to legislators and press |
 
 The Compose stack is unchanged and remains the reference architecture: twelve separate containers are what
@@ -13,7 +13,7 @@ make "the institutions are independent and the bus is the only link" visible. No
 
 **The domain is `sindarvueltas.org`**, registered at Cloudflare Registrar on 8 September 2026 and on
 Cloudflare nameservers. The apex serves the static case pages; `demo.sindarvueltas.org` serves the
-interactive portal. Why that name and not a `puravida*` one: `docs/DECISIONS.md` D-021.
+interactive portal. Why that name and not a `puravida*` one: `docs/DECISIONS.md` D-023.
 
 Hosting facts below were verified on 8 September 2026 against each provider's own pages. Sources and the
 things that could **not** be verified are in `docs/research/hosting-free-tier.md`. Free tiers move; re-check
@@ -76,7 +76,7 @@ generated `_redirects` (`/*  /index.html  200`) covers it explicitly, so do not 
 
 ## 2. The interactive portal — one container
 
-`scripts/serve-all.mjs` runs the bus and all thirteen agencies on `127.0.0.1` (ports 4000–4010, shift with
+`scripts/serve-all.mjs` runs the bus and all thirteen agencies on `127.0.0.1` (ports 4000–4013, shift with
 `INTERNAL_PORT_BASE`), mounts the portal API, and serves the built SPA. **Only `PORT` is exposed.** The
 API → bus → agency calls stay real HTTP, so the audit trail is exactly what the Compose stack produces.
 
@@ -88,7 +88,7 @@ docker build -f infra/Dockerfile.allinone -t puravidagov .
 docker run -p 8080:8080 -e AGENCY_LATENCY_MS=150 puravidagov
 ```
 
-Health check: `GET /healthz` → `{"status":"ok","mode":"all-in-one","agencies":10,...}`. It answers about a
+Health check: `GET /healthz` → `{"status":"ok","mode":"all-in-one","agencies":13,...}`. It answers about a
 second after the process starts; the rest of any cold start is the platform pulling and scheduling the image.
 
 Set `SESSION_SECRET` in production. Everything else has a demo-safe default; `.env.example` documents the lot.

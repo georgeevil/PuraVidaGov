@@ -34,7 +34,7 @@ infra/ (Dockerfiles, compose, Caddyfile) · scripts/ (dev, e2e, smoke, serve-all
 npm install && npm run dev                                   # everything on localhost (web :5173)
 docker compose -f infra/docker-compose.yml up --build        # web :3000, https :8443
 npm run typecheck && npm test && npm run e2e                 # minimum before calling anything done
-npm start                                                    # all 12 apps in ONE process on $PORT (free-tier target)
+npm start                                                    # all 15 apps in ONE process on $PORT (free-tier target)
 npm run build:static                                         # public pages only, no backend → apps/web/dist-static
 ```
 Three deployment targets, all in CI; see `docs/DEPLOY.md`. **Compose stays the reference architecture** — do

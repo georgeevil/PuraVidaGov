@@ -115,7 +115,7 @@ Three targets from one codebase, all covered by CI. Full guide with the verified
 | One container | `docker build -f infra/Dockerfile.allinone -t pvg . && docker run -p 8080:8080 pvg` | 10–60 s on free plans | the interactive portal on a public URL |
 | Static, no backend | `npm run build:static` → `apps/web/dist-static` | none | the link for legislators and press |
 
-The all-in-one image runs the same twelve Express apps in one Node process: bus and agencies on loopback,
+The all-in-one image runs the same fifteen Express apps in one Node process: bus and agencies on loopback,
 only `PORT` exposed, the audit trail unchanged. `render.yaml` is a ready Render blueprint and the same image
 runs on Cloud Run. The static build carries the three public pages plus JSON generated from the same source
 of truth as the API; set `VITE_PORTAL_URL` so its "Probar el demo" buttons point at the interactive
