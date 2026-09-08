@@ -1,14 +1,17 @@
-# Deploying PuraVidaGov, including on free tiers
+# Deploying PuraVidaGov
+
+**Live:** the public site is at <https://sindarvueltas.org> (Cloudflare Pages) and the interactive portal at
+<https://demo.sindarvueltas.org> (Cloudflare Containers). Both are deployed from this repo; see §1 and §2 option C.
 
 Three targets, one codebase. Pick by what the audience needs, not by what is cheapest.
 
 | Target | What it is | Cold start | Cost | Use it for |
 |---|---|---|---|---|
-| **Compose** (`infra/docker-compose.yml`) | 12 containers, one per institution + Caddy | none | your machine | Local demos, CI, showing the architecture |
-| **All-in-one** (`infra/Dockerfile.allinone`) | the same 12 Express apps in **one** Node process | 10–60 s on free plans | free tier | The interactive portal on a public URL |
+| **Compose** (`infra/docker-compose.yml`) | 15 containers, one per institution + Caddy | none | your machine | Local demos, CI, showing the architecture |
+| **All-in-one** (`infra/Dockerfile.allinone`) | the same 14 Express apps in **one** Node process | 20 s on Cloudflare, up to 60 s on free plans | free tier, or included in Workers Paid | The interactive portal on a public URL |
 | **Static** (`npm run build:static`) | the three public pages, **no backend** | none | free | The link you send to legislators and press |
 
-The Compose stack is unchanged and remains the reference architecture: twelve separate containers are what
+The Compose stack is unchanged and remains the reference architecture: fifteen separate containers are what
 make "the institutions are independent and the bus is the only link" visible. Nothing below replaces it.
 
 Hosting facts below were verified on 8 September 2026 against each provider's own pages. Sources and the
@@ -80,7 +83,7 @@ docker build -f infra/Dockerfile.allinone -t puravidagov .
 docker run -p 8080:8080 -e AGENCY_LATENCY_MS=150 puravidagov
 ```
 
-Health check: `GET /healthz` → `{"status":"ok","mode":"all-in-one","agencies":10,...}`. It answers about a
+Health check: `GET /healthz` → `{"status":"ok","mode":"all-in-one","agencies":13,...}`. It answers about a
 second after the process starts; the rest of any cold start is the platform pulling and scheduling the image.
 
 Set `SESSION_SECRET` in production. Everything else has a demo-safe default; `.env.example` documents the lot.
@@ -122,6 +125,42 @@ Three warnings, in order of how much they will cost you:
    the closest eligible to Costa Rica. The GA alternative is a global load balancer, which is **not free**.
 3. `--source` builds through Cloud Build and stores images in Artifact Registry, whose free storage is
    **0.5 GB**. A Node image plus a few retained revisions exceeds that, so set a cleanup policy.
+
+### Option C — Cloudflare Containers (what sindarvueltas.org actually runs)
+
+If you are already paying the $5/month Workers Paid plan, this keeps the static site and the portal on one
+platform, one bill and one domain.
+
+```bash
+npx wrangler deploy -c infra/cloudflare/wrangler.jsonc
+```
+
+`infra/cloudflare/worker.ts` is a Worker whose only job is to hand the request to a container running
+`infra/Dockerfile.allinone` — the same image as Option A and B. `infra/cloudflare/wrangler.jsonc` pins it to the
+`lite` instance type (1/16 vCPU, 256 MiB, 2 GB disk), `max_instances: 1`, and `sleepAfter = '10m'`.
+
+**Why those numbers.** Measured footprint of the all-in-one after a full thirteen-trámite journey is **79 MiB**, so
+256 MiB is ample. The Workers Paid plan includes 25 GiB-hours of memory, 200 GB-hours of disk and 375 vCPU-minutes a
+month. At 256 MiB and 2 GB that works out to roughly **100 hours of awake time a month before anything is billed on
+top of the $5**, and the same 100 hours is where the CPU allowance lands if the container ever saturated its 1/16
+vCPU. A demo that sleeps after ten minutes idle does not come close. Cold start measured at **20 seconds**.
+
+**Keep the ceiling.** `max_instances: 1` is the thing that makes the bill predictable — remove it and a traffic spike
+scales out and bills per instance. Watch usage under Workers & Pages → sindarvueltas-portal → Metrics.
+
+Custom domain (`demo.sindarvueltas.org`) is a Worker Custom Domain, not a DNS record you write by hand:
+
+```bash
+# once, then Cloudflare manages the record and the certificate
+npx wrangler triggers deploy -c infra/cloudflare/wrangler.jsonc
+```
+
+Then rebuild the static site so its "Probar el demo" buttons point at it:
+
+```bash
+VITE_PORTAL_URL=https://demo.sindarvueltas.org npm run build:static
+npx wrangler pages deploy apps/web/dist-static --project-name sindarvueltas
+```
 
 ### Do not plan around these
 
