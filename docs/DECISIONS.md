@@ -192,3 +192,41 @@ volume but requires a card, so it needs a $1 budget alert and a `max-instances` 
 The earlier draft of `DEPLOY.md` listed Cloudflare Containers under "do not plan around these" because it is
 not free. That was written before the footprint was measured and before the domain moved to Cloudflare, and
 it is now wrong; the list no longer contains the option the project actually uses.
+
+## D-026 · Per-deployment commercial pricing, and a support link confined to `/quien-lo-hace`
+
+D-024 chose PolyForm Noncommercial and named systems integrators as needing a commercial licence, but left the
+terms as "negotiable". Unpriced terms are not a business model: a firm that has to open a negotiation before it
+can quote a client will quietly use something else, and the licence stops being enforced by anything but
+goodwill. `COMMERCIAL.md` now publishes the schedule.
+
+**The unit is a deployment — one client, one set of environments — not a seat and not a share of revenue.** A
+royalty on the integrator's engagement fee was the obvious alternative and was rejected: collecting it means
+auditing someone's books, which needs an audit clause, which needs a relationship adversarial enough to use it.
+A flat figure per deployment is checkable by both sides without an accountant. It is paired with one obligation
+— written notice before a deployment goes live — because a per-deployment fee nobody reports is not a fee. The
+figures are left `TBD` in the file; they are the author's to set.
+
+**There is deliberately no audit clause, no licence key and no telemetry.** The software does not phone home and
+must not be made to: a demo whose whole argument is about what public systems should not do with people's data
+cannot ship a call-home. The model runs on the integrator telling the author, which is also why the price has to
+sit where a firm can pay it without escalating to finance. The free carve-out for governments, universities and
+charities is unchanged and is not up for revision — it is what makes the integrator clause fair rather than a toll.
+
+**The Ko-fi link goes on `/quien-lo-hace` and nowhere else.** `docs/research/foreigner-advocacy-cr.md` §6c says
+"do not fundraise for advocacy at all", against Código Electoral art. 128 — which, read at §2c, bans foreigners
+funding *political parties*. Taking money for one's own software is not within it, so the warning is about
+characterisation rather than the statute: a foreign resident soliciting money on the same page that argues for
+legislative reform is the fact pattern that invites the reading. Confining the link to the author page, itemising
+what it pays for, and saying on the page that it funds no political activity keeps it a fact about a developer's
+demo. **A support link on `/por-que` or `/marco-legal` is the artefact §6c warns about — do not add one.**
+`author.ts` carries this rule at the top of the file, and `facts.Financiamiento` was corrected because it
+asserted no donations were accepted, which the change made false.
+
+**The author page now says plainly that this is publication, not political participation**, on the footing the
+research already established: Constitución arts. 28 and 29 use *nadie* and *todos*, not *ciudadanos*, and art. 19
+¶1 gives foreigners the same individual rights while ¶2 subtracts only political participation. Stated in one
+short section, not a legal brief — a long self-defence reads as anticipating an accusation. §6e's recommendation
+stands and matters more now, not less: charging licence fees is earning income in Costa Rica, and §5a flags Ley
+8764 art. 129(8) as the highest-probability risk in the whole document. Nothing here substitutes for the written
+opinion of a Costa Rican abogado.

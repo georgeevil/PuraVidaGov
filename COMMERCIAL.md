@@ -31,15 +31,42 @@ If you are in one of those groups, take it and use it. Nothing below applies to 
 This is the point of the licence. A ministry should be able to run this for free. A firm billing that
 ministry to deploy it should not get the work for free.
 
-## What is on offer
+## What a commercial licence costs
 
-Commercial terms are negotiable and are meant to be reasonable, not obstructive. Depending on what you
-are doing, that has meant:
+Priced per deployment, not per seat and not per line of revenue. A percentage of your engagement fee would
+mean auditing your books, which neither of us wants; a flat figure per deployment is checkable by both sides
+and needs no accountant.
 
-- a per-engagement licence for a single deployment;
-- an annual licence for a firm delivering it repeatedly;
-- a co-delivery arrangement, where the author is part of the engagement;
-- a bespoke arrangement, if you want ownership or exclusivity of some part of it.
+| | |
+|---|---|
+| **Per-deployment licence** | TBD, once per deployment. Perpetual for that deployment at the version delivered. |
+| **Annual renewal** | TBD per deployment per year, for as long as it runs. Covers updates and the right to keep operating it. |
+| **Firm-wide annual licence** | TBD per year. Unlimited deployments; worth it from roughly the fourth concurrent deployment. |
+| **Co-delivery** | No licence fee. The author joins the engagement on normal professional terms instead. |
+| **Exclusivity or ownership** of some part | By negotiation. Say what you need and why. |
+
+Rates are the same whoever the client is. A licence bought for a ministry costs what one bought for a bank costs.
+
+### What counts as one deployment
+
+**One client, one set of environments.** Everything you run for a single client organisation — production plus
+whatever staging, test and demo environments serve it — is one deployment and attracts one fee. A second client
+is a second deployment, even if you reuse the same build, the same pipeline and the same people.
+
+Splitting one client's system into several instances to make it cheaper is not how this works, and neither is
+running one instance for several clients to make it cheaper. If your architecture genuinely does not fit the
+unit — a shared multi-tenant platform, say — say so and we will price the actual shape of it.
+
+### Telling me about a deployment
+
+**Write to me before it goes live**, naming the client, the environments and the intended go-live date. That is
+the whole administrative burden, and it is a condition of the licence rather than a courtesy: a per-deployment
+fee nobody reports is not a fee.
+
+There is no audit clause, no telemetry and no licence key. The software does not phone home and it never will —
+it would contradict the demo's own argument about what public systems should do with people's data. The model
+runs on you telling me, which is why the figures are set where a firm can pay them without a conversation with
+its finance department.
 
 ## Contact
 
