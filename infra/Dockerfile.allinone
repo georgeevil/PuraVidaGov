@@ -1,0 +1,56 @@
+# All-in-one image (docs/CONTRACTS.md v4 → "All-in-one image"): the ten agencies, the bus, the
+# portal API and the built SPA in ONE Node process on ONE port. Free-tier target (Render, Koyeb,
+# Fly). The reference architecture is still infra/docker-compose.yml — twelve containers.
+#
+#   docker build -f infra/Dockerfile.allinone -t puravidagov .
+#   docker run -p 8080:8080 puravidagov
+
+FROM node:22-alpine AS build
+WORKDIR /app
+# Manifests first so the install layer is cached until a package.json actually changes.
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json packages/shared/
+COPY services/registro-civil/package.json services/registro-civil/
+COPY services/tributacion/package.json services/tributacion/
+COPY services/ccss/package.json services/ccss/
+COPY services/municipalidad/package.json services/municipalidad/
+COPY services/bus/package.json services/bus/
+COPY services/registro-nacional/package.json services/registro-nacional/
+COPY services/salud/package.json services/salud/
+COPY services/cfia/package.json services/cfia/
+COPY services/supen/package.json services/supen/
+COPY services/mtss/package.json services/mtss/
+COPY services/cosevi/package.json services/cosevi/
+COPY services/ins/package.json services/ins/
+COPY services/mep/package.json services/mep/
+COPY services/imas/package.json services/imas/
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+# tsx and the SPA toolchain are root/workspace devDependencies, so install everything.
+RUN npm ci --include=dev --ignore-scripts
+COPY tsconfig.base.json ./
+COPY packages/shared packages/shared
+COPY services services
+COPY apps/api apps/api
+COPY apps/web apps/web
+COPY scripts scripts
+RUN npm run build -w @pvg/web
+
+# ---------------------------------------------------------------- runtime
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=8080
+# node_modules carries the workspace symlinks, so it is copied whole (tsx runs the TypeScript
+# sources directly at runtime — do not prune it).
+COPY --from=build /app/node_modules node_modules
+COPY --from=build /app/package.json /app/package-lock.json /app/tsconfig.base.json ./
+COPY --from=build /app/packages/shared packages/shared
+COPY --from=build /app/services services
+COPY --from=build /app/apps/api apps/api
+COPY --from=build /app/apps/web/package.json apps/web/package.json
+COPY --from=build /app/apps/web/dist apps/web/dist
+COPY --from=build /app/scripts scripts
+USER node
+EXPOSE 8080
+CMD ["npx", "tsx", "scripts/serve-all.mjs"]
