@@ -4,7 +4,7 @@ import type { WorkflowDefinition } from '@pvg/shared/data';
 import { api, IS_STATIC } from '../api';
 import { useAuth } from '../auth';
 import { LegalBadge } from '../components/LegalBadge';
-import { NO_PORTAL, PortalLink, PortalUnavailable } from '../components/Portal';
+import { ColdStartNote, NO_PORTAL, PortalLink, PortalUnavailable } from '../components/Portal';
 import { Tip } from '../components/Tip';
 import { CASE, type CaseContent } from '../content/case';
 import { formatCrc, formatDecimal } from '../format';
@@ -182,6 +182,7 @@ function DemoCta() {
             Probar el demo
           </PortalLink>
         )}
+        <ColdStartNote className="mt-2" />
       </div>
     </section>
   );

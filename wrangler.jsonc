@@ -1,0 +1,12 @@
+{
+  // Cloudflare Pages project for the STATIC target only: the public pages (Por qué, Marco legal,
+  // Cómo funciona) with no backend. See docs/DEPLOY.md §1.
+  //
+  //   npm run build:static
+  //   npx wrangler pages deploy apps/web/dist-static --project-name puravidagov
+  //
+  // The interactive portal is a container, not a Worker — it is not deployed from here.
+  "$schema": "https://developers.cloudflare.com/schema/wrangler.json",
+  "name": "puravidagov",
+  "pages_build_output_dir": "apps/web/dist-static"
+}
