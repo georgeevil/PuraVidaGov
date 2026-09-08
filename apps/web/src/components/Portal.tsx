@@ -12,6 +12,24 @@ import { Tip } from './Tip';
 
 export const PORTAL_UNAVAILABLE_TEXT = 'El portal interactivo no está desplegado en esta versión estática.';
 
+/**
+ * Every free container tier either sleeps when idle or scales to zero, so the first visitor after a quiet
+ * period waits for the container to wake (Render documents "about one minute"). Saying so next to the link is
+ * the difference between a slow demo and an apparently broken one. See docs/DEPLOY.md.
+ */
+export const COLD_START_TEXT =
+  'El portal se duerme cuando nadie lo usa: la primera visita puede tardar hasta un minuto en despertar.';
+
+/** Shown under a portal link in the static build; nothing in the default build, where the API is local. */
+export function ColdStartNote({ className = '' }: { className?: string }) {
+  if (!IS_STATIC || !PORTAL_URL) return null;
+  return (
+    <p className={`text-xs text-slate-500 ${className}`} title="Free hosting sleeps when idle; the first visit can take up to a minute to wake">
+      {COLD_START_TEXT}
+    </p>
+  );
+}
+
 /** True when the build is static and no interactive deployment was configured. */
 export const NO_PORTAL = IS_STATIC && !PORTAL_URL;
 
@@ -68,9 +86,12 @@ export function PortalOnlyCard() {
           la arquitectura, pero no el backend. Los trámites, la sesión y la auditoría necesitan el despliegue completo.
         </p>
         {PORTAL_URL ? (
-          <a href={`${PORTAL_URL}/login`} target="_blank" rel="noopener" className="btn-primary inline-flex" title="Open the interactive demo">
-            Abrir el portal interactivo ↗
-          </a>
+          <>
+            <a href={`${PORTAL_URL}/login`} target="_blank" rel="noopener" className="btn-primary inline-flex" title="Open the interactive demo">
+              Abrir el portal interactivo ↗
+            </a>
+            <ColdStartNote />
+          </>
         ) : (
           <PortalUnavailable />
         )}
