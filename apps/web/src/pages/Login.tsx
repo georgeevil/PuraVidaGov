@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api, errorMessage, type LoginResponse } from '../api';
+import { api, errorMessage, IS_STATIC, type LoginResponse } from '../api';
 import { useAuth } from '../auth';
 import { Alert } from '../components/Alert';
+import { PortalOnlyCard } from '../components/Portal';
 import { Spinner } from '../components/Spinner';
 import { Tip } from '../components/Tip';
 
@@ -59,6 +60,9 @@ export function Login() {
       setBusy(false);
     }
   }
+
+  // Static build: there is no session to create here (docs/CONTRACTS.md v4 → "Static mode in apps/web").
+  if (IS_STATIC) return <PortalOnlyCard />;
 
   return (
     <div className="mx-auto max-w-md">

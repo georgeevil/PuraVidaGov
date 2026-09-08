@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
 import { AGENCIES, AGENCY_SHORT, type RegistryEntry } from '@pvg/shared/data';
-import { api, errorMessage } from '../api';
+import { api, errorMessage, IS_STATIC } from '../api';
 import { Alert } from '../components/Alert';
 import { Spinner } from '../components/Spinner';
 import { Tip } from '../components/Tip';
 import { agencyLabel, agencyLabelEn } from '../labels';
 
+/**
+ * Three states, not two: an entry with no `healthy` field (the static build's registry.json, which nobody
+ * probed) is neutral — never the red "sin respuesta" dot.
+ */
 function HealthDot({ healthy }: { healthy?: boolean }) {
   const cls = healthy === undefined ? 'bg-slate-300' : healthy ? 'bg-green-500' : 'bg-red-500';
-  const label = healthy === undefined ? 'Sin verificar' : healthy ? 'En línea' : 'Sin respuesta';
+  const label = healthy === undefined ? 'Estado no disponible' : healthy ? 'En línea' : 'Sin respuesta';
+  const en = healthy === undefined ? 'health status unavailable' : healthy ? 'healthy' : 'unhealthy';
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-slate-600" title={healthy ? 'healthy' : 'unhealthy'}>
+    <span className="inline-flex items-center gap-1.5 text-xs text-slate-600" title={en}>
       <span className={`inline-block h-2.5 w-2.5 rounded-full ${cls} ${healthy ? 'animate-pulse' : ''}`} aria-hidden="true" />
       {label}
     </span>
@@ -162,6 +167,10 @@ export function Architecture() {
         .then((r) => !cancelled && setRegistry(r))
         .catch((err) => !cancelled && setError(errorMessage(err)));
     load();
+    // Static build: registry.json never changes and there is nothing to probe, so do not poll it.
+    if (IS_STATIC) return () => {
+      cancelled = true;
+    };
     const id = setInterval(load, 10_000);
     return () => {
       cancelled = true;
@@ -197,7 +206,7 @@ export function Architecture() {
         <h2 id="registro-servicios" className="mb-3 text-base font-semibold text-slate-900">
           Instituciones conectadas al bus
           {registry && <span className="ml-2 text-sm font-normal text-slate-500">{registry.length}</span>}
-          <Tip en="Service registry with live health checks" />
+          <Tip en={IS_STATIC ? 'Service registry (static snapshot: no live health checks)' : 'Service registry with live health checks'} />
         </h2>
         {error && (
           <div className="mb-3">
