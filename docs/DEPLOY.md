@@ -21,6 +21,32 @@ before you commit to one.
 
 ---
 
+## 0. What is live right now
+
+Verified end to end on 8 September 2026. Both stages are deployed.
+
+| URL | Serves | Verified |
+|---|---|---|
+| `https://sindarvueltas.org` | static case pages, Cloudflare Pages project **`sindarvueltas`** | apex 200, `/por-que` `/marco-legal` `/arquitectura` all 200 through the SPA rule, `workflows.json` 12, `registry.json` 13, all thirteen agencies named on `/arquitectura`, zero console or page errors, DEMO banner present |
+| `https://demo.sindarvueltas.org` | the all-in-one container | `/healthz` → `{"status":"ok","mode":"all-in-one","agencies":13}`, and `node scripts/smoke.mjs https://demo.sindarvueltas.org` → **SMOKE OK**: 13 trámites, three citizens, 59 exchanges across 13 institutions, 71.5 s |
+
+**The Pages project is named `sindarvueltas`, not `puravidagov`.** `wrangler.jsonc` says so; deploying with the
+old name creates a second project with no custom domain attached, leaving the live site stale. Both custom
+domains (`sindarvueltas.org` and `www.sindarvueltas.org`) are already attached to it, so redeploys need no
+DNS work.
+
+Both hostnames are **proxied** (orange cloud) now that their certificates have issued, which is why the
+origin host is not visible in response headers — only `x-powered-by: Express` leaks from the container.
+
+WHOIS redaction is on and confirmed: RDAP returns a registrar entity only, with no registrant name, e-mail,
+telephone or address.
+
+**The deployed static bundle was built with `VITE_PORTAL_URL=https://demo.sindarvueltas.org`**, so every
+"Probar el demo" affordance links to `https://demo.sindarvueltas.org/login`. That is correct only while the
+container is up — see the note on `VITE_PORTAL_URL` in §1 before rebuilding.
+
+---
+
 ## 1. The static site — Cloudflare Pages
 
 This is the URL that matters politically, so it must be instant and must not go dark. Cloudflare Pages wins on
@@ -31,7 +57,7 @@ content.
 ```bash
 npm ci
 npm run build:static            # → apps/web/dist-static
-npx wrangler pages deploy apps/web/dist-static --project-name puravidagov
+npx wrangler pages deploy apps/web/dist-static --project-name sindarvueltas
 ```
 
 Or connect the repo in the Cloudflare dashboard with:
