@@ -84,3 +84,11 @@ digital, because the identity step is part of what the demo shows.
 Job loss, retirement and licence renewal became specs with three new agencies (operadora/SUPEN, MTSS, COSEVI). SEDIMEC
 (the medical college's certificate platform) is simulated inside the Salud mock rather than as an eleventh service; the
 legal note says so. José's date of birth moved to 1961 so one seed citizen qualifies for the IVM pension.
+
+## D-020 · Survive browser translation
+Chrome translates the Spanish portal for visitors whose browser is in another language and rewrites text nodes as
+`<font>` elements; React 18 then throws `NotFoundError` on `insertBefore`/`removeChild` and unmounts to a blank page
+(reproduced on the login → dashboard transition). `apps/web/src/dom-guard.ts` makes those two DOM calls tolerant
+(the standard workaround for React issue #11538) so translation keeps working, and an `ErrorBoundary` shows a reload
+button instead of a blank page if anything else goes wrong. Blocking translation with `notranslate` was rejected: the
+audience is often English-speaking.
