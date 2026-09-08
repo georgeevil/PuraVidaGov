@@ -130,7 +130,8 @@ credibility asset for a project arguing that the government should change.
 
 ## D-024 — PolyForm Noncommercial for the code, CC BY-NC-SA for the research
 
-**Date:** 8 September 2026 · **Status:** accepted · **Supersedes:** the MIT licence of D-002
+**Status:** accepted · **Supersedes:** the MIT licence, which was never itself a recorded decision — the
+repository simply carried an MIT `LICENSE` from its first commit
 
 The demo was MIT. MIT lets a systems integrator take the whole thing, bill a ministry to deploy it, and owe
 nothing to anyone. That is precisely the outcome the project should not subsidise, and it is also the only
@@ -160,5 +161,10 @@ both Elastic and Redis eventually reversed their relicensing. The trade is delib
 is to be adopted by a government loses little from a licence that governments may freely use, and gains the
 only negotiating position its author has.
 
-**The MIT history is not withdrawn** and cannot be. Anyone may fork the last MIT commit. `COMMERCIAL.md`
-says so in public rather than leaving a lawyer to discover it.
+**The MIT history is not withdrawn** and cannot be. Every version up to and including commit `7efbf07` was
+MIT; anyone may fork it. `COMMERCIAL.md` says so in public rather than leaving a lawyer to discover it.
+
+**The boundary is a commit, not a date.** An earlier draft of `NOTICE` said "published before 8 September
+2026", which the relicensing commit itself contradicted: it is dated 7 September in Costa Rica and 8
+September in UTC. A licence boundary that depends on the reader's time zone is exactly the kind of defect
+that is free to fix now and expensive to argue about later.

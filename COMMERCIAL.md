@@ -1,7 +1,9 @@
 # Commercial licensing
 
-The code in this repository is under the [PolyForm Noncommercial License 1.0.0](LICENSE) and the written
-material under `docs/` is under [CC BY-NC-SA 4.0](LICENSE-docs). This page says who needs something else.
+The code in this repository is under the [PolyForm Noncommercial License 1.0.0](LICENSE). The research and
+the argument — `docs/research/`, `docs/LEGAL.md`, `docs/CASE.md` and the Spanish page copy — are under
+[CC BY-NC-SA 4.0](LICENSE-docs). The program's own technical documentation follows the code licence, because
+Ley 6683 art. 4 treats it as part of the program. This page says who needs something else.
 
 ## You do not need a commercial licence
 
@@ -46,9 +48,9 @@ author through the contact details on <https://sindarvueltas.org/quien-lo-hace>.
 
 ## Two things worth stating plainly
 
-**The MIT history.** Versions published before 8 September 2026 were MIT licensed, and that grant cannot be
-withdrawn for copies already distributed. Anyone can fork the last MIT commit. The current licence governs
-this version and everything after it. Saying so up front is more useful than letting a lawyer discover it.
+**The MIT history.** Every version up to and including commit `7efbf07` was MIT licensed, and that grant cannot be withdrawn for
+copies already distributed. Anyone can fork that commit. The current licence governs everything after it.
+Saying so up front is more useful than letting a lawyer discover it.
 
 **What the licence does not cover.** Copyright protects this particular expression, not the idea. Anyone is
 free to build a once-only life-event portal for Costa Rica, and the legal conclusions in `docs/` describe

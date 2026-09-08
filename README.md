@@ -136,7 +136,8 @@ it is a reference architecture to discuss one. See `docs/ARCHITECTURE.md` for wh
 | What | Licence |
 |---|---|
 | Source code | [PolyForm Noncommercial 1.0.0](LICENSE) |
-| Everything under `docs/`, and the Spanish page copy | [CC BY-NC-SA 4.0](LICENSE-docs) |
+| The research and the argument — `docs/research/`, `docs/LEGAL.md`, `docs/CASE.md`, and the Spanish page copy | [CC BY-NC-SA 4.0](LICENSE-docs) |
+| The program's own technical docs — `docs/CONTRACTS.md`, `docs/PRD.md`, `docs/DECISIONS.md`, `docs/DEPLOY.md`, `CLAUDE.md` | PolyForm, with the code (Ley 6683 art. 4) |
 
 **Governments, universities, public research bodies and charities may use this freely**, including in
 production — the PolyForm licence names them as a permitted purpose "regardless of the source of funding".
@@ -146,6 +147,6 @@ So may anyone using it personally or noncommercially. Distribution and modificat
 a ministry. That is the whole point of the choice: a ministry should be able to run this for free; a
 consultancy billing that ministry to deploy it should not get the work for free. See [COMMERCIAL.md](COMMERCIAL.md).
 
-Versions published before 8 September 2026 were MIT and that grant stands for copies already distributed;
-it does not extend to later versions. Code contributions need a copyright assignment or CLA, for the reason
+Every version up to and including commit `7efbf07` was MIT licensed, and that grant stands for copies already
+distributed. It does not extend to anything after that commit. Code contributions need a copyright assignment or CLA, for the reason
 explained in [CONTRIBUTING.md](CONTRIBUTING.md). See [NOTICE](NOTICE) for the full statement.
