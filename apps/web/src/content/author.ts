@@ -17,6 +17,8 @@
  * argues for legislation is exactly the artefact the warning is about. `facts.Financiamiento` must keep
  * telling the truth about this; it is a factual claim, not a slogan.
  */
+import { CONTACTO } from './contacto';
+
 export interface AuthorContent {
   title: string;
   lead: string;
@@ -96,6 +98,11 @@ export const AUTHOR: AuthorContent = {
         label: 'Reportar un error o una imprecisión',
         href: 'https://github.com/georgeevil/PuraVidaGov/issues/new',
         note: 'Especialmente si es una cita legal',
+      },
+      {
+        label: CONTACTO,
+        href: `mailto:${CONTACTO}`,
+        note: 'Si prefiere el correo a GitHub',
       },
     ],
   },

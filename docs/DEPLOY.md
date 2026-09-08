@@ -269,3 +269,33 @@ since it needs a card and a misconfiguration bills instead of stopping.
 `.github/workflows/ci.yml` builds and exercises all three targets on every pull request: the Compose stack
 with the full journey through it, the all-in-one image with the same journey through its single port, and the
 static bundle asserted to stand alone with its generated JSON. If a deployment breaks, CI breaks first.
+
+## Correo de contacto — `contact@sindarvueltas.org`
+
+The site publishes this address on `/quien-lo-hace` and `/seguimiento`. **It must deliver before those pages
+ship**: a published address that bounces costs more credibility than having none, and the whole posture of the
+site is that its claims can be checked.
+
+Delivery is Cloudflare Email Routing on the `sindarvueltas.org` zone — free, and the domain is already at
+Cloudflare Registrar with Cloudflare nameservers, so nothing else has to move. **This cannot be done from the
+build environment**: it needs zone-level DNS permissions that the deploy token deliberately does not carry, and
+the destination address has to confirm by clicking a link in its own inbox. So it is done by hand, once:
+
+1. Cloudflare dashboard → the `sindarvueltas.org` zone → **Email** → **Email Routing** → Get started.
+2. Cloudflare offers to add the MX and TXT (SPF) records for the zone. **Accept.** Without the MX records the
+   address silently does not exist.
+3. **Destination addresses** → add the inbox that should receive it → open that inbox and click Cloudflare's
+   verification link. Routing does nothing until this is confirmed.
+4. **Custom addresses** → create `contact@sindarvueltas.org` → action *Send to an email* → the verified
+   destination.
+5. Verify from outside: send a message from an address that is not the destination, and confirm it arrives.
+   Checking `dig MX sindarvueltas.org` proves the records exist, not that the route works.
+
+Notes worth having in advance:
+
+- Email Routing is **receive-only**. Replying as `contact@sindarvueltas.org` needs the destination provider
+  configured to send as that address (in Gmail, *Send mail as* with an SMTP relay). Until then, replies come
+  from the personal address, which is a privacy consideration rather than a technical one.
+- Adding the MX records makes this zone an email domain. If `sindarvueltas.org` ever needs to *send* mail, add
+  SPF, DKIM and DMARC then — do not leave a permissive SPF sitting there in the meantime.
+- The address appears in `apps/web/src/content/contacto.ts`, in one place, used by both pages. Change it there.

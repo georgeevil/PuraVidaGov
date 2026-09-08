@@ -1,0 +1,56 @@
+{
+  "_comment": "Sources the daily seguimiento check watches. Configs are data (CLAUDE.md): add a source here, never in the script. `enCI: false` means the source is real but GitHub runners cannot reach it — it is checked manually and the script skips it unless run with --todas from a normal connection.",
+  "fuentes": [
+    {
+      "id": "micitt-sector-informa",
+      "nombre": "MICITT — Noticias",
+      "url": "https://www.micitt.go.cr/micitt-Informa/noticias",
+      "porQue": "Where Conecta and interoperability announcements appear first. Verified 200 on 8 Sep 2026; the older /el-sector-informa path now 404s.",
+      "enCI": true
+    },
+    {
+      "id": "micitt-angd",
+      "nombre": "MICITT — Agencia Nacional de Gobierno Digital",
+      "url": "https://www.micitt.go.cr/micitt/agencia-nacional-de-gobierno-digital",
+      "porQue": "The ANGD's own page. Changes here signal a change in what the executor says it is doing.",
+      "enCI": true
+    },
+    {
+      "id": "micitt-gobernanza-digital",
+      "nombre": "MICITT — Gobernanza Digital",
+      "url": "https://www.micitt.go.cr/gobierno-digital/gobernanza-digital",
+      "porQue": "Rectoría: standards, CNTD, Sello de Gobierno Digital.",
+      "enCI": true
+    },
+    {
+      "id": "cgr-itd",
+      "nombre": "CGR — Índice de Transformación Digital",
+      "url": "https://sites.google.com/cgr.go.cr/itd/",
+      "porQue": "The official per-institution scoreboard. A new edition is the single most citable accountability event.",
+      "enCI": true
+    },
+    {
+      "id": "delfino-asamblea",
+      "nombre": "Delfino — Legislación",
+      "url": "https://delfino.cr/asamblea/legislacion",
+      "porQue": "Reachable secondary index for Asamblea activity, since asamblea.go.cr is not reachable from CI.",
+      "enCI": true
+    },
+    {
+      "id": "asamblea",
+      "nombre": "Asamblea Legislativa — consulta de expedientes",
+      "url": "https://www.asamblea.go.cr/",
+      "porQue": "The authoritative source for whether a once-only or interoperability bill is filed and where it sits.",
+      "enCI": false,
+      "notaManual": "Does not respond from datacentre ranges (tested 8 Sep 2026: no TCP). Check from an ordinary connection in a browser. See docs/research/institutions-and-accountability.md §4."
+    },
+    {
+      "id": "gobierno-digital",
+      "nombre": "Gobierno Digital",
+      "url": "https://www.gobiernodigital.go.cr/",
+      "porQue": "Programme site.",
+      "enCI": false,
+      "notaManual": "Does not respond from datacentre ranges (tested 8 Sep 2026: no TCP)."
+    }
+  ]
+}

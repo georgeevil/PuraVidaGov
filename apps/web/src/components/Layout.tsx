@@ -18,6 +18,7 @@ const NAV: NavItem[] = [
   { to: '/marco-legal', label: 'Marco legal', en: 'Legal framework — what is possible today' },
   { to: '/por-que', label: 'Por qué', en: 'Why — the case for a once-only government' },
   { to: '/arquitectura', label: 'Cómo funciona', en: 'How it works' },
+  { to: '/seguimiento', label: 'Seguimiento', en: 'Where this stands, and what you can do' },
   { to: '/quien-lo-hace', label: 'Quién lo hace', en: 'Who builds this, and why' },
 ];
 
@@ -26,6 +27,7 @@ const PUBLIC_NAV: NavItem[] = [
   { to: '/por-que', label: 'Por qué', en: 'Why — the case for a once-only government' },
   { to: '/marco-legal', label: 'Marco legal', en: 'Legal framework — what is possible today' },
   { to: '/arquitectura', label: 'Cómo funciona', en: 'How it works' },
+  { to: '/seguimiento', label: 'Seguimiento', en: 'Where this stands, and what you can do' },
   { to: '/quien-lo-hace', label: 'Quién lo hace', en: 'Who builds this, and why' },
 ];
 
