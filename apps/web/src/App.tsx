@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { IS_STATIC } from './api';
-import { RequireAuth } from './auth';
+import { RequireAuth, useAuth } from './auth';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -13,6 +13,7 @@ import { LegalFramework } from './pages/LegalFramework';
 import { Case } from './pages/Case';
 import { Author } from './pages/Author';
 import { Seguimiento } from './pages/Seguimiento';
+import { Landing } from './pages/Landing';
 import { PortalOnlyCard } from './components/Portal';
 
 /** v1 `/negocio/:txnId` → v2 `/tramite/start-business/:txnId`. */
@@ -23,17 +24,28 @@ function LegacyBusinessRedirect() {
 
 /**
  * Guarded routes. In the static build (docs/CONTRACTS.md v4) there is no backend to talk to, so the route
- * still exists but renders the "the portal runs elsewhere" card instead of the page. RequireAuth keeps
- * sending anonymous visitors to the public /por-que, which is itself unguarded — no redirect loop.
+ * still exists but renders the "the portal runs elsewhere" card instead of the page. RequireAuth sends
+ * anonymous visitors to `/`, which for them is the unguarded landing page — no redirect loop.
  */
 const guarded = (el: JSX.Element) => <RequireAuth>{IS_STATIC ? <PortalOnlyCard /> : el}</RequireAuth>;
+
+/**
+ * `/` is two different pages. Signed in, it is the citizen dashboard. Anonymous, it is the short landing
+ * page — NOT the case essay, which is what an anonymous visitor used to be redirected into and which is why
+ * the first outside reader found the site overwhelming. Branching here rather than redirecting keeps one
+ * canonical home URL and avoids a redirect loop with RequireAuth, which now also points at `/`.
+ */
+function Home() {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? guarded(<Dashboard />) : <Landing />;
+}
 
 export function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={guarded(<Dashboard />)} />
+        <Route path="/" element={<Home />} />
         <Route path="/tramite/:id" element={guarded(<GenericWorkflow />)} />
         <Route path="/tramite/:id/:txnId" element={guarded(<Transaction />)} />
         <Route path="/mis-tramites" element={guarded(<MyTransactions />)} />

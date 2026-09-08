@@ -128,6 +128,18 @@ API; set `VITE_PORTAL_URL` so its "Probar el demo" buttons point at the interact
 Everything is in `.env.example`: API keys per hop, session secret, the demo OTP, simulated agency latency, and the
 three benefit figures (`BENEFIT_TRIPS_AVOIDED`, `BENEFIT_HOURS_SAVED`, `BENEFIT_COST_SAVED_CRC`, PRD FR-20).
 
+## Feedback
+
+Every page carries a footer link that opens a prefilled email to `contact@sindarvueltas.org` naming the page and
+asking three questions. It stores nothing and loads nothing — no form, no third party, no analytics.
+
+What arrives by email is triaged by hand into issues using the **Feedback de una persona usuaria** template, one
+person per issue, quoting them verbatim. Paraphrasing a report turns someone's confusion into the transcriber's
+opinion, which is the part worth keeping.
+
+The first reader outside the project found the site overwhelming, which was both correct and unreportable at the
+time. That is what this exists to fix.
+
 ## What this is not
 
 Not connected to TSE, Hacienda, CCSS or any municipality. Not legally valid. Not a data-protection-compliant system —

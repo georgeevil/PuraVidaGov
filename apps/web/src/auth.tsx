@@ -103,13 +103,14 @@ export function useAuth(): AuthContextValue {
 }
 
 /**
- * Route guard. An anonymous visitor is sent to the public case page (/por-que), not to /login: the argument
- * is readable without a session and the layout offers "Probar el demo" from there.
+ * Route guard. An anonymous visitor is sent to `/`, not to /login: `/` renders the short landing page for
+ * anyone without a session, which leads with the demo. It used to send them to /por-que, the ~2,300-word case
+ * essay, which is how a first-time visitor ended up reading an argument instead of trying the thing.
  */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
-    return <Navigate to="/por-que" replace />;
+    return <Navigate to="/" replace />;
   }
   return <>{children}</>;
 }
