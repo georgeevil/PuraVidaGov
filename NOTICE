@@ -1,0 +1,31 @@
+PuraVidaGov
+Copyright (c) 2026 George Chigrichenko. All rights reserved.
+
+Source code in this repository is licensed under the PolyForm Noncommercial
+License 1.0.0 — see LICENSE. That licence permits use by any government
+institution, educational institution, public research organization or
+charitable organization, and any noncommercial or personal use, including
+distribution and modification. It does not permit commercial use.
+
+The research and the argument — docs/research/, docs/LEGAL.md, docs/CASE.md and
+the Spanish page copy in apps/web/src/content/ — are licensed under Creative
+Commons Attribution-NonCommercial-ShareAlike 4.0 International. See LICENSE-docs.
+The program's own technical documentation follows the code licence, because
+Ley 6683 art. 4 treats it as part of the program.
+
+Commercial licences are available, including for systems integrators and
+consultancies delivering this software to a client. See COMMERCIAL.md.
+
+Prior licensing. Versions of this project published before 8 September 2026
+were released under the MIT License. That grant is not withdrawn and cannot be
+withdrawn as to copies already distributed. It does not extend to any version
+published on or after 8 September 2026.
+
+Attribution. The research in docs/research/ cites primary sources throughout
+and marks what could not be verified. If you reuse it, keep those marks: an
+unsourced copy of sourced work is worse than useless to the people it is meant
+to inform.
+
+This is a demonstration system. It is not connected to any Costa Rican
+institution, has not been reviewed or endorsed by any of them, and is not
+legally valid for any trámite. All citizen data in it is fictional.

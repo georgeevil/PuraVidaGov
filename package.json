@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "PuraVidaGov — demo of a citizen-centric, once-only e-government platform for Costa Rica (interoperability bus + 4 simulated agencies).",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "workspaces": [
     "packages/*",
     "services/*",
