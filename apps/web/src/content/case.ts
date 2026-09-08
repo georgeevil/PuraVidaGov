@@ -175,8 +175,8 @@ export const CASE: CaseContent = {
     maxPct: 1.5,
   },
   asks: {
-    // Deliberately descriptive, not a petition. See docs/research/foreigner-advocacy-cr.md §6c: a foreign
-    // resident authoring an illustrative artefact is protected expression; "pedimos"/"exigimos" addressed to
+    // Deliberately descriptive, not a petition. A foreign resident authoring an illustrative artefact is
+    // protected expression; "pedimos"/"exigimos" addressed to
     // the Asamblea reads as promoting a legislative proposal, which is the phrasing that best fits the
     // Sala IV's "influir en la formación de la política estatal". Same content, stated as analysis.
     title: 'Qué haría falta para que esto funcionara de verdad',

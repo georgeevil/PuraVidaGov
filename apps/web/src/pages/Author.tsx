@@ -53,6 +53,29 @@ export function Author() {
         </ul>
       </section>
 
+      <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="text-lg font-semibold text-slate-900">{AUTHOR.support.heading}</h2>
+        {AUTHOR.support.paragraphs.map((s, i) => (
+          <p key={i} className="text-slate-700">
+            {s}
+          </p>
+        ))}
+        <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+          {AUTHOR.support.exclusion}
+        </p>
+        <p>
+          <a
+            className="inline-block rounded-lg bg-primary-700 px-4 py-2 font-semibold text-white"
+            href={AUTHOR.support.link.href}
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            {AUTHOR.support.link.label}
+          </a>
+        </p>
+        <p className="text-sm text-slate-600">{AUTHOR.support.note}</p>
+      </section>
+
       <p className="text-sm text-slate-600">
         <Link to="/por-que" className="text-primary-700 underline">
           ← Volver al argumento

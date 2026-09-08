@@ -626,4 +626,4 @@ Not a hosting fact, but the most consequential finding of this pass, so it is re
 - **`gobiernoabierto.go.cr`** is a live government open-government initiative.
 - Anything containing `gov`/`gob` reads as official; `.gov` is US-restricted and `.gob.cr` is NIC.cr-controlled.
 
-See `docs/DECISIONS.md` D-023 for what was decided.
+The decision log recording what was chosen is kept privately.

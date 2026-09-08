@@ -2,7 +2,9 @@
 
 Demo of a citizen-centric e-government platform for Costa Rica: portal → orchestrator API → interoperability bus →
 thirteen mock agencies. **Read `docs/CONTRACTS.md` before touching any package**; it fixes the interfaces. PRD in
-`docs/PRD.md`, decisions in `docs/DECISIONS.md`.
+`docs/PRD.md`. **The decision log and the advocacy and licensing research are kept in a private companion
+repository, not here** — do not recreate `docs/DECISIONS.md` or `docs/research/foreigner-advocacy-cr.md` in this
+repository, and do not restate their contents in a comment. Ask the author for them if a decision needs checking.
 
 ## Vocabulary
 Spanish domain nouns stay Spanish in code and copy: `cédula`, `patente`, `NITE`, `trámite`, `patrono`. UI copy and

@@ -16,7 +16,8 @@ make "the institutions are independent and the bus is the only link" visible. No
 
 **The domain is `sindarvueltas.org`**, registered at Cloudflare Registrar on 8 September 2026 and on
 Cloudflare nameservers. The apex serves the static case pages; `demo.sindarvueltas.org` serves the
-interactive portal. Why that name and not a `puravida*` one: `docs/DECISIONS.md` D-023.
+interactive portal. The name is deliberately not a `puravida*` one, because `puravidadigital.go.cr` is the real
+Costa Rican national trámites portal — a name and function collision.
 
 Hosting facts below were verified on 8 September 2026 against each provider's own pages. Sources and the
 things that could **not** be verified are in `docs/research/hosting-free-tier.md`. Free tiers move; re-check

@@ -31,15 +31,47 @@ If you are in one of those groups, take it and use it. Nothing below applies to 
 This is the point of the licence. A ministry should be able to run this for free. A firm billing that
 ministry to deploy it should not get the work for free.
 
-## What is on offer
+## What a commercial licence costs
 
-Commercial terms are negotiable and are meant to be reasonable, not obstructive. Depending on what you
-are doing, that has meant:
+**By negotiation, and deliberately not a price list.** There is one Costa Rican State, and it has already chosen
+X-Road as its national interoperability platform (project Conecta, March 2026 — see `docs/CASE.md`). So this is
+not a product with a repeatable per-deployment market, and pricing it as though it were would misdescribe what
+is actually on offer. Published rates make sense for many small transactions nobody wants to negotiate one at a
+time; this is the other kind.
 
-- a per-engagement licence for a single deployment;
-- an annual licence for a firm delivering it repeatedly;
-- a co-delivery arrangement, where the author is part of the engagement;
-- a bespoke arrangement, if you want ownership or exclusivity of some part of it.
+Two shapes cover almost every real case:
+
+**Co-delivery — the expected route.** No licence fee. The author joins the engagement on normal professional
+terms. This is usually the cheaper answer for you and the better answer for the client, because the part that
+is hard to reproduce is not the code: it is the research in `docs/research/`, the judgement about which claims
+survive contact with a primary source, and knowing which of the thirteen institutions actually behaves the way
+the demo says. A team that licenses the repository and not that has bought the easy half.
+
+**A bought-out licence — if you want it without the author.** A one-off fee for a named engagement, or an
+annual licence for a firm expecting to use it repeatedly. Priced against the size of the engagement, agreed in
+writing before delivery. Ask and you will get a number, not a negotiation ritual.
+
+Beyond those: exclusivity, ownership of some part, or a white-label are all possible. Say what you need and why.
+
+Terms are the same whoever the client is. Nothing here changes for a ministry versus a bank.
+
+### Telling me about a deployment
+
+**Write to me before it goes live**, naming the client and the intended date. That is the whole administrative
+burden, and it is a condition of the licence rather than a courtesy.
+
+There is no audit clause, no telemetry and no licence key. The software does not phone home and it never will —
+it would contradict the demo's own argument about what public systems should do with people's data. The model
+runs on you telling me.
+
+### What this licence is honestly for
+
+Not revenue. It exists so that a consultancy cannot lift this work into a bid, bill a ministry for delivering
+it, and leave the author with neither the fee nor the credit. A ministry running it for free is the point; a
+firm being paid to deliver it while treating the research as found material is not.
+
+If you are reading this because you want to use it and are unsure whether you owe anything, the answer is
+usually "let's talk, and it will cost less than you fear".
 
 ## Contact
 
