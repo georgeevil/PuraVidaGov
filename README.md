@@ -23,7 +23,7 @@ legislators and press directly; the portal itself stays behind the simulated fir
 `docs/LEGAL.md`, `docs/CASE.md`, `docs/research/`.
 
 Documents: [PRD](docs/PRD.md) · [Architecture](docs/ARCHITECTURE.md) · [Contracts (binding interfaces)](docs/CONTRACTS.md) ·
-[Legal status](docs/LEGAL.md) · [The case](docs/CASE.md) · [Decisions](docs/DECISIONS.md) · [Demo script](docs/DEMO.md) ·
+[Legal status](docs/LEGAL.md) · [The case](docs/CASE.md) · [Demo script](docs/DEMO.md) ·
 [Conventions](CLAUDE.md)
 
 ## Run it
@@ -139,7 +139,7 @@ it is a reference architecture to discuss one. See `docs/ARCHITECTURE.md` for wh
 |---|---|
 | Source code | [PolyForm Noncommercial 1.0.0](LICENSE) |
 | The research and the argument — `docs/research/`, `docs/LEGAL.md`, `docs/CASE.md`, and the Spanish page copy | [CC BY-NC-SA 4.0](LICENSE-docs) |
-| The program's own technical docs — `docs/CONTRACTS.md`, `docs/PRD.md`, `docs/DECISIONS.md`, `docs/DEPLOY.md`, `CLAUDE.md` | PolyForm, with the code (Ley 6683 art. 4) |
+| The program's own technical docs — `docs/CONTRACTS.md`, `docs/PRD.md`, `docs/DEPLOY.md`, `CLAUDE.md` | PolyForm, with the code (Ley 6683 art. 4) |
 
 **Governments, universities, public research bodies and charities may use this freely**, including in
 production — the PolyForm licence names them as a permitted purpose "regardless of the source of funding".

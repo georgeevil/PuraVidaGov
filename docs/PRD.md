@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD) — PuraVidaGov
 
-Version 1.0 (MVP Demo) · 2026-09-06 · Status: implemented as PoC (see `docs/DECISIONS.md` for how the open questions were resolved)
+Version 1.0 (MVP Demo) · 2026-09-06 · Status: implemented as PoC (the open questions were resolved; the decision log is kept privately)
 
 ## 1. Executive summary
 
@@ -110,7 +110,7 @@ Phase 1 scaffolding → Phase 2 bus → Phase 3 workflow → Phase 4 polish. All
 Scope creep (4 agencies, 1 life event) · demo data only · Docker for reproducibility · prominent DEMO disclaimers ·
 simple gateway rather than full X-Road.
 
-## 16. Open questions → resolved in `docs/DECISIONS.md`
+## 16. Open questions → resolved
 
 ## 17. Version 2 additions (September 2026)
 Four life events (start a business with sanitary permit and company formation, newborn, construction, change of

@@ -48,12 +48,15 @@ to green appears to cross one, that is the finding, and it goes in a comment rat
 Wording on `/por-que`, `/marco-legal`, `/quien-lo-hace` and anything in `docs/research/` is not ordinary
 copy.
 
+- **Never recreate `docs/DECISIONS.md`, `docs/research/foreigner-advocacy-cr.md` or
+  `docs/research/licensing-options.md` here.** They were deliberately removed from this public repository and
+  live privately. Do not restate their contents in a comment either.
 - **Every `LegalNote` and `LegalRef` traces to `docs/research/*.md`.** Never add or change a legal status,
   an article number or a figure without a source there. A reviewer asking for a stronger claim is a
   request to do research, not to edit a string — say so rather than pushing it.
 - **Never add a support, donation or funding affordance to `/por-que` or `/marco-legal`** (D-026). The
   Ko-fi link belongs on `/quien-lo-hace` alone. `apps/web/src/content/author.ts` carries the reasoning at
-  the top of the file, from `docs/research/foreigner-advocacy-cr.md` §6c.
+  the top of the file; the research behind it is in a private companion repository.
 - **Never add** *campaña*, *movimiento*, *únase*, *firme aquí*, or the name of any party, diputado or
   candidate, and never reference an electoral cycle. Same source, §6c.
 - Do not weaken the DEMO disclaimer in the banner, the PDF or the README, and do not make seed citizens

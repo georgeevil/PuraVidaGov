@@ -1,21 +1,21 @@
 /**
  * Content for /quien-lo-hace — who built this and why, and the disclaimers that go with it.
  *
- * The wording follows `docs/research/foreigner-advocacy-cr.md` §6. The governing principle from that
- * research: **contributing to a public debate is protected; seeking to exercise or allocate political power
- * is not.** So this page presents a technical author publishing work, never a campaign — it states the
+ * The wording follows advocacy research kept in a private companion repository; the rules it produced are
+ * restated here so they survive without it. The governing principle: **contributing to a public debate is
+ * protected; seeking to exercise or allocate political power is not.** So this page presents a technical author publishing work, never a campaign — it states the
  * author's foreign residency openly (transparency is protective, discovered concealment is not), describes
  * the draft law as an illustrative artefact rather than a demand, and asks for correction rather than
  * support. Do not add: "campaña", "movimiento", "únase", "firme aquí", or the name of any party, diputado
  * or candidate.
  *
- * On the Ko-fi link (D-026). The research's §6c warning — "do not fundraise for advocacy at all" — reads
- * against Código Electoral art. 128, which bans foreigners funding *political parties*. Money for one's own
- * software is not within it. The exposure is characterisation, so `support` below is scoped to it: it funds
- * hosting and development time, it says on the page that it funds no political activity, and it lives on
- * THIS page only. Never put a support link on /por-que or /marco-legal — a donate button on the page that
- * argues for legislation is exactly the artefact §6c warns about. `facts.Financiamiento` must keep telling
- * the truth about this; it is a factual claim, not a slogan.
+ * On the Ko-fi link. The research warned against fundraising for advocacy, reading against Código Electoral
+ * art. 128 — which bans foreigners funding *political parties*. Money for one's own software is not within
+ * it, so the exposure is characterisation rather than the statute, and `support` below is scoped to that: it
+ * funds hosting and development time, it says on the page that it funds no political activity, and it lives
+ * on THIS page only. Never put a support link on /por-que or /marco-legal — a donate button on the page that
+ * argues for legislation is exactly the artefact the warning is about. `facts.Financiamiento` must keep
+ * telling the truth about this; it is a factual claim, not a slogan.
  */
 export interface AuthorContent {
   title: string;
