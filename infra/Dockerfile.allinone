@@ -21,6 +21,9 @@ COPY services/cfia/package.json services/cfia/
 COPY services/supen/package.json services/supen/
 COPY services/mtss/package.json services/mtss/
 COPY services/cosevi/package.json services/cosevi/
+COPY services/ins/package.json services/ins/
+COPY services/mep/package.json services/mep/
+COPY services/imas/package.json services/imas/
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 # tsx and the SPA toolchain are root/workspace devDependencies, so install everything.

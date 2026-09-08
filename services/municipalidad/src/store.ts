@@ -1,4 +1,4 @@
-import type { AddressUpdateResponse, BuildingPermitResponse, LandUseResponse, MunicipalityResponse } from '@pvg/shared';
+import type { AddressUpdateResponse, BuildingPermitResponse, LandUseResponse, MunicipalityResponse, PropertyDeclarationResponse } from '@pvg/shared';
 
 export interface Canton {
   name: string;
@@ -69,7 +69,16 @@ export interface AddressChange extends AddressUpdateResponse {
   district: string;
 }
 
+/** Declaración de bienes inmuebles (v4). */
+export interface PropertyDeclaration extends PropertyDeclarationResponse {
+  citizenId: string;
+  folio: string;
+  registrationNumber: string;
+  declaredAt: string;
+}
+
 const landUseKeyOf = (folio: string, projectType: string) => `${folio.trim()}::${projectType}`;
+const declarationKeyOf = (folio: string, citizenId: string) => `${folio.trim()}::${citizenId}`;
 
 class MunicipalidadStore {
   private licenses = new Map<string, License>(); // keyed by NITE
@@ -79,8 +88,12 @@ class MunicipalidadStore {
   private permits = new Map<string, BuildingPermit>(); // keyed by apcNumber
   private permitCounters = new Map<number, number>();
   private addresses = new Map<string, AddressChange>(); // keyed by citizenId
+  private declarations = new Map<string, PropertyDeclaration>(); // keyed by (folio, citizenId)
+  private declarationCounters = new Map<number, number>();
 
   reset(): void {
+    this.declarations.clear();
+    this.declarationCounters.clear();
     this.licenses.clear();
     this.counters.clear();
     this.landUses.clear();
@@ -88,6 +101,25 @@ class MunicipalidadStore {
     this.permits.clear();
     this.permitCounters.clear();
     this.addresses.clear();
+  }
+
+  findDeclaration(folio: string, citizenId: string): PropertyDeclaration | undefined {
+    return this.declarations.get(declarationKeyOf(folio, citizenId));
+  }
+
+  nextDeclarationSequence(year: number): number {
+    const next = (this.declarationCounters.get(year) ?? 0) + 1;
+    this.declarationCounters.set(year, next);
+    return next;
+  }
+
+  saveDeclaration(d: PropertyDeclaration): PropertyDeclaration {
+    this.declarations.set(declarationKeyOf(d.folio, d.citizenId), d);
+    return d;
+  }
+
+  listDeclarations(): PropertyDeclaration[] {
+    return [...this.declarations.values()];
   }
 
   findLandUse(folio: string, projectType: string): LandUseCertificate | undefined {

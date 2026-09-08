@@ -61,3 +61,23 @@ what Conecta looks like from the citizen's side once a law obliges everyone to j
   payout is set at the operator in the same step, which today needs the printed resolution.
 - **Renovar licencia** (María): digital medical certificate, fines and marchamo check, renewal with the cédula photo.
   Only a MOPT regulation stands in the way; the MOPT tendered the digital licence in 2026.
+
+## Version 4: the events other countries organise around
+
+Twelve life events now. The five new ones mirror what Gosuslugi, Norway's seven "livshendelser", borger.dk, Suomi.fi,
+Sweden's efterlevandeguiden.se and LifeSG bundle, and what Costa Ricans lose the most time on:
+
+- **Falleció mi cónyuge** (log in as Rosa, `7-0111-0222`, whose husband Luis died in hospital): the hospital already
+  declared the death through SEDIMEC (this works today); the widow's pension, the ROP/FCL payout and the succession
+  annotation follow from that one record. Red as a whole: nothing in Costa Rican law lets the TSE tell anyone.
+- **Compré un carro** (María buys Ana's Yaris, BCR-123): Registro Nacional, COSEVI fines, INS marchamo, Hacienda's
+  transfer tax and the registration in one flow. Try SJB-456 to see a lien block the transfer.
+- **Compré una casa** (María buys Ana's house in Grecia): the municipal property-tax declaration follows the deed
+  automatically; today it is a separate visit every five years.
+- **Me caso** (María marries Diego, `1-1111-2222`): spouse insured at the CCSS and civil status updated at Hacienda from
+  the notary's single filing. Notarial divorce is still only a bill (23.982, first debate April 2026).
+- **Mi hijo entra a la escuela** (María enrols Lucas): the child comes from the Registro Civil, the vaccination record
+  from the CCSS, and the IMAS scholarship is assessed in the same step through SINIRUBE.
+
+Talking point: the death event is the one every reference country built first, and it is the one where Costa Rica
+already has the hardest part (electronic death certificates since 2018) and none of the easy parts.

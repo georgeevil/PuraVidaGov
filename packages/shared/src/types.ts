@@ -13,7 +13,10 @@ export type AgencyName =
   | 'cfia'
   | 'supen'
   | 'mtss'
-  | 'cosevi';
+  | 'cosevi'
+  | 'ins'
+  | 'mep'
+  | 'imas';
 
 export const AGENCIES: AgencyName[] = [
   'registro',
@@ -26,6 +29,9 @@ export const AGENCIES: AgencyName[] = [
   'supen',
   'mtss',
   'cosevi',
+  'ins',
+  'mep',
+  'imas',
 ];
 
 export const AGENCY_LABELS: Record<AgencyName, string> = {
@@ -39,6 +45,9 @@ export const AGENCY_LABELS: Record<AgencyName, string> = {
   supen: 'Operadora de pensiones (SUPEN)',
   mtss: 'Ministerio de Trabajo (ANE)',
   cosevi: 'COSEVI (MOPT)',
+  ins: 'INS (marchamo y SOA)',
+  mep: 'Ministerio de Educación Pública',
+  imas: 'IMAS (SINIRUBE)',
 };
 
 export const AGENCY_SHORT: Record<AgencyName, string> = {
@@ -52,6 +61,9 @@ export const AGENCY_SHORT: Record<AgencyName, string> = {
   supen: 'Operadora (SUPEN)',
   mtss: 'MTSS',
   cosevi: 'COSEVI',
+  ins: 'INS',
+  mep: 'MEP',
+  imas: 'IMAS',
 };
 
 /** Citizen record held by the simulated Registro Civil. */
@@ -70,6 +82,12 @@ export interface Citizen {
   maritalStatus: 'single' | 'married' | 'divorced' | 'widowed';
   email: string; // simulated, used only to "send" the OTP
   phone: string; // simulated
+  /** Cédula of the spouse, when married (v4). */
+  spouseId?: string;
+  /** Cédulas of minor children (v4). */
+  children?: string[];
+  /** Set by the Registro Civil when a death is inscribed (v4). */
+  deceased?: { date: string; certificateNumber: string };
 }
 
 export type BusinessType = 'natural' | 'legal';
@@ -329,6 +347,128 @@ export interface LicenceRenewalResponse {
   feeCrc: number;
 }
 
+// ---------------------------------------------------------------- v4 payloads (death, vehicle, home, marriage, school)
+
+export interface Vehicle {
+  plate: string; // "BCR-123"
+  ownerId: string;
+  make: string;
+  model: string;
+  year: number;
+  fiscalValueCrc: number;
+  encumbrances: string[];
+}
+
+export interface DeathRegistrationResponse {
+  certificateNumber: string; // "DEF-2026-000123"
+  deceasedId: string;
+  deceasedName: string;
+  date: string;
+  registeredAt: string;
+  /** SEDIMEC electronic certificate id from the hospital. */
+  medicalCertificate: string;
+}
+
+export interface SurvivorPensionResponse {
+  applicationNumber: string; // "IVM-SV-2026-000123"
+  beneficiary: 'viudez' | 'orfandad';
+  monthlyPensionCrc: number;
+  firstPaymentDate: string;
+  status: 'aprobada' | 'en-estudio';
+}
+
+export interface BeneficiaryPayoutResponse {
+  requestNumber: string; // "ROP-BEN-2026-000123"
+  operator: string;
+  ropBalanceCrc: number;
+  fclBalanceCrc: number;
+  paymentDate: string;
+}
+
+export interface EstateResponse {
+  properties: Array<{ folio: string; canton: string; areaM2: number }>;
+  vehicles: Array<{ plate: string; make: string; model: string; year: number }>;
+  companies: Array<{ cedulaJuridica: string; legalName: string }>;
+  /** Annotation placed on every asset: "sucesión abierta". */
+  annotation: string;
+}
+
+export interface VehicleFinesResponse {
+  plate: string;
+  pendingFines: number;
+  pendingAmountCrc: number;
+}
+
+export interface MarchamoStatusResponse {
+  plate: string;
+  year: number;
+  paid: boolean;
+  amountCrc: number;
+  soaPolicy: string; // "SOA-2026-000123"
+}
+
+export interface TransferTaxResponse {
+  receiptNumber: string; // "HAC-2026-000123"
+  taxableBaseCrc: number;
+  ratePct: number;
+  taxCrc: number;
+  stampsCrc: number;
+  totalCrc: number;
+}
+
+export interface VehicleTransferResponse {
+  plate: string;
+  newOwnerId: string;
+  registrationNumber: string; // "BM-2026-000123"
+  registeredAt: string;
+}
+
+export interface PropertyTransferResponse {
+  folio: string;
+  newOwnerId: string;
+  registrationNumber: string; // "BI-2026-000123"
+  registeredAt: string;
+}
+
+export interface PropertyDeclarationResponse {
+  municipality: string;
+  declarationNumber: string; // "DBI-2026-00012"
+  declaredValueCrc: number;
+  annualTaxCrc: number; // 0.25 %
+  validUntil: string; // + 5 years
+}
+
+export interface MarriageRegistrationResponse {
+  certificateNumber: string; // "MAT-2026-000123"
+  spouseAId: string;
+  spouseBId: string;
+  date: string;
+  regime: 'gananciales' | 'separacion';
+}
+
+export interface CivilStatusUpdateResponse {
+  updated: true;
+  registry: string;
+  maritalStatus: string;
+}
+
+export interface SchoolEnrolmentResponse {
+  enrolmentNumber: string; // "MEP-2026-000123"
+  school: string;
+  grade: string;
+  circuit: string;
+  startDate: string;
+  services: string[]; // e.g. ["Comedor (PANEA)", "Transporte estudiantil"]
+}
+
+export interface ScholarshipResponse {
+  applicationNumber: string; // "IMAS-2026-000123"
+  programme: 'Crecemos' | 'Avancemos';
+  eligible: boolean;
+  monthlyAmountCrc: number;
+  basis: string; // "SINIRUBE: ingreso per cápita bajo la línea de pobreza"
+}
+
 // ---------------------------------------------------------------- Legal status (v2)
 
 /** Can this interaction happen in Costa Rica today? */
@@ -340,7 +480,7 @@ export const LEGAL_STATUS_LABELS: Record<LegalStatus, { es: string; en: string }
   ley: { es: 'Requiere ley', en: 'Requires legislation' },
 };
 
-export type Jurisdiction = 'CR' | 'EE' | 'SG' | 'EU' | 'UY' | 'BR';
+export type Jurisdiction = 'CR' | 'EE' | 'SG' | 'EU' | 'UY' | 'BR' | 'RU' | 'NO' | 'DK' | 'SE' | 'FI';
 
 export interface LegalRef {
   id: string;

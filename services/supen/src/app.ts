@@ -1,17 +1,19 @@
 import {
+  beneficiaryPayoutSchema,
   createServiceApp,
   errorHandler,
   ropStatementSchema,
   simulatedLatency,
   todayIso,
   withdrawFclSchema,
+  type BeneficiaryPayoutResponse,
   type FclWithdrawalResponse,
   type RopStatementResponse,
 } from '@pvg/shared';
 import type { Express } from 'express';
 import type { z } from 'zod';
 import { requireApiKey, validateBody, wrap } from './middleware.js';
-import { store, type FclWithdrawal, type RopStatement } from './store.js';
+import { store, type BeneficiaryPayout, type FclWithdrawal, type RopStatement } from './store.js';
 
 export const SERVICE_NAME = 'supen';
 export const OPERATOR = 'Operadora Demo de Pensiones';
@@ -27,6 +29,10 @@ export const ROP_MONTHS: Record<RopStatementResponse['modality'], number> = {
 
 type WithdrawFclBody = z.infer<typeof withdrawFclSchema>;
 type RopStatementBody = z.infer<typeof ropStatementSchema>;
+type BeneficiaryPayoutBody = z.infer<typeof beneficiaryPayoutSchema>;
+
+/** Days the operadora has to pay a deceased affiliate's balances to the beneficiaries (v4, same demo term). */
+export const BENEFICIARY_PAYMENT_DAYS = 15;
 
 /** ISO date `days` days after `iso` (UTC arithmetic). */
 export function addDaysIso(iso: string, days: number): string {
@@ -53,6 +59,11 @@ function withdrawalToResponse(w: FclWithdrawal): FclWithdrawalResponse {
 function statementToResponse(s: RopStatement): RopStatementResponse {
   const { operator, balanceCrc, modality, monthlyPaymentCrc, firstPaymentDate } = s;
   return { operator, balanceCrc, modality, monthlyPaymentCrc, firstPaymentDate };
+}
+
+function payoutToResponse(p: BeneficiaryPayout): BeneficiaryPayoutResponse {
+  const { requestNumber, operator, ropBalanceCrc, fclBalanceCrc, paymentDate } = p;
+  return { requestNumber, operator, ropBalanceCrc, fclBalanceCrc, paymentDate };
 }
 
 function affiliateNotFound(citizenId: string) {
@@ -137,6 +148,43 @@ export function createApp(): Express {
         firstPaymentDate: firstDayOfNextMonthIso(todayIso()),
       });
       res.json(statementToResponse(statement));
+    }),
+  );
+
+  // ---------------------------------------------------------------- v4
+
+  app.get('/supen/payouts', (_req, res) => {
+    res.json(store.listPayouts());
+  });
+
+  app.post(
+    '/supen/beneficiaryPayout',
+    validateBody(beneficiaryPayoutSchema),
+    wrap(async (req, res) => {
+      const body = req.body as BeneficiaryPayoutBody;
+      await simulatedLatency();
+
+      const existing = store.findPayout(body.deceasedId);
+      if (existing) return res.json(payoutToResponse(existing));
+
+      const affiliate = store.findAffiliate(body.deceasedId);
+      if (!affiliate) return res.status(404).json(affiliateNotFound(body.deceasedId));
+
+      const today = todayIso();
+      const year = Number(today.slice(0, 4));
+      const payout = store.savePayout({
+        beneficiaryId: body.beneficiaryId,
+        deceasedId: body.deceasedId,
+        deathCertificate: body.deathCertificate,
+        iban: body.iban,
+        requestedAt: today,
+        requestNumber: `ROP-BEN-${year}-${String(store.nextPayoutSequence(year)).padStart(6, '0')}`,
+        operator: OPERATOR,
+        ropBalanceCrc: affiliate.ropBalanceCrc,
+        fclBalanceCrc: affiliate.fclBalanceCrc,
+        paymentDate: addDaysIso(today, BENEFICIARY_PAYMENT_DAYS),
+      });
+      res.json(payoutToResponse(payout));
     }),
   );
 

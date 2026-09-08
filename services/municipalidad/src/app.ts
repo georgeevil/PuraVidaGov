@@ -1,6 +1,7 @@
 import {
   addYearsIso,
   createServiceApp,
+  declarePropertySchema,
   errorHandler,
   findActivity,
   issueBuildingPermitSchema,
@@ -14,6 +15,7 @@ import {
   type BuildingPermitResponse,
   type LandUseResponse,
   type MunicipalityResponse,
+  type PropertyDeclarationResponse,
 } from '@pvg/shared';
 import type { Express } from 'express';
 import type { z } from 'zod';
@@ -26,6 +28,7 @@ import {
   type LandUseCertificate,
   type License,
   type ProjectType,
+  type PropertyDeclaration,
 } from './store.js';
 
 export const SERVICE_NAME = 'municipalidad';
@@ -38,6 +41,21 @@ type IssueLicenseBody = z.infer<typeof issueLicenseSchema>;
 type IssueLandUseBody = z.infer<typeof issueLandUseSchema>;
 type IssueBuildingPermitBody = z.infer<typeof issueBuildingPermitSchema>;
 type UpdateAddressBody = z.infer<typeof updateAddressSchema>;
+type DeclarePropertyBody = z.infer<typeof declarePropertySchema>;
+
+/** Impuesto sobre bienes inmuebles: 0.25 % of the declared value per year (Ley 7509 art. 23). */
+export const PROPERTY_TAX_RATE = 0.0025;
+/** A declaración de bienes inmuebles is valid for five years (Ley 7509 art. 16). */
+export const DECLARATION_VALIDITY_YEARS = 5;
+
+export function propertyTax(declaredValueCrc: number): number {
+  return Math.round(declaredValueCrc * PROPERTY_TAX_RATE);
+}
+
+function declarationToResponse(d: PropertyDeclaration): PropertyDeclarationResponse {
+  const { municipality, declarationNumber, declaredValueCrc, annualTaxCrc, validUntil } = d;
+  return { municipality, declarationNumber, declaredValueCrc, annualTaxCrc, validUntil };
+}
 
 const normalizeUse = (s: string) =>
   s
@@ -248,6 +266,42 @@ export function createApp(): Express {
       });
       const response: AddressUpdateResponse = { updated: true, registry: ADDRESS_REGISTRY, effectiveDate: body.effectiveDate };
       res.json(response);
+    }),
+  );
+
+  // ---------------------------------------------------------------- v4
+
+  app.get('/municipalidad/declarations', (_req, res) => {
+    res.json(store.listDeclarations());
+  });
+
+  app.post(
+    '/municipalidad/declareProperty',
+    validateBody(declarePropertySchema),
+    wrap(async (req, res) => {
+      const body = req.body as DeclarePropertyBody;
+      await simulatedLatency();
+
+      const canton = findCanton(body.municipality);
+      if (!canton) return res.status(422).json(municipalityUnknown(body.municipality));
+
+      const existing = store.findDeclaration(body.folio, body.citizenId);
+      if (existing) return res.json(declarationToResponse(existing));
+
+      const declaredAt = todayIso();
+      const year = Number(declaredAt.slice(0, 4));
+      const declaration = store.saveDeclaration({
+        citizenId: body.citizenId,
+        folio: body.folio.trim(),
+        registrationNumber: body.registrationNumber,
+        declaredAt,
+        municipality: canton.name,
+        declarationNumber: `DBI-${year}-${String(store.nextDeclarationSequence(year)).padStart(5, '0')}`,
+        declaredValueCrc: body.declaredValueCrc,
+        annualTaxCrc: propertyTax(body.declaredValueCrc),
+        validUntil: addYearsIso(declaredAt, DECLARATION_VALIDITY_YEARS),
+      });
+      res.json(declarationToResponse(declaration));
     }),
   );
 

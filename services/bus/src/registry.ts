@@ -6,7 +6,7 @@ import { AGENCY_LABELS, type AgencyName, type RegistryEntry } from '@pvg/shared'
 
 /**
  * One routable action. `path` may contain `:param` segments and a GET action may declare `query`;
- * the router fills both from the request's `data` (docs/CONTRACTS.md v2/v3 → "Bus registry additions").
+ * the router fills both from the request's `data` (docs/CONTRACTS.md v2/v3/v4 → "Bus registry additions").
  */
 export interface ActionSpec {
   method: 'GET' | 'POST';
@@ -41,6 +41,9 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
       getCitizen: { method: 'GET', path: '/registro/citizen/:id' },
       registerBirth: { method: 'POST', path: '/registro/registerBirth' },
       updateAddress: { method: 'POST', path: '/registro/updateAddress' },
+      registerDeath: { method: 'POST', path: '/registro/registerDeath' },
+      registerMarriage: { method: 'POST', path: '/registro/registerMarriage' },
+      getDependants: { method: 'GET', path: '/registro/dependants/:id' },
     },
   },
   tributacion: {
@@ -51,6 +54,8 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
     actions: {
       createTaxId: { method: 'POST', path: '/tributacion/createTaxId' },
       updateAddress: { method: 'POST', path: '/tributacion/updateAddress' },
+      transferTax: { method: 'POST', path: '/tributacion/transferTax' },
+      updateCivilStatus: { method: 'POST', path: '/tributacion/updateCivilStatus' },
     },
   },
   ccss: {
@@ -65,6 +70,7 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
       getEmployment: { method: 'GET', path: '/ccss/employment/:citizenId' },
       applyPension: { method: 'POST', path: '/ccss/applyPension' },
       enrollVoluntary: { method: 'POST', path: '/ccss/enrollVoluntary' },
+      survivorPension: { method: 'POST', path: '/ccss/survivorPension' },
     },
   },
   municipalidad: {
@@ -77,6 +83,7 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
       issueLandUse: { method: 'POST', path: '/municipalidad/issueLandUse' },
       issueBuildingPermit: { method: 'POST', path: '/municipalidad/issueBuildingPermit' },
       updateAddress: { method: 'POST', path: '/municipalidad/updateAddress' },
+      declareProperty: { method: 'POST', path: '/municipalidad/declareProperty' },
     },
   },
   'registro-nacional': {
@@ -88,6 +95,11 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
       listProperties: { method: 'GET', path: '/registro-nacional/properties', query: ['ownerId'] },
       getProperty: { method: 'GET', path: '/registro-nacional/property/:folio' },
       registerCompany: { method: 'POST', path: '/registro-nacional/registerCompany' },
+      getVehicle: { method: 'GET', path: '/registro-nacional/vehicle/:plate' },
+      listVehicles: { method: 'GET', path: '/registro-nacional/vehicles', query: ['ownerId'] },
+      transferVehicle: { method: 'POST', path: '/registro-nacional/transferVehicle' },
+      transferProperty: { method: 'POST', path: '/registro-nacional/transferProperty' },
+      listEstate: { method: 'POST', path: '/registro-nacional/listEstate' },
     },
   },
   salud: {
@@ -118,6 +130,7 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
     actions: {
       withdrawFcl: { method: 'POST', path: '/supen/withdrawFcl' },
       ropStatement: { method: 'POST', path: '/supen/ropStatement' },
+      beneficiaryPayout: { method: 'POST', path: '/supen/beneficiaryPayout' },
     },
   },
   mtss: {
@@ -137,6 +150,35 @@ const AGENCY_CONFIG: Record<AgencyName, AgencyConfig> = {
     actions: {
       checkFines: { method: 'POST', path: '/cosevi/checkFines' },
       renewLicence: { method: 'POST', path: '/cosevi/renewLicence' },
+      checkVehicleFines: { method: 'POST', path: '/cosevi/checkVehicleFines' },
+    },
+  },
+  // ---- v4 agencies (docs/CONTRACTS.md v4 → "New agencies")
+  ins: {
+    urlEnv: 'INS_URL',
+    defaultUrl: 'http://localhost:4011',
+    keyEnv: 'INS_API_KEY',
+    defaultKey: 'demo-ins-key',
+    actions: {
+      marchamoStatus: { method: 'POST', path: '/ins/marchamoStatus' },
+    },
+  },
+  mep: {
+    urlEnv: 'MEP_URL',
+    defaultUrl: 'http://localhost:4012',
+    keyEnv: 'MEP_API_KEY',
+    defaultKey: 'demo-mep-key',
+    actions: {
+      enrolStudent: { method: 'POST', path: '/mep/enrolStudent' },
+    },
+  },
+  imas: {
+    urlEnv: 'IMAS_URL',
+    defaultUrl: 'http://localhost:4013',
+    keyEnv: 'IMAS_API_KEY',
+    defaultKey: 'demo-imas-key',
+    actions: {
+      applyScholarship: { method: 'POST', path: '/imas/applyScholarship' },
     },
   },
 };
