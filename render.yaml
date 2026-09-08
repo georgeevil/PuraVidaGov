@@ -1,0 +1,23 @@
+# Render blueprint for the PuraVidaGov demo (docs/CONTRACTS.md v4 → "All-in-one image").
+# NOTE: on Render's free plan the service SLEEPS after ~15 minutes without traffic; the first
+# request afterwards pays a cold start of roughly 30-60 s while the container boots again.
+# This is a DEMO deployment: no persistence, no real personal data.
+services:
+  - type: web
+    name: puravidagov
+    runtime: docker
+    plan: free
+    dockerfilePath: ./infra/Dockerfile.allinone
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: AGENCY_LATENCY_MS
+        value: "150"
+      - key: BENEFIT_TRIPS_AVOIDED
+        value: "4"
+      - key: BENEFIT_HOURS_SAVED
+        value: "8"
+      - key: BENEFIT_COST_SAVED_CRC
+        value: "50000"

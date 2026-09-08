@@ -26,7 +26,7 @@ the PDF are es-CR; code, identifiers, comments and docs are English.
 ## Layout
 ```
 packages/shared · services/{registro-civil,tributacion,ccss,municipalidad,registro-nacional,salud,cfia,supen,mtss,cosevi,ins,mep,imas,bus} · apps/{api,web}
-infra/ (Dockerfiles, compose, Caddyfile) · scripts/ (dev, e2e, smoke) · docs/ · .github/workflows/ci.yml
+infra/ (Dockerfiles, compose, Caddyfile) · scripts/ (dev, e2e, smoke, serve-all, build-static-api) · docs/ · .github/workflows/ci.yml
 ```
 
 ## Run and verify
@@ -34,7 +34,12 @@ infra/ (Dockerfiles, compose, Caddyfile) · scripts/ (dev, e2e, smoke) · docs/ 
 npm install && npm run dev                                   # everything on localhost (web :5173)
 docker compose -f infra/docker-compose.yml up --build        # web :3000, https :8443
 npm run typecheck && npm test && npm run e2e                 # minimum before calling anything done
+npm start                                                    # all 12 apps in ONE process on $PORT (free-tier target)
+npm run build:static                                         # public pages only, no backend → apps/web/dist-static
 ```
+Three deployment targets, all in CI; see `docs/DEPLOY.md`. **Compose stays the reference architecture** — do
+not collapse it to fit a host. `apps/web/dist` is the default bundle the all-in-one serves; `dist-static` is
+the static one. Never let a static bundle end up in front of a live backend.
 Every service is ESM TypeScript run by `tsx`, exports `createApp()` from `src/app.ts` (tests import it without
 binding a port) and listens in `src/index.ts`. Local imports need the `.js` extension (NodeNext). `apps/web` has its
 own bundler-style tsconfig and must never pull Express into the bundle: import from `@pvg/shared` with `import type`
