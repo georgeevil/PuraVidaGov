@@ -1,7 +1,7 @@
 # PuraVidaGov — conventions
 
 Demo of a citizen-centric e-government platform for Costa Rica: portal → orchestrator API → interoperability bus →
-ten mock agencies. **Read `docs/CONTRACTS.md` before touching any package**; it fixes the interfaces. PRD in
+thirteen mock agencies. **Read `docs/CONTRACTS.md` before touching any package**; it fixes the interfaces. PRD in
 `docs/PRD.md`, decisions in `docs/DECISIONS.md`.
 
 ## Vocabulary
@@ -25,7 +25,7 @@ the PDF are es-CR; code, identifiers, comments and docs are English.
 
 ## Layout
 ```
-packages/shared · services/{registro-civil,tributacion,ccss,municipalidad,registro-nacional,salud,cfia,supen,mtss,cosevi,bus} · apps/{api,web}
+packages/shared · services/{registro-civil,tributacion,ccss,municipalidad,registro-nacional,salud,cfia,supen,mtss,cosevi,ins,mep,imas,bus} · apps/{api,web}
 infra/ (Dockerfiles, compose, Caddyfile) · scripts/ (dev, e2e, smoke) · docs/ · .github/workflows/ci.yml
 ```
 
@@ -41,6 +41,6 @@ own bundler-style tsconfig and must never pull Express into the bundle: import f
 plus plain-data constants only.
 
 ## Demo login
-`1-2345-6789` / `demo` / OTP `123456` (shown on screen); José `7-0123-0456` for the pension. Reset: `POST /api/__demo/reset`.
+`1-2345-6789` / `demo` / OTP `123456` (shown on screen); José `7-0123-0456` for the pension; Rosa `7-0111-0222` for the bereavement; Diego `1-1111-2222` is María's fiancé. Reset: `POST /api/__demo/reset`.
 `/por-que`, `/marco-legal`, `/arquitectura` and the non-citizen API routes are public by design; keep everything about a
 citizen behind `requireAuth`.

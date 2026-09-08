@@ -15,7 +15,7 @@ export const businessRegistrationSchema = z.object({
 });
 
 export const busRequestSchema = z.object({
-  service: z.enum(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia', 'supen', 'mtss', 'cosevi']),
+  service: z.enum(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia', 'supen', 'mtss', 'cosevi', 'ins', 'mep', 'imas']),
   action: z.string().min(1),
   data: z.unknown(),
   requester: z.string().min(1),
@@ -200,4 +200,104 @@ export const renewLicenceSchema = z.object({
   categories: z.array(z.enum(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2'])).min(1),
   medicalCertificate: z.string().min(1),
   validityYears: z.union([z.literal(2), z.literal(4), z.literal(6)]),
+});
+
+// ---------------------------------------------------------------- v4 agency actions
+
+export const registerDeathSchema = z.object({
+  declarantId: cedulaSchema,
+  deceasedId: cedulaSchema,
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  hospital: z.string().min(1),
+});
+
+export const survivorPensionSchema = z.object({
+  survivorId: cedulaSchema,
+  deceasedId: cedulaSchema,
+  relationship: z.enum(['conyuge', 'hijo']),
+  deathCertificate: z.string().min(1),
+  iban: z.string().regex(/^CR\d{20}$/),
+});
+
+export const beneficiaryPayoutSchema = z.object({
+  beneficiaryId: cedulaSchema,
+  deceasedId: cedulaSchema,
+  deathCertificate: z.string().min(1),
+  iban: z.string().regex(/^CR\d{20}$/),
+});
+
+export const listEstateSchema = z.object({
+  deceasedId: cedulaSchema,
+  deathCertificate: z.string().min(1),
+});
+
+export const checkVehicleFinesSchema = z.object({ plate: z.string().min(3) });
+export const marchamoStatusSchema = z.object({ plate: z.string().min(3) });
+
+export const transferTaxSchema = z.object({
+  buyerId: cedulaSchema,
+  sellerId: cedulaSchema,
+  kind: z.enum(['vehiculo', 'inmueble']),
+  reference: z.string().min(1), // plate or folio
+  priceCrc: z.number().positive(),
+  fiscalValueCrc: z.number().positive(),
+});
+
+export const transferVehicleSchema = z.object({
+  plate: z.string().min(3),
+  sellerId: cedulaSchema,
+  buyerId: cedulaSchema,
+  taxReceipt: z.string().min(1),
+  priceCrc: z.number().positive(),
+});
+
+export const transferPropertySchema = z.object({
+  folio: z.string().min(1),
+  sellerId: cedulaSchema,
+  buyerId: cedulaSchema,
+  taxReceipt: z.string().min(1),
+  priceCrc: z.number().positive(),
+});
+
+export const declarePropertySchema = z.object({
+  citizenId: cedulaSchema,
+  folio: z.string().min(1),
+  municipality: z.string().min(1),
+  declaredValueCrc: z.number().positive(),
+  registrationNumber: z.string().min(1),
+});
+
+export const registerMarriageSchema = z.object({
+  spouseAId: cedulaSchema,
+  spouseBId: cedulaSchema,
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  regime: z.enum(['gananciales', 'separacion']),
+  notary: z.string().min(1),
+});
+
+export const updateCivilStatusSchema = z.object({
+  citizenId: cedulaSchema,
+  maritalStatus: z.enum(['single', 'married', 'divorced', 'widowed']),
+  certificate: z.string().min(1),
+});
+
+export const enrolStudentSchema = z.object({
+  guardianId: cedulaSchema,
+  studentId: cedulaSchema,
+  studentName: z.string().min(1),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  vaccinationRecord: z.string().min(1),
+  school: z.string().min(1),
+  grade: z.enum(['materno', 'transicion', 'primero', 'septimo']),
+  canton: z.string().min(1),
+  needsTransport: z.boolean(),
+});
+
+export const applyScholarshipSchema = z.object({
+  guardianId: cedulaSchema,
+  studentId: cedulaSchema,
+  enrolmentNumber: z.string().min(1),
+  grade: z.enum(['materno', 'transicion', 'primero', 'septimo']),
+  householdMonthlyIncomeCrc: z.number().int().min(0),
+  householdSize: z.number().int().min(1).max(20),
 });
