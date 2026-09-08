@@ -321,3 +321,69 @@ hoy?" panel per step) · `/mis-tramites` (list) · `/auditoria` · `/arquitectur
   is sent to `/por-que` (not `/login`); the layout for anonymous visitors shows nav "Por qué · Marco legal · Cómo
   funciona" and a primary button "Probar el demo" → `/login`. Logged-in users keep the full nav. `/por-que` ends with
   a CTA card "Pruebe el demo como María" → `/login`.
+
+---
+
+# v4 — deployment targets (free tier), alongside the existing Compose stack
+
+Three ways to run the same code. **`infra/docker-compose.yml` does not change**: twelve containers stay the
+reference architecture for local demos and CI, because separate containers are what makes the "institutions are
+independent, the bus is the only link" claim visible.
+
+| Target | What runs | Where it is free | Cold start |
+|---|---|---|---|
+| **Compose** (unchanged) | 10 agencies + bus + API + web + Caddy, one container each | local / any VM | none |
+| **All-in-one container** | the same 12 Express apps in ONE Node process + the built SPA, one port | Render / Koyeb / Fly free plans | 30–60 s on free plans that sleep |
+| **Static** | the public pages only (`/por-que`, `/marco-legal`, `/arquitectura`), no backend | Cloudflare Pages / Netlify / GitHub Pages | none |
+
+## All-in-one server — `scripts/serve-all.mjs`
+
+Run with `npx tsx scripts/serve-all.mjs`. One Node process that:
+
+1. Sets internal defaults before importing anything: `BUS_URL=http://127.0.0.1:4000`,
+   `REGISTRO_URL=http://127.0.0.1:4001` … `COSEVI_URL=http://127.0.0.1:4010` (only when not already set), so the
+   bus→agency and API→bus hops stay real HTTP calls and the audit log is unchanged.
+2. Imports each service's `createApp()` and calls `app.listen(port, '127.0.0.1')` for the ten agencies (4001–4010)
+   and the bus (4000). These bind to loopback only and are never exposed.
+3. Builds the API app with `createApp()` from `apps/api` and mounts it (`front.use(apiApp)`) — no extra proxy hop.
+4. Serves `apps/web/dist` as static files with an SPA fallback to `index.html` for any non-`/api` path.
+5. Listens on `process.env.PORT` (default 8080) on `0.0.0.0`. This is the only exposed port.
+
+Env: `PORT`; `INTERNAL_PORT_BASE` (default 4000) shifts the loopback ports so the script can run next to
+`npm run dev`; everything else is the usual `.env` (`SESSION_SECRET`, `BENEFIT_*`, `AGENCY_LATENCY_MS`, …).
+`CORS_ORIGIN` is irrelevant here (same origin) but harmless.
+
+`GET /healthz` on the front app returns `{ status:"ok", mode:"all-in-one", agencies:<n> }` after every internal
+app is listening — free-tier health checks point at it.
+
+Script entry: `npm start` at the repo root.
+
+## All-in-one image — `infra/Dockerfile.allinone`
+
+Multi-stage: install workspace deps, `npm run build -w @pvg/web`, then run `npx tsx scripts/serve-all.mjs`.
+Exposes `8080`, runs as `node`, honours `PORT`. `render.yaml` at the repo root is a Render blueprint using it
+(free plan, Docker env, health check `/healthz`); `docs/DEPLOY.md` covers Koyeb and Fly with the same image.
+
+## Static build — `npm run build:static`
+
+`vite build` with `VITE_DEPLOY_MODE=static` (and optional `VITE_PORTAL_URL=<url of the all-in-one deployment>`),
+then `node scripts/build-static-api.mjs` writes `apps/web/dist/api-static/*.json` and `apps/web/dist/_redirects`.
+
+- Generated files: `workflows.json` (from `listDefinitions()` in `apps/api/src/workflows/index.ts`),
+  `legal.json` (same shape as `GET /api/legal`), `registry.json` (one `RegistryEntry` per agency with the
+  compose-internal `baseUrl` and **no `healthy` field**), `benefits.json`, `activities.json`.
+- `_redirects` contains `/*  /index.html  200` for SPA routing on Pages/Netlify.
+
+### Static mode in `apps/web`
+The single seam is `request<T>(path)` in `apps/web/src/api.ts`. When `import.meta.env.VITE_DEPLOY_MODE === 'static'`:
+- `/workflows` → `fetch('/api-static/workflows.json')`; `/workflows/:id` is resolved from that list client-side;
+  `/legal`, `/registry`, `/benefits`, `/activities` map to their JSON files.
+- Any other path (login, options, transactions, PDF, audit) rejects with an `ApiError` code `STATIC_MODE`.
+- `Architecture` renders an entry with `healthy === undefined` as neutral ("estado no disponible"), never "DOWN".
+- Every "Probar el demo" / login link points at `VITE_PORTAL_URL` when set (target `_blank`), otherwise `/login`.
+  With `VITE_DEPLOY_MODE=static` and no `VITE_PORTAL_URL`, those links are replaced by a short line saying the
+  interactive portal is not deployed.
+- `/login` and the guarded routes still exist in static mode but show one card: the demo runs elsewhere, with the
+  link. Nothing must throw an unhandled error or spin forever.
+
+The default (unset `VITE_DEPLOY_MODE`) is unchanged: relative `/api/...` against a real backend.
