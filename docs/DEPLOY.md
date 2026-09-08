@@ -14,6 +14,10 @@ Three targets, one codebase. Pick by what the audience needs, not by what is che
 The Compose stack is unchanged and remains the reference architecture: fifteen separate containers are what
 make "the institutions are independent and the bus is the only link" visible. Nothing below replaces it.
 
+**The domain is `sindarvueltas.org`**, registered at Cloudflare Registrar on 8 September 2026 and on
+Cloudflare nameservers. The apex serves the static case pages; `demo.sindarvueltas.org` serves the
+interactive portal. Why that name and not a `puravida*` one: `docs/DECISIONS.md` D-021.
+
 Hosting facts below were verified on 8 September 2026 against each provider's own pages. Sources and the
 things that could **not** be verified are in `docs/research/hosting-free-tier.md`. Free tiers move; re-check
 before you commit to one.
@@ -39,7 +43,13 @@ Or connect the repo in the Cloudflare dashboard with:
 |---|---|
 | Build command | `npm ci && npm run build:static` |
 | Build output directory | `apps/web/dist-static` |
-| Environment variable | `VITE_PORTAL_URL` = the URL of your all-in-one deployment (optional) |
+| Environment variable | `VITE_PORTAL_URL` = `https://demo.sindarvueltas.org` |
+| Custom domain | `sindarvueltas.org` |
+
+**Already configured.** The apex and `www` are attached to the `sindarvueltas` Pages project and the proxied
+`CNAME`s to `sindarvueltas.pages.dev` exist. If you ever rebuild this from scratch: attach the domain first
+(Pages dashboard → the project → Custom domains, or the Pages domains API), then let it create the record —
+hand-creating the CNAME without attaching the domain will not resolve.
 
 `wrangler.jsonc` at the repo root already sets the output directory.
 
@@ -192,21 +202,35 @@ Rules that apply to every host:
 - **Render does not support IPv6**; delete any `AAAA` record for its subdomain.
 - **Cloud Run:** turn "Always Use HTTPS" off during domain-mapping validation, then back on.
 
-For this project specifically: `denuncia.cr` is a live service on a registrar whose DNS changes are manual, so
-prefer a subdomain of `cartacaribesur.org` for anything experimental — and scope any rule to the exact host,
-the way the existing `reporta.cartacaribesur.org` redirect is scoped, because that zone hosts other production
-sites.
+For this project specifically, the layout is:
+
+| Host | Serves | Record |
+|---|---|---|
+| `sindarvueltas.org` (apex) and `www` | static case pages, Cloudflare Pages | proxied `CNAME` → `sindarvueltas.pages.dev`, created by attaching the domain to the project |
+| `demo.sindarvueltas.org` | the all-in-one container | Worker Custom Domain on `sindarvueltas-portal`; Cloudflare manages the record and the certificate |
+
+`sindarvueltas.org` is its own zone at Cloudflare Registrar, so nothing here touches `denuncia.cr` (whose
+registrar NIC.cr needs manual DNS changes) or `cartacaribesur.org` (which hosts other production sites).
+That separation is the point: the container can move between hosts by editing one `CNAME`, and neither
+existing domain is at risk.
+
+Registrar notes for this domain: it is locked to Cloudflare nameservers, cannot transfer out for 60 days
+from registration, and WHOIS redaction is free — worth confirming it is on, since this is an advocacy
+project criticising government inaction. Cloudflare publishes no price list anywhere, so the dashboard
+search is the only authoritative price; `.org` has flat registry pricing, so unlike `.xyz` or `.site` there
+is no promotional first year that renews at a cliff.
 
 ---
 
 ## 4. Recommended combination
 
-- **Static** → Cloudflare Pages, on a subdomain of a domain you already run.
-- **Interactive** → Cloud Run in `us-central1` if you are comfortable putting a card on file and setting a
-  budget alert; **Render free** if you would rather have a one-minute cold start than any possibility of a
-  bill. Both are supported by the same image.
-- Set `VITE_PORTAL_URL` on the Pages build so the two halves link up, and pre-warm the container before any
-  live walkthrough.
+- **Static** → Cloudflare Pages on `sindarvueltas.org`.
+- **Interactive** → `demo.sindarvueltas.org`. Use **Render free** (via `render.yaml`) unless you want to put
+  a card on file: it cannot bill you, at the cost of a ~1-minute wake after 15 minutes idle, which the
+  static site already warns about next to every portal link. **Cloud Run** in `us-central1` is the swap if
+  you would rather have no cold start; both run the same image and switching is one `CNAME` edit.
+- Set `VITE_PORTAL_URL=https://demo.sindarvueltas.org` on the Pages build so the two halves link up, and
+  pre-warm the container before any live walkthrough.
 
 ## 5. What CI already proves
 
