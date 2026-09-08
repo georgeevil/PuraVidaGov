@@ -18,6 +18,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
+    "build:static": "VITE_DEPLOY_MODE=static npm run build -w @pvg/web -- --outDir dist-static --emptyOutDir && node --import tsx scripts/build-static-api.mjs",
     "lint": "npm run lint --workspaces --if-present",
     "e2e": "node scripts/e2e.mjs",
     "smoke": "node scripts/smoke.mjs"

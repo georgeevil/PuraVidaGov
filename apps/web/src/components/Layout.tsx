@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
+import { PortalLink } from './Portal';
 
 interface NavItem {
   to: string;
@@ -123,9 +124,9 @@ export function Layout() {
                 </button>
               </>
             ) : (
-              <Link to="/login" className="btn-primary !px-3 !py-1.5" title="Try the demo — sign in as María">
+              <PortalLink className="btn-primary !px-3 !py-1.5" title="Try the demo — sign in as María">
                 Probar el demo
-              </Link>
+              </PortalLink>
             )}
             {menuButton}
           </div>

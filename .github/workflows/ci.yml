@@ -73,12 +73,12 @@ jobs:
       - run: npm run build:static
       - name: The static bundle must stand alone
         run: |
-          test -f apps/web/dist/index.html
-          test -f apps/web/dist/_redirects
+          test -f apps/web/dist-static/index.html
+          test -f apps/web/dist-static/_redirects
           for f in workflows legal registry benefits activities; do
-            test -s "apps/web/dist/api-static/$f.json"
-            node -e "JSON.parse(require('fs').readFileSync('apps/web/dist/api-static/$f.json','utf8'))"
+            test -s "apps/web/dist-static/api-static/$f.json"
+            node -e "JSON.parse(require('fs').readFileSync('apps/web/dist-static/api-static/$f.json','utf8'))"
           done
-          node -e "const w=require('./apps/web/dist/api-static/workflows.json'); if(w.length!==7) throw new Error('expected 7 life events, got '+w.length)"
-          node -e "const l=require('./apps/web/dist/api-static/legal.json'); if(!l.refs||!l.workflows) throw new Error('legal.json shape')"
-          ! grep -rl "require('express')\|from\"express\"" apps/web/dist/assets/*.js
+          node -e "const w=require('./apps/web/dist-static/api-static/workflows.json'); if(w.length!==7) throw new Error('expected 7 life events, got '+w.length)"
+          node -e "const l=require('./apps/web/dist-static/api-static/legal.json'); if(!l.refs||!l.workflows) throw new Error('legal.json shape')"
+          ! grep -rl "require('express')\|from\"express\"" apps/web/dist-static/assets/*.js

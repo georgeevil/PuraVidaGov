@@ -5,6 +5,7 @@ import { api, errorMessage, type LegalOverview } from '../api';
 import { Alert } from '../components/Alert';
 import { LegalBadge } from '../components/LegalBadge';
 import { LegalChip, LegalPanel } from '../components/LegalPanel';
+import { NO_PORTAL, PortalLink } from '../components/Portal';
 import { Spinner } from '../components/Spinner';
 import { Tip } from '../components/Tip';
 import { LEGAL_MATRIX, MATRIX_COLUMNS, MATRIX_VALUE_LABELS, type MatrixValue } from '../content/legal-matrix';
@@ -69,9 +70,16 @@ function WorkflowTable({ w }: { w: LegalOverview['workflows'][number] }) {
             className="bg-primary-50/40"
             note={w.legal}
             cells={[
-              <Link key="t" to={`/tramite/${encodeURIComponent(w.id)}`} className="font-semibold text-slate-900 hover:text-primary-700 hover:underline">
-                {w.title}
-              </Link>,
+              NO_PORTAL ? (
+                // Static build with no interactive deployment: the trámite is not reachable from here.
+                <span key="t" className="font-semibold text-slate-900">
+                  {w.title}
+                </span>
+              ) : (
+                <PortalLink key="t" path={`/tramite/${encodeURIComponent(w.id)}`} className="font-semibold text-slate-900 hover:text-primary-700 hover:underline">
+                  {w.title}
+                </PortalLink>
+              ),
               <span key="a" className="text-xs text-slate-500">
                 todo el evento
               </span>,
