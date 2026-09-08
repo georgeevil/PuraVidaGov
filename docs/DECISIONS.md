@@ -223,6 +223,11 @@ demo. **A support link on `/por-que` or `/marco-legal` is the artefact §6c warn
 `author.ts` carries this rule at the top of the file, and `facts.Financiamiento` was corrected because it
 asserted no donations were accepted, which the change made false.
 
+**The `Required Notice:` line lives in LICENSE, once.** It was already the last line of that file, where
+PolyForm's own example puts it. A second, differently-worded copy was briefly added to NOTICE and removed: a
+licensee must propagate *every* plain-text `Required Notice:` line the licensor supplied, so two variants of
+the same notice create an argument about which governs. NOTICE now points at the one in LICENSE instead.
+
 **The author page now says plainly that this is publication, not political participation**, on the footing the
 research already established: Constitución arts. 28 and 29 use *nadie* and *todos*, not *ciudadanos*, and art. 19
 ¶1 gives foreigners the same individual rights while ¶2 subtracts only political participation. Stated in one
