@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { WorkflowDefinition } from '@pvg/shared/data';
-import { api } from '../api';
+import { api, IS_STATIC } from '../api';
 import { useAuth } from '../auth';
 import { LegalBadge } from '../components/LegalBadge';
+import { ColdStartNote, NO_PORTAL, PortalLink, PortalUnavailable } from '../components/Portal';
 import { Tip } from '../components/Tip';
 import { CASE, type CaseContent } from '../content/case';
 import { formatCrc, formatDecimal } from '../format';
@@ -112,7 +113,8 @@ function Calculator({ calc, rule }: { calc: CaseContent['calculator']; rule: Cas
 
 /**
  * The life events as a compact strip of links. Signed in → the trámite itself; anonymous → /login (the page is
- * public, the trámites are not). Fetched from the public /api/workflows; silently omitted if it fails.
+ * public, the trámites are not). In the static build they point at the interactive deployment, or are plain
+ * labels when none is configured. Fetched from the public /api/workflows; silently omitted if it fails.
  */
 function LifeEventsStrip({ workflows, isAuthenticated }: { workflows: WorkflowDefinition[]; isAuthenticated: boolean }) {
   if (!workflows.length) return null;
@@ -123,22 +125,38 @@ function LifeEventsStrip({ workflows, isAuthenticated }: { workflows: WorkflowDe
         <Tip en="Life events in the demo — sign in to try one" />
       </p>
       <ul className="flex flex-wrap gap-2">
-        {workflows.map((w) => (
-          <li key={w.id}>
-            <Link
-              to={isAuthenticated ? `/tramite/${encodeURIComponent(w.id)}` : '/login'}
-              title={isAuthenticated ? w.titleEn : `${w.titleEn} — sign in to try it`}
-              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                w.available
-                  ? 'border-slate-200 bg-white text-slate-800 hover:border-primary-300 hover:bg-primary-50'
-                  : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
-              }`}
-            >
+        {workflows.map((w) => {
+          const cls = `inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
+            w.available
+              ? 'border-slate-200 bg-white text-slate-800 hover:border-primary-300 hover:bg-primary-50'
+              : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
+          }`;
+          const inner = (
+            <>
               {w.title}
               {w.legal && <LegalBadge status={w.legal.status} size="xs" />}
-            </Link>
-          </li>
-        ))}
+            </>
+          );
+          const path = `/tramite/${encodeURIComponent(w.id)}`;
+          return (
+            <li key={w.id}>
+              {NO_PORTAL ? (
+                // Static build with no interactive deployment: show the life event, but never a dead link.
+                <span className={cls.replace('transition-colors', '')} title={w.titleEn}>
+                  {inner}
+                </span>
+              ) : isAuthenticated && !IS_STATIC ? (
+                <Link to={path} title={w.titleEn} className={cls}>
+                  {inner}
+                </Link>
+              ) : (
+                <PortalLink path={IS_STATIC ? path : '/login'} title={`${w.titleEn} — sign in to try it`} className={cls}>
+                  {inner}
+                </PortalLink>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );
@@ -157,9 +175,14 @@ function DemoCta() {
         en segundos.
       </p>
       <div className="mt-4">
-        <Link to="/login" className="btn-primary" title="Try the demo">
-          Probar el demo
-        </Link>
+        {NO_PORTAL ? (
+          <PortalUnavailable />
+        ) : (
+          <PortalLink className="btn-primary inline-flex" title="Try the demo">
+            Probar el demo
+          </PortalLink>
+        )}
+        <ColdStartNote className="mt-2" />
       </div>
     </section>
   );
@@ -352,9 +375,17 @@ export function Case() {
 
       <p className="text-xs text-slate-500">
         Vea cómo se traduce esto en un trámite real:{' '}
-        <Link to={isAuthenticated ? '/' : '/login'} className="text-primary-700 hover:underline">
-          eventos de vida
-        </Link>{' '}
+        {NO_PORTAL ? (
+          <span className="text-slate-600">eventos de vida</span>
+        ) : isAuthenticated && !IS_STATIC ? (
+          <Link to="/" className="text-primary-700 hover:underline">
+            eventos de vida
+          </Link>
+        ) : (
+          <PortalLink path={IS_STATIC ? '/' : '/login'} className="text-primary-700 hover:underline">
+            eventos de vida
+          </PortalLink>
+        )}{' '}
         ·{' '}
         <Link to="/arquitectura" className="text-primary-700 hover:underline">
           cómo funciona
