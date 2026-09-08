@@ -127,3 +127,38 @@ portal.
 `.cr` was never an option — Cloudflare Registrar does not support it, and NIC.cr is the only path. Not
 registering anything under `.go.cr`, and staying visibly outside the government namespace, is itself a
 credibility asset for a project arguing that the government should change.
+
+## D-024 — PolyForm Noncommercial for the code, CC BY-NC-SA for the research
+
+**Date:** 8 September 2026 · **Status:** accepted · **Supersedes:** the MIT licence of D-002
+
+The demo was MIT. MIT lets a systems integrator take the whole thing, bill a ministry to deploy it, and owe
+nothing to anyone. That is precisely the outcome the project should not subsidise, and it is also the only
+leverage a single author has.
+
+**PolyForm Noncommercial 1.0.0** for the code, because it is the only reviewed licence surveyed in
+`docs/research/licensing-options.md` that both forbids commercial delivery *and* names the intended users in
+its own operative text: use by a government institution, educational institution, public research
+organization, public safety or health organization, environmental protection organization or charity is a
+permitted purpose "regardless of the source of funding". A ministry never has to read a FAQ to know it is
+allowed. Every other candidate — Elastic License, BUSL, FSL, AGPL, CC BY-NC — either permits paid delivery,
+converts to permissive on a timer, or is unsuited to software.
+
+**CC BY-NC-SA 4.0** for the research and the Spanish page copy, because they are prose, not software, and
+because ShareAlike is the point: adapting the analysis into a real policy document is the best thing that
+could happen to it, and the derived analysis should stay open in turn. The program's *technical*
+documentation stays under the code licence — Ley 6683 art. 4 treats it as part of the program.
+
+**The honest costs, recorded so nobody has to rediscover them.** PolyForm is not OSI-approved, so this is
+not open source and should never be called that. The project therefore fails the
+[Standard for Public Code](https://standard.publiccode.net/), which requires an OSI licence *and* that
+contributors not be asked to assign copyright — and `CONTRIBUTING.md` asks for exactly that, because the
+ability to sell a commercial licence dies the moment one outside contributor keeps their copyright. There is
+a real counter-argument in §6.7 of the research: X-Road itself is MIT and defends its position with a
+trademark rather than a licence, every government reference implementation verified is OSI-licensed, and
+both Elastic and Redis eventually reversed their relicensing. The trade is deliberate: a demo whose purpose
+is to be adopted by a government loses little from a licence that governments may freely use, and gains the
+only negotiating position its author has.
+
+**The MIT history is not withdrawn** and cannot be. Anyone may fork the last MIT commit. `COMMERCIAL.md`
+says so in public rather than leaving a lawyer to discover it.

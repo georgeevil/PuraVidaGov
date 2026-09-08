@@ -13,8 +13,10 @@ is required rather than optional.
 
 **Method note.** Licence texts were fetched raw (`curl` on the canonical URL or the raw file in the
 steward's repository) rather than read through a summariser, so the quoted clauses are verbatim.
-Costa Rican statutes and registry fees were researched separately; confidence there is lower and is
-flagged per claim in §5 and in the gap list at the end.
+Costa Rican statutes were read as consolidated full text from SCIJ/SINALEVI and grepped locally, and
+the articles quoted in §5 were independently cross-read against a second statute mirror; the Spanish
+quotations are verbatim. Confidence is high throughout except where a claim carries an `[unverified]`
+marker. **§7 lists every gap** — read it before acting on anything time-sensitive, fees above all.
 
 ---
 
@@ -34,6 +36,12 @@ That decomposes into four requirements, and they are not equally achievable:
 | R4 | Nobody can take "the initiative" without paying | **No.** See §4. This is not a copyright question at all |
 
 Most of the disappointment in these situations comes from expecting a licence to deliver R4.
+
+**And one finding outranks the whole licence question.** Costa Rica's innovative-procurement decree of
+**9 March 2026** (Decreto Ejecutivo 45763, art. 28) makes **shared State/supplier ownership the default**
+where a *pliego de condiciones* is silent, and lets the Administration stipulate rights extending to the
+whole State plus the power to sub-license to third parties. No licence in §2 survives that clause. If
+he reads only two sections of this memo, read §5.4 and §6.5.
 
 ---
 
@@ -179,15 +187,20 @@ What this means in practice, stated bluntly:
 - **A lawyer needs to look at this**, and it is a better use of a first consultation than choosing
   between BUSL and PolyForm.
 
-`[unverified: I could not find Costa Rican case law or Registro Nacional guidance on AI-assisted
-authorship. Assume the question is open there.]`
+**§5.1b answers this for Costa Rica, and the answer is better than expected.** Costa Rican law does
+require a natural person to be the *author* (Reglamento 24611-J art. 3.1: "la persona física que
+realiza la creación intelectual"). But two provisions give him ownership without needing to win that
+argument: Reglamento arts. 6 and 7 presume software published under someone's name to be a **collective
+work** whose *titular* is the **productor** — the person who publishes it under their responsibility —
+and Ley 6683 art. 155 presumes authorship from the name conspicuously shown on the work. Both are
+secured by the same one-commit fix recommended in §1.5. Read §5.1b before acting on this section.
 
 ### 1.5 The complete list of files a relicence touches
 
 | File | Current | Action |
 |---|---|---|
 | `/LICENSE` | MIT, "PuraVidaGov contributors" | Replace; and see the note below |
-| `/package.json` line 6 | `"license": "MIT"` | Change to the new SPDX id or `"SEE LICENSE IN LICENSE"` |
+| `/package.json` line 6 | `"license": "MIT"` | Change to the new SPDX id; use `"SEE LICENSE IN LICENSE"` only if the chosen licence has none |
 | `/README.md` line 136 | `MIT.` | Rewrite as a licensing section pointing at LICENSE, LICENSE-docs and COMMERCIAL.md |
 | workspace `package.json` files | none declare a licence | Leave, or add explicitly |
 
@@ -303,15 +316,17 @@ Sentry adopted BSL in November 2019 with a **three**-year change date converting
 left BSL for its own FSL in 2023. CockroachDB went Apache-2.0 → BSL → its own bespoke CockroachDB
 Software License in 2024.
 
-**Government internal use? It depends entirely on the adopter's AUG, and at least one adopter
-excludes government by name.** Terraform's AUG permits it explicitly ("internal purposes within an
-organization"). But Cockroach Labs' licensing FAQ states: "No, government entities do not qualify for
-an Enterprise Free license" (https://www.cockroachlabs.com/docs/stable/licensing-faqs).
+**Government internal use? It depends entirely on the adopter's AUG.** Terraform's AUG permits it
+explicitly ("internal purposes within an organization"). BUSL itself says *nothing* generic about
+government — it delegates the question to a blank the licensor fills in.
 
-**That is the single most important warning about BUSL for this project.** BUSL says *nothing* generic
-about government. It delegates the question to a blank the licensor fills in, and the delegation can
-cut against government. A ministry's procurement lawyer who has met BUSL before may have met
-CockroachDB's version of it.
+**And the delegation can cut against government.** Cockroach Labs — a former BUSL adopter, now under
+its own bespoke CockroachDB Software License since 2024 — states in its licensing FAQ: "No, government
+entities do not qualify for an Enterprise Free license"
+(https://www.cockroachlabs.com/docs/stable/licensing-faqs). *That exclusion sits in Cockroach's own
+licence, not in a BUSL AUG*, so it is not an example of BUSL drafting. It is something more general and
+more useful: proof that a source-available licensor writing its own terms will sometimes carve
+government out, and that a ministry's procurement lawyer may have met exactly that before.
 
 **Does it stop an integrator?** **Only if the AUG is drafted for it, and Terraform's is not.** Under
 Terraform's AUG an integrator may deploy Terraform for a ministry and charge for the work, because that
@@ -673,18 +688,36 @@ entirely at the cost of allowing commercial use.
 Share, Adapted Material". A ministry could adapt the research internally but could not publish the
 adaptation — which defeats the point.
 
-**Recommendation for `docs/`: CC BY-NC-SA 4.0.** It requires attribution by name (which MIT does not,
-in any meaningful sense), blocks commercial exploitation of the research, and forces derivative
-analyses to stay open. **CC BY-ND is the wrong choice** — it would prevent the government from adapting
-the legal analysis into its own policy documents, which is the single most valuable thing that could
-happen to this work.
+**Recommendation for `docs/`: CC BY-NC-SA 4.0, with a caveat worth weighing.** It requires attribution
+by name (which MIT does not, in any meaningful sense) and blocks commercial exploitation of the
+research. **CC BY-ND is the wrong choice** — it would prevent the government from adapting the legal
+analysis into its own policy documents, which is the single most valuable thing that could happen to
+this work.
+
+But **ShareAlike has a softer version of the same problem.** If a ministry adapts the legal analysis
+into an official policy document, SA requires that document to carry CC BY-NC-SA 4.0 — and an official
+government publication typically cannot be licensed that way, because the institution has its own
+publication rules and its output is often meant to be freely reusable. **CC BY-NC 4.0 (`CC-BY-NC-4.0`,
+also in the SPDX list) keeps the attribution and the NonCommercial protection without that friction.**
+If the priority is that the analysis actually reaches Costa Rican policy, drop the SA. If the priority
+is that no one builds a closed derivative research product on it, keep it. Both are defensible; the
+memo recommends BY-NC-SA on the stated goal and flags BY-NC as the better fit for §6.7's alternative.
+
+**And a scope question the statute forces.** Ley 6683 art. 4(ñ) provides that a program's "documentación
+técnica y sus manuales de uso" *form part of the program* (§5.1). So `docs/CONTRACTS.md` — 37 KB of
+interface definitions — plus `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` are arguably program
+documentation, not prose, and CC-licensing a file of TypeScript interface definitions sits oddly against
+the CC advice quoted above. **Cleanest split: the code licence covers `docs/CONTRACTS.md`,
+`ARCHITECTURE.md`, `DECISIONS.md`, `PRD.md`, `DEMO.md`, `DEPLOY.md`; the CC licence covers
+`docs/research/*`, `docs/CASE.md` and `docs/LEGAL.md`** — the original written research, which is the
+actual asset. §6.3 states this as the file layout.
 
 ### 2.7 Summary table
 
 | Licence | SPDX | OSI | Gov may run internally | Blocks integrator selling services | Converts to OSS |
 |---|---|---|---|---|---|
 | MIT | `MIT` | Yes | Yes | **No** | n/a |
-| BUSL-1.1 | `BUSL-1.1` | No | Only if the AUG says so — CockroachDB's says no | **Only if custom-drafted for it** | Yes, ≤4 yrs, GPL-compatible |
+| BUSL-1.1 | `BUSL-1.1` | No | Only if the AUG says so; BUSL itself is silent | **Only if custom-drafted for it** | Yes, ≤4 yrs, GPL-compatible |
 | FSL-1.1-MIT / -ALv2 | both listed | No | Yes, by name | **No — expressly permits it** | Yes, 2 yrs |
 | PolyForm Noncommercial | `PolyForm-Noncommercial-1.0.0` | No | **Yes, by name** | Probably — but grey, see §6.1 | No |
 | PolyForm Shield | none | No | Yes | Arguably, if he has a competing offering | No |
@@ -888,10 +921,22 @@ PuraVidaGov would be the first, and being first is a cost as well as an asset.
 
 ### 3.4 Costa Rican rules
 
-See §5.4 for Ley 9986 and for the search for a Costa Rican software-libre policy. Summary of what was
-and was not found is in the gap list. The short version: **no Costa Rican equivalent of Uruguay's Ley
-19.179 was confirmed to exist, and none was confirmed not to exist.** Treat it as an open question and
-have a Costa Rican lawyer check before assuming either way.
+**Costa Rica has no software-libre mandate or preference, and this is now a confirmed negative
+finding** — see §5.5 for the search method and the governing decree. The short version, and it is the
+single most favourable fact in this memo for the recommendation in §6:
+
+- A SINALEVI full-text search for `software libre` returns no public-sector decree, directriz or policy.
+- `software libre`, `código abierto` and `fuente abierta` return **zero hits** across Ley 9986, its
+  Reglamento 43808, and the March 2026 innovative-procurement decree 45763.
+- The governing instrument, Decreto Ejecutivo 45167-MICITT-J-COMEX, is a licence-**compliance** regime.
+  Its only open-source clause (art. 15) is permissive: institutions "podrán utilizar software de código
+  abierto… como una alternativa útil".
+- The mandatory Código Nacional de Tecnologías Digitales is built on **neutralidad tecnológica**.
+
+So the EU material in §3.2, the Standard for Public Code in §3.1 and Uruguay's Ley 19.179 above are all
+context, not constraints. **In Costa Rica specifically, nothing in law obstructs a ministry from
+running source-available software.** What remains is reputational and procedural, not legal — and
+§5.4's shared-ownership default is a far bigger commercial risk than the licence choice.
 
 ---
 
@@ -921,6 +966,26 @@ And software is protected *as a literary work*, not as an invention — TRIPS Ar
 Costa Rica has been a WTO member since 1 January 1995
 (https://www.wto.org/english/thewto_e/countries_e/costa_rica_e.htm), so TRIPS binds it.
 
+**And Costa Rica has written the same rule into its own copyright statute.** Ley 6683, artículo 1º,
+second sentence, verbatim:
+
+> "La protección del derecho de autor abarcará las expresiones, pero no las ideas, los procedimientos,
+> métodos de operación ni los conceptos matemáticos en sí."
+
+The same article puts computer programs squarely inside the protected category:
+
+> "Por 'obras literarias y artísticas' deben entenderse todas las producciones en los campos literario
+> y artístico, cualquiera sea la forma de expresión, tales como: libros, folletos, cartas y otros
+> escritos; además, **los programas de cómputo dentro de los cuales se incluyen sus versiones sucesivas
+> y los programas derivados**…"
+
+(Text of Ley 6683 as consolidated, https://costa-rica.justia.com/nacionales/leyes/ley-6683/gdoc/,
+retrieved 7 September 2026, cross-read against the SCIJ consolidated text. `[unverified: which reform
+introduced which sentence. The consolidated text carries a Ley 7979/2000 note against the
+idea/expression paragraph, while a separate reading attributes the software wording to Ley 8686/2008.
+Do not cite an amending-law number for art. 1º from this memo without checking SCIJ.]`) So the code and the documents are protected in Costa
+Rica — and the architecture, the method and the ideas are, by the statute's own words, not.
+
 ### 4.2 What that means, concretely, for this project
 
 Anyone — Accenture, a local firm, a ministry's own team — may lawfully:
@@ -932,6 +997,9 @@ Anyone — Accenture, a local firm, a ministry's own team — may lawfully:
   driver's licence and starting a business into twelve orchestrated trámites is not protected. His
   particular *selection and arrangement* has a thin compilation copyright at best, and thin
   compilation copyright is the weakest thing in the field.
+- **Reimplement it in a different language or stack.** Ley 6683 art. 1º protects the expression,
+  "cualquiera sea la forma de expresión" — but a genuinely independent reimplementation is a different
+  expression, not a copy of his.
 - **Use every legal conclusion in `docs/LEGAL.md` and `docs/research/`.** The facts about Ley 8454,
   Ley 8220, Ley 9986 and every article number are public-domain facts about public law. The
   *conclusion* that a given step is `hoy`, `parcial` or `ley` is an idea. Only his particular prose
@@ -955,7 +1023,18 @@ Anyone who wanted only the code could reimplement it. What a buyer would actuall
    visibility.
 4. **Speed and de-risking.** A working demo that a minister can click through today.
 
-Every one of those is a function of *him*, not of the licence file. Which leads to:
+Every one of those is a function of *him*, not of the licence file.
+
+**And there is a route by which it could happen without anyone buying anything.** Costa Rica's
+innovative-procurement decree of 9 March 2026 lets a contracting institution stipulate, in the *pliego
+de condiciones*, rights of use "extensivos a toda la Administración", a right of modification, and the
+power to extend licences to third parties — and where the pliego is silent, ownership defaults to
+*titularidad compartida*, shared between the State and the supplier (Decreto Ejecutivo 45763 art. 28;
+see §5.4). **A single signed engagement drafted that way would do more damage to his position than any
+licence choice could prevent.** The instrument that protects him there is contract negotiation, not
+copyright.
+
+Which leads to:
 
 ### 4.4 What actually creates defensible value
 
@@ -984,128 +1063,411 @@ also stops the ministry's contractor from becoming dependent on him. The recomme
 buy R3 at the smallest possible cost in visibility, but there is no version where the cost is zero.
 
 ---
-
 ## 5. Trademark and copyright registration in Costa Rica
 
-*Confidence in this section is lower than in §§1–4. Costa Rican primary sources are harder to fetch —
-SCIJ now redirects to sinalevi.go.cr, which renders through JavaScript, a problem `docs/research/legal-cr.md`
-already documents for this project. Fee figures in particular must be re-checked against the Registro
-Nacional's current published schedule before anyone spends money.*
+*Method note. Costa Rican statutes below were read as **consolidated full text** from SCIJ/SINALEVI
+(`pgrweb.go.cr/scij/…nrm_texto_completo.aspx`, which 302-redirects to sinalevi.go.cr) and grepped
+locally, not summarised. Version stamps are what SINALEVI reported on 7 September 2026. Where a claim
+rests on a secondary mirror or on a document quoted inside another document, it says so.*
 
-### 5.1 Copyright — Ley 6683
+**One trap worth recording**, because several search engines get it wrong: **SCIJ `nValor2=42690` is
+Ley 8020, not Ley 7978.** Ley 7978 is `nValor2=45096`.
 
-Costa Rica's copyright statute is **Ley N.º 6683, Ley de Derechos de Autor y Derechos Conexos** (1982,
-much amended). It is the instrument under which the code and the documents in this repository are
-protected in Costa Rica.
+### 5.1 Copyright — Ley 6683 and its Reglamento
 
-Costa Rica acceded to the **Paris Act (1971) of the Berne Convention**, depositing its instrument on
-**3 March 1978**, with entry into force **10 June 1978**
-(https://www.wipo.int/wipolex/en/treaties/notifications/details/treaty_berne_90).
+The statute is **Ley N.º 6683, Ley sobre Derechos de Autor y Derechos Conexos**, of 14 October 1982,
+much amended (Ley 7397/1994, Ley 7979/2000, Ley 8686/2008, Ley 8834/2010). SCIJ `nValor2=3396`,
+consolidated version 8 of 8. Its regulation is **Decreto Ejecutivo 24611-J** (SCIJ `nValor2=24652`,
+version 6 of 6), **substantially rewritten by Decreto Ejecutivo 44727 of 3 October 2024** — the
+software-registration procedure in particular is new, so older guidance is out of date.
 
-**Registration is not required for protection.** Berne Convention Article 5(2), verbatim
-(https://www.wipo.int/wipolex/en/text/283698):
+**Software is expressly protected**, by artículo 1º — quoted in §4.1 above: "los programas de cómputo
+dentro de los cuales se incluyen sus versiones sucesivas y los programas derivados". And art. 4(ñ)
+defines the term in a way that reaches this repository's `docs/` as well as its code:
+
+> "**Programa de cómputo**: conjunto de instrucciones expresadas mediante palabras, códigos, gráficos,
+> diseño o en cualquier otra forma que, al ser incorporados en un dispositivo de lectura automatizada,
+> es capaz de hacer que una computadora… ejecute determinada tarea u obtenga determinado resultado.
+> **También, forman parte del programa su documentación técnica y sus manuales de uso.**"
+
+**Foreign authors are covered.** Art. 2º protects works of Costa Rican authors "domiciliados o no en el
+territorio nacional"; art. 3º gives foreign authors domiciled abroad "la protección que les acuerden
+las convenciones internacionales a que el país se adhiera" — i.e. Berne.
+
+**Registration is not required for protection.** Two independent sources say so.
+
+Berne Convention Article 5(2), verbatim (https://www.wipo.int/wipolex/en/text/283698):
 
 > "The enjoyment and the exercise of these rights shall not be subject to any formality"
 
-So his copyright in PuraVidaGov already exists, in Costa Rica and in all ~180 Berne countries, without
-filing anything. Nothing in §5 is a precondition to owning the work or to enforcing the licence.
+Costa Rica acceded to the **Paris Act (1971) of the Berne Convention**, depositing on **3 March 1978**,
+in force **10 June 1978** (https://www.wipo.int/wipolex/en/treaties/notifications/details/treaty_berne_90;
+cross-checked against WIPO Publication 423, https://www.wipo.int/edocs/pubdocs/en/wipo_pub_423.pdf).
+Costa Rica is also party to the **WCT (in force 6 March 2002)**, the **WPPT (20 May 2002)** and the
+**Paris Convention (31 October 1995, Stockholm Act)**.
 
-**What registration adds is evidence, not rights.** Registration with the Registro Nacional de Derechos
-de Autor y Derechos Conexos creates a dated, official record of the claim of authorship, which shifts
-who has to prove what if authorship is ever disputed. For a project whose commits are half
-AI-authored (§1.4), a dated registration naming a human author is a more useful document than usual.
+And Ley 6683, **artículo 101**, verbatim:
 
-`[unverified: the specific articles of Ley 6683 covering (a) protection of programas de cómputo,
-(b) the definition of "autor" and whether it requires a persona física, (c) the presumption arising
-from registration, and (d) the term of protection for software; and the Registro Nacional's current
-fee and processing time for registering a software work. These were researched but not confirmed from
-a fetchable primary text in this pass. Do not cite article numbers for Ley 6683 from this memo — read
-the statute at wipolex.wipo.int or sinalevi.go.cr first.]`
+> "La protección prevista en la presente ley lo es por el simple hecho de la creación independiente de
+> cualquier formalidad o solemnidad."
 
-The §1.4 point re-enters here: **if Ley 6683 defines an author as a natural person** (which is the
-norm in civil-law droit d'auteur systems, and which Costa Rica's tradition follows), the
-AI-authored commits raise the same question in Costa Rica as the U.S. Copyright Office raised in
-January 2025. Confirming the definition of "autor" in Ley 6683 is a five-minute job for a Costa Rican
-lawyer and should be the first question asked.
+**Registration is declarative, and the presumption of authorship does not come from it.** Art. 102:
+
+> "Para mejor seguridad, los titulares de derechos de autor y conexos podrán registrar sus producciones
+> en el Registro Nacional de Derechos de Autor y Conexos, lo cual **sólo tendrá efectos declarativos**."
+
+The presumption comes from the name on the work. Art. 155 (as amended by Ley 8686):
+
+> "Se tendrá como autor de la obra… **salvo prueba en contrario, al individuo cuyo nombre o seudónimo
+> conocido está indicado en ella, en la forma habitual.**"
+
+**This is directly actionable and free.** Putting `Copyright (c) 2026 George Chigrichenko` in the
+LICENSE, the NOTICE and the source headers is not a formality — under art. 155 it *is* the statutory
+presumption of authorship. The current line, "PuraVidaGov contributors", names no individuo and
+therefore buys him nothing. §1.5 already recommends fixing it; art. 155 is the reason it matters.
+
+What registration adds beyond that is a **dated official deposit under permanent custody** — Reglamento
+art. 62 requires the copy be lodged "para su calificación formal y **custodia permanente**… a efectos
+de ser remitido en caso de ser requerido por una autoridad judicial" — plus a certificate recording
+date, tome and folio (Ley art. 112).
+
+**Term of protection.** Art. 58: the author's life plus **seventy years**; art. 59 for joint works
+(70 years from the last co-author's death); art. 60 for works measured otherwise (70 years from
+publication). Reglamento art. 8 still reads "cincuenta años", but SINALEVI carries an editorial note
+that Ley 7979 of 6 January 2000 raised it to 70. **Cite the Ley, not the Reglamento, for the term.**
+
+Worth noting if the counterparty is the State — **art. 63**: the State, municipal councils and official
+corporations hold patrimonial rights "únicamente por veinticinco años, contados desde la publicación de
+la obra", extended to fifty for public entities whose ordinary business is exercising such rights.
+
+#### 5.1a Registering software: what it actually costs, and what it costs you
+
+**Fee: ₡2,270 in total**, cross-checked three ways:
+
+| Source | Amount |
+|---|---|
+| Registro Nacional fee table (https://www.rnpdigital.com/tramites_servicios/tramitesregistros/propiedad%20intelectual/propiedad_industrial_aranceles.htm) | "Inscripción de obras… **¢2.000,00 mínimo** por cada inscripción", basis Ley de Aranceles 4564 |
+| RN requirements sheet DPI-DAC | ₡2,000 arancel + ₡20 Archivo Nacional + ₡250 Colegio de Abogados = **₡2,270** |
+| Costa Rica's own replies to a WIPO questionnaire (https://www.wipo.int/documents/d/copyright/docs-es-registration-replies-costa_rica.pdf) | "Se debe cancelar mediante entero bancario la suma de **2,270 colones**" |
+
+Plus ₡125 and ₡5 in timbres on collecting the certificate. This is a flat statutory minimum, not
+salary-indexed.
+
+**Timeline: days, not months.** Ley 3883 art. 3 (as amended by Ley 10800 of 16 November 2025) caps the
+Registrador's calificación and inscription at **eight business days**, applied to copyright by
+Reglamento art. 77. An **unpublished (inédita)** work needs no *edicto* at all (Ley art. 113,
+Reglamento art. 78); a published one needs one insertion in La Gaceta plus a 30-business-day
+opposition window (Reglamento arts. 79, 81). Costa Rica told WIPO the practical figure for an
+unpublished work is "el plazo estimado ronda los 3, 4 días".
+
+**A foreign resident can register directly, and no local agent is required** — unlike trademarks.
+Reglamento art. 61(b) simply requires that a foreign applicant state their nationality; foreign
+documents must be apostilled with a Spanish translation that need not be official (arts. 61(a), (d),
+(p)); a power of attorney granted abroad may follow the law of the granting country (art. 61(c)). The
+signature on the application must be notarially authenticated (Ley art. 105, Reglamento art. 61(n)).
+Costa Rica's own statement to WIPO: "En Costa Rica se permite a los extranjeros inscribir sus
+creaciones y el proceso de inscripción para las obras nacionales son los mismos que para las obras
+extranjeras."
+
+**⚠ But read this before filing.** Reglamento **art. 69**, added by Decreto 44727 in October 2024,
+requires a software application to:
+
+> "b) **Aportar el código fuente en soporte digital**, conforme el artículo 63…
+> c) Indicar breve descripción de la funcionalidad del programa, así como de sus módulos.
+> d) Indicar el software utilizado para el desarrollo de la obra y **aportar copia del documento que
+> compruebe la adquisición de la licencia de uso**… En el caso de utilizar software no propietario,
+> presentar una captura de pantalla donde se revele el tipo de software utilizado.
+> e) Presentar el manual de usuario…
+> f) Presentar la documentación técnica que debe incluir el diagrama de entidad de relación y el
+> diccionario de datos…"
+
+**Source-code deposit is real and substantive.** Art. 63 requires the digital media be uncompressed and
+readable without prior treatment, in a sealed envelope for custody. For PuraVidaGov this is a
+non-issue — the source is already public — but it is a reason not to reflexively recommend copyright
+registration for a project with trade secrets.
+
+`[Caution: the Registro's own DPI-DAC requirements PDF still describes the pre-2024 procedure. Use
+Reglamento art. 69; treat the PDF as authoritative only for the fee.]`
+
+#### 5.1b The AI-authorship question, answered for Costa Rica
+
+§1.4 flagged this as the biggest unexamined risk. Costa Rican law gives a clearer answer than expected,
+and it cuts both ways.
+
+**Ley 6683 does not define "autor".** Its definitions article (art. 4º) covers obra individual, en
+colaboración, anónima, seudónima, inédita, editor, productor cinematográfico and more — but not
+"autor". **Citing "Ley 6683 art. 4" for a definition of author would be a wrong article number.**
+
+The definition is in the **Reglamento, Decreto Ejecutivo 24611-J, artículo 3.1**, verbatim:
+
+> "**Autor**: Es, salvo disposición expresa en contrario de la Ley, **la persona física que realiza la
+> creación intelectual**."
+
+**So Costa Rican law does require a natural person to be the author.** The Ley is consistent: art. 155's
+presumption attaches to an "individuo"; juridical persons appear only as *titulares*, never as
+*autores* (art. 4(h), art. 6). The U.S. Copyright Office's January 2025 conclusion and Costa Rican law
+therefore point the same way, and the fifteen `Claude <noreply@anthropic.com>` commits sit squarely in
+the question.
+
+**But two provisions substantially mitigate it, and this is the most useful finding in §5.**
+
+**First, Reglamento art. 7** presumes that software which is neither an individual work nor published
+under its authors' names is a **collective work**, with title vesting in the *productor* — and
+Reglamento art. 6 presumes the *productor* is "la persona natural o jurídica que publique la obra bajo
+su responsabilidad o que aparezca indicada como tal en la misma de la manera acostumbrada" (rebuttable).
+Publishing the repository under his own name, with his copyright notice, makes him the presumed
+productor and therefore the *titular* — a route to ownership that does not depend on resolving who
+authored each commit. Art. 7 also lets the productor defend the moral right so far as needed to exploit
+the work.
+
+**Second, Ley 6683 art. 40** (as amended by Ley 7397 of 3 May 1994):
+
+> "**El comitente será el titular de los derechos patrimoniales sobre la obra**, pero los comisarios
+> conservarán sobre ella sus derechos morales; asimismo, **cuando el autor sea un asalariado el titular
+> de los derechos patrimoniales será el empleador**."
+
+Commissioned and employed work vests patrimonial rights in the commissioning party or employer. It does
+not address AI directly, but it is the doctrinal furniture a Costa Rican lawyer would reach for.
+
+**Practical conclusion.** The *titularidad* route (arts. 6 and 7 of the Reglamento) is stronger here
+than the *autoría* route, and it is secured by doing exactly what §1.5 and §6.3 already recommend:
+publish under his own name, with his copyright notice, conspicuously, as productor. Combined with the
+art. 155 presumption, that is most of the protection available — and it costs one commit.
+
+`[unverified: any Costa Rican case law, Registro Nacional circular or doctrinal position on
+AI-assisted authorship specifically. None found. This remains the first question for a lawyer.]`
 
 ### 5.2 Trademark — Ley 7978
 
-The statute is **Ley N.º 7978, Ley de Marcas y Otros Signos Distintivos** (2000), administered by the
-Registro de la Propiedad Industrial within the Registro Nacional (https://www.rnpdigital.com/).
+**Ley N.º 7978, Ley de Marcas y Otros Signos Distintivos** (2000), SCIJ `nValor2=45096`, version 3 of 3,
+amended by Ley 8632 of 28 March 2008 (CAFTA implementation). Administered by the Registro de la
+Propiedad Industrial within the Registro Nacional (https://www.rnpdigital.com/).
 
-Costa Rica uses the **Nice Classification** for goods and services. The classes relevant here, from
-the WIPO Nice Classification class headings (https://www.wipo.int/classifications/nice/):
+**A foreign applicant can register, but a locally-domiciled agent is mandatory.** Art. 82, verbatim:
 
-| Class | Covers | Why it matters here |
+> "**Representación.** Cuando el solicitante o el titular de un derecho de propiedad industrial **tenga
+> su domicilio o sede fuera de Costa Rica, deberá ser representado por un mandatario con domicilio en
+> el país.**"
+
+Art. 9(d) repeats it at filing stage. But the formalities are light — **art. 82 bis** (added by Ley
+8632): "se deberá contar con la autorización del poderdante, **en mandato autenticado, como formalidad
+mínima; y en todo caso no se requerirá la inscripción de dicho mandato**." A single mandatario is
+presumed authorised for registration, renewal, transfer, licensing and defence, administratively and
+judicially. **This is the one place a Costa Rican professional is structurally required.**
+
+**Priority:** art. 5 gives six months from a first filing in a Paris Convention state. Costa Rica has
+been a Paris party since 31 October 1995.
+
+**Term and renewal.** Art. 20:
+
+> "El registro de una marca **vencerá a los diez años**, contados desde la fecha de su concesión. La
+> marca podrá ser **renovada indefinidamente por períodos sucesivos de diez años**…"
+
+Art. 21 gives a six-month grace period; art. 22 forbids changing the mark or broadening the
+goods/services list on renewal.
+
+**Nice Classification — used by statute, but Costa Rica is *not* a Nice Agreement party.** Art. 9(h)
+requires goods and services "agrupados por clases según la Clasificación internacional de productos y
+servicios de Niza", and art. 89 makes it operative, while stating that classification is administrative
+only — goods are not similar merely because they share a class. But Costa Rica is absent from the WIPO
+Lex Nice contracting-parties list and from the Nice table in WIPO Publication 423. **Do not write that
+Costa Rica "is a Nice member".** It applies the classification by domestic statute. Practical effect on
+filing strategy: none.
+
+**Procedure and timeline.**
+
+| Stage | Period | Article |
 |---|---|---|
-| **9** | Computer software; downloadable software | The product itself, if distributed |
-| **42** | Design and development of computer hardware and software; SaaS; IT consultancy | **The most important class** — this is where a software platform and its development services live |
-| **35** | Business management, business administration, consultancy | Advisory/consulting engagements with institutions |
-| **41** | Education; providing of training | Workshops, courses, training material |
+| Formal examination | 15 business days; 15 business days to cure defects | art. 13 |
+| Substantive examination | objections notified; 30 business days to respond | art. 14 |
+| Publication | **three** insertions in the official gazette, at the applicant's cost, ordered within 15 days of notification | art. 15 |
+| **Opposition** | **2 months** from the **first** publication; evidence within 30 calendar days; applicant answers within 2 months | arts. 16, 17 |
+| Registration | if unopposed, the Registro "procederá a registrar la marca" | art. 18 |
+| Certificate | issued to the holder | art. 19 |
 
-If budget is limited, **class 42 is the one to file**, with class 9 second.
+Summing the statutory minima gives roughly **six to eight months for an unopposed application**. That is
+arithmetic from the articles, not an observed average. `[unverified: real-world RPI pendency; no
+official statistic found.]`
 
-`[unverified: (a) whether Ley 7978 requires a foreign applicant to appoint a local apoderado or
-establish domicile, and the article that says so; (b) the term of registration and renewal period;
-(c) the publication (edicto) and opposition periods and the article numbers; (d) the current official
-fee per class and the edicto cost, in colones; (e) realistic filing-to-registration timeline. These
-were researched but not confirmed from a fetchable primary source in this pass.]`
+**Official fees are in the statute itself** — art. 94 as amended by Ley 8632, payable in colón
+equivalent at the official bank rate. Confirmed against the Registro Nacional's current fee table
+(retrieved 7 September 2026).
 
-Two things I can say with confidence and that do not depend on those gaps:
+| Act | Fee | art. 94 |
+|---|---|---|
+| **Trademark registration, per class** | **US$ 50** | (a) |
+| Trade name (*nombre comercial*) | US$ 50 | (b) |
+| Advertising expression / slogan | US$ 50 | (c) |
+| **Renewal, per mark** | **US$ 50** | (d) |
+| Assignment, licence, name change, cancellation, per class | US$ 25 | (e) |
+| **Opposition** | US$ 25 | (h) |
+| Division of an application | US$ 50 | (j) |
+| Grace-period renewal surcharge | US$ 25 | (l) |
 
-- **A foreign resident can own a Costa Rican trademark.** Costa Rica is a Paris Convention country and
-  is bound by TRIPS national-treatment obligations; refusing registration on nationality grounds is not
-  available to it. The practical requirement is usually a local address for service, which any Costa
-  Rican IP firm provides as a routine service.
-- **Madrid Protocol status is the thing to check before filing anywhere.** I could not confirm from
-  WIPO's member pages whether Costa Rica is a Madrid Protocol member
-  (https://www.wipo.int/madrid/en/members/ did not render a member list to me).
-  `[unverified — check https://www.wipo.int/madrid/memberprofiles/ before deciding between a national
-  filing and an international one.]` If Costa Rica is a member, a single international application
-  designating Costa Rica plus other markets may be cheaper than separate national filings; if not, a
-  direct national filing at the Registro Nacional is the route.
+**The *edicto* is the cost this memo cannot total.** Imprenta Nacional charges by area: "El precio por
+centímetro cuadrado es de **Ȼ 47 (IVA incluido)**" (https://www.imprentanacional.go.cr/contactenos/preguntas_frecuentes.aspx,
+tariff approved sesión ordinaria No. 32 of 2 November 2021, Acuerdo No. 151-11-2021, La Gaceta N° 239
+of 13 December 2021). Ley 7978 art. 15 requires **three** insertions. `[unverified: the cm² of a
+standard edicto, so the total is not computable here. Multiply ₡47 × cm² × 3 once you have one
+measured. A third-party mirror showing ₡11.67 per character and ₡95,200 per page is dated 12 August
+2016 and is superseded — do not use it.]`
 
-**Practical advice regardless:** trademark is the cheapest, highest-leverage legal step in this whole
-memo, and it is the one that is *not* substitutable by anything else (§4.4). Registering
-"PuraVidaGov" in class 42 costs a small fraction of a lawyer's time on licence drafting and gives him
-something copyright never can: the right to stop someone else using the name.
+**Costa Rica is NOT a Madrid Protocol member.** Verified twice: absent from the WIPO Lex Madrid
+Protocol contracting-parties list (117 members; the Latin American parties present are Antigua and
+Barbuda, Brazil, Chile, Colombia, Cuba, Mexico, and Trinidad and Tobago), and absent from the Madrid
+table in WIPO Publication 423. **Consequence: Costa Rica cannot be designated in an international
+registration.** It requires a direct national filing through a locally-domiciled agent. Budget it
+separately from any Madrid strategy.
+
+**Nice classes for this project**, from the Nice Classification 13th Edition, Version 2026
+(https://nclpub.wipo.int/):
+
+| Class | Heading, in the relevant part | Why it matters here |
+|---|---|---|
+| **9** | "recorded and downloadable multimedia files, **computer software**" | Downloadable/packaged software. Entries `090658 computer programs, downloadable`, `090373 computer programs, recorded` |
+| **42** | "**design and development of computer hardware and software**"; explanatory note covers "software as a service (SaaS), platform as a service (PaaS)" | **The one to file.** Entries `420220 software as a service [SaaS]`, `420204 computer software consultancy`, `420273 technological consultancy services for digital transformation` |
+| **35** | "Advertising; business management, organization and administration" | Consulting. Entries `350020 business management consultancy`, `350166 business consultancy services for digital transformation` |
+| **41** | "Education; providing of training" | Workshops and training. Entries `410070 arranging and conducting of seminars`, `410218 know-how transfer [training]` |
+
+**All four classes cost about US$200 in registry fees**, plus three *edicto* insertions and the agent's
+own fee. If budget is limited, **file class 42 first**, class 9 second.
 
 ### 5.3 What registration does and does not buy — summary
 
 | | Copyright (Ley 6683) | Trademark (Ley 7978) |
 |---|---|---|
-| Needed for protection? | **No** (Berne art. 5(2)) | **Yes** — trademark rights are largely registration-based |
+| Needed for protection? | **No** — art. 101, Berne 5(2) | **Yes** — trademark rights are registration-based |
+| Where the presumption comes from | The **name on the work** (art. 155), not the registry (art. 102) | The registration |
+| Official fee | **₡2,270** flat | **US$50 per class** |
+| Timeline | ~8 business days; ~3–4 days in practice for an unpublished work | ~6–8 months unopposed (statutory arithmetic) |
+| Local agent required? | **No** | **Yes** — art. 82 |
 | What it stops | Copying his *expression* | Others using the *name* |
 | Stops reimplementation? | No | No — but stops them calling it PuraVidaGov |
-| Cost | Low | Low per class |
-| Priority | Nice to have; useful evidence given §1.4 | **Do this** |
+| Priority | Optional. Note the art. 69 source-code deposit | **Do this** |
 
-### 5.4 Procurement — Ley 9986
+### 5.4 Procurement — Ley 9986, and the March 2026 rule that changes the picture
 
-**Ley N.º 9986, Ley General de Contratación Pública** governs Costa Rican public procurement.
+**Ley N.º 9986, Ley General de Contratación Pública**, SCIJ `nValor2=94469`, version 14 of 14. Its
+Reglamento is **Decreto Ejecutivo 43808-H**, SCIJ `nValor2=98344`, version 5 of 5.
 
-`[unverified: whether Ley 9986 or its reglamento contains any provision on intellectual property in
-deliverables, on ownership of software the State procures, or on any preference for software libre.
-This was researched but not confirmed from a fetchable primary text in this pass.]`
+**Does the State take ownership of IP in procured deliverables? No — and this is a clean negative
+finding, obtained by grepping the full consolidated texts** of Ley 9986 (4,516 lines) and Reglamento
+43808 for `propiedad intelectual`, `derechos de autor`, `software`, `licencia`, `programas de cómputo`,
+`código fuente`, `titularidad`, `patente`, `libre` and `fuente abierta`.
 
-What can be said on principle, and should be checked rather than assumed:
+**In the whole of Ley 9986 there is exactly one mention of intellectual property**, art. 22 (compra
+pública innovadora), and it imposes a duty to *respect* IP, not to acquire it:
 
-- Ownership of IP in procured deliverables is, in most jurisdictions and in most standard contract
-  templates, a matter of **the contract**, not the statute. The State takes what the cartel/contract
-  says it takes. If a Costa Rican institution contracts for a PuraVidaGov deployment, the IP terms
-  will be in that contract, and **that is where the author must be careful** — a standard clause
-  assigning all deliverables to the State would, if he signed it, hand over the very thing he is
-  trying to keep.
-- **This is the single place where a Costa Rican lawyer is genuinely indispensable**, more than for the
-  licence choice: reviewing the IP and deliverables clauses of any cartel he bids into, before he
-  bids.
+> "Cuando se opte por la compra pública innovadora deberá verificarse, en lo que corresponda, **el
+> cumplimiento de la legislación relativa a la protección de los derechos de propiedad intelectual
+> vinculados a la contratación**…"
 
-`[unverified: whether Costa Rica has any decree, directriz or MICITT/ANGD policy mandating or
-preferring software libre in the public sector. I could not confirm one exists, and I could not
-confirm one does not. Treat as an open question. Note that `docs/research/legal-cr.md` already covers
-adjacent ground (Ley 8454, Ley 8220) and may be the better starting point.]`
+There is no article vesting ownership of deliverables in the State. Title therefore falls to Ley 6683
+and to ordinary contract law — **what the contract says controls.**
 
----
+**But there is a new rule, and it is six months old.** Reglamento 43808 arts. 61–71, including art. 69
+on IP in innovative procurement, were **derogated** by art. 43 of the **Reglamento de compra pública
+innovadora, Decreto Ejecutivo 45763-H-MIDEPLAN-MICITT of 9 March 2026** (SCIJ `nValor2=107143`). Its
+art. 28 now provides that the Administration "tiene la potestad de disponer en el pliego de
+condiciones" on, among other things, "la titularidad de la creación", a right of use "extensivos a toda
+la Administración", "el derecho de modificación", "extensión de las licencias a terceros" and "la
+potestad de cesión del derecho de uso o explotación". And then:
+
+> "En casos debidamente fundados… podrán preverse regulaciones en los pliegos de condiciones diferentes
+> a las establecidas en el presente artículo **y de no preverse, la titularidad será compartida**.
+> **Cuando existan seguridades calificadas y secreto de Estado los derechos de propiedad intelectual le
+> corresponden a la Administración.**"
+
+**Three things follow, and they are the most commercially important findings in this memo:**
+
+1. **The default is *titularidad compartida* — shared ownership — where the pliego is silent.** Not
+   State ownership, not vendor ownership. Anyone bidding must read the pliego on this point every time.
+2. **Where the Administration does stipulate, it may claim rights extending to the whole
+   Administration, modification rights, and sub-licensing to third parties.** That is the clause that
+   most directly threatens the licensing model this memo is trying to build. A pliego with art. 28(b)
+   and (d) fully exercised would let one ministry's contract propagate PuraVidaGov across the entire
+   Costa Rican State and out to third parties, for the price of one engagement.
+3. **Scope limit:** art. 28 governs *compra pública innovadora* only. For ordinary procurement there is
+   **no regulatory default at all** — the contract governs outright.
+
+`[unverified: the pre-derogation text of Reglamento 43808 art. 69, which SINALEVI now serves only as a
+derogated stub. If a contract awarded before 9 March 2026 is ever in issue, retrieve the prior version
+from La Gaceta.]`
+
+**Software procurement specifically.** Ley 9986 art. 70 lets institutions and enterprises operating in
+competition use the art. 68 procedure for "la adquisición, el mantenimiento y la actualización o el
+arrendamiento de equipos tecnológicos para la informática, **hardware y software y desarrollos de
+sistemas informáticos**." (SINALEVI notes Sala Constitucional res. N° 022483 of 7 August 2024 declared
+arts. 69 and 70 unconstitutional *as applied to the ICE*.) Reglamento 43808 art. 170 adds required
+contract terms: service levels, and clauses guaranteeing "la confidencialidad de la información, de la
+migración de los sistemas y de la información contenida en los sitios de procesamiento de terceros" —
+**data-migration and exit clauses are regulatorily required**, worth knowing for any hosted offering.
+
+**Is there an open-source preference in procurement? No.** `software libre`, `código abierto` and
+`fuente abierta` return **zero hits** across Ley 9986, Reglamento 43808 and Decreto 45763. The only
+adjacent provision is Reglamento 43808 art. 170(a):
+
+> "Se deberán contratar **tecnologías abiertas que garanticen la interoperabilidad** de equipos y de
+> sistemas. Cualquier limitación a la adquisición de tecnología con **estándares abiertos** deberá
+> contar con un acto motivado…"
+
+**Open standards are not open source.** This binds only institutions in competition using the art. 68
+procedure, and is escapable by a reasoned act. Do not characterise it as a FOSS preference.
+
+### 5.5 Costa Rican public-sector software policy — there is no software-libre mandate
+
+This was the open question in §3.4, and it now has an answer.
+
+**A SINALEVI full-text search for `software libre` returns no decree, directriz or policy on free
+software in the public sector.** Searches for `uso legal de programas de cómputo`, `software
+Administración Pública` and `plataforma nacional de interoperabilidad` (zero results) found nothing
+either.
+
+The governing instrument is **Decreto Ejecutivo 45167-MICITT-J-COMEX**, *Reglamento para Garantizar la
+Observancia de los Derechos de Autor en el uso de los Programas de Cómputo por parte de los Ministerios
+e Instituciones Adscritas al Gobierno Central* (SCIJ `nValor2=105176`), whose art. 16 derogated the
+older Decreto 37549-JP of 2013. Its open-source clause is **permissive and nothing more** — art. 15:
+
+> "Los Ministerios e Instituciones adscritas al Gobierno Central, en los casos que sea posible, **podrán
+> utilizar software de código abierto** en sus diferentes aplicaciones, **como una alternativa útil**;
+> garantizando el respeto a los Derechos de la Propiedad Intelectual."
+
+**The decree's actual thrust is the opposite of a FOSS mandate.** It is a licence-*compliance* regime:
+art. 2 obliges each ministry's jerarca to file an annual compliance report, "llevar el control del
+licenciamiento e instalación de licencias" and maintain an inventory sufficient "para determinar si se
+tiene el licenciamiento correspondiente para cubrir todos los equipos". Ley 6683's Reglamento art. 55(b)
+gives the Registro de la Propiedad Intelectual a matching duty to "combatir el uso ilegal de programas
+de cómputo por parte del Gobierno Central".
+
+**Say this plainly in any conversation with a Costa Rican institution: Costa Rica has no open-source
+preference or mandate in public procurement. It has a proprietary-licence compliance regime.** That is
+commercially *favourable* to the licensing model in §6, and it is the strongest single fact against
+§6.7's counter-argument. Costa Rica is not the EU and it is not Uruguay.
+
+Two more instruments, for completeness:
+
+- **Código Nacional de Tecnologías Digitales (CNTD)**, made mandatory by **Decreto Ejecutivo 44507** of
+  27 May 2024 (SCIJ `nValor2=102229`), art. 2: its provisions "deberán ser aplicadas de manera
+  obligatoria en toda iniciativa y proyecto que incorpore componentes de tecnologías de información y
+  comunicaciones a nivel nacional". Its six principles include **interoperabilidad** and **neutralidad
+  tecnológica** — the latter being, again, the opposite of a mandated open-source preference.
+  `[The CNTD's own text lives on micitt.go.cr, not in the decree, and was not retrieved. The six
+  principles are quoted second-hand from the PNSEB. Treat its detailed provisions as unverified.]`
+- **Ley 9943, Creación de la Agencia Nacional de Gobierno Digital** (SCIJ `nValor2=95260`), whose
+  mandate includes "ser el ejecutor y administrador de la interoperabilidad a nivel técnico".
+  **Grepping it for `software`, `propiedad intelectual` and `licencia` returns nothing** — the ANGD's
+  enabling law is silent on both. Another clean negative.
+- **Política Nacional de Sociedad y Economía Basadas en el Conocimiento 2022–2050** (SCIJ
+  `nValor2=96512`) contains no occurrence of `software libre`, `código abierto` or `fuente abierta`.
+  It does note weak domestic IP awareness: "son muy pocos los programas disponibles para que la
+  sociedad conozca de los beneficios y el valor de la propiedad intelectual."
+
+**On X-Road: no evidence of Costa Rican adoption.** `X-Road`, `xroad` and `Estonia` return zero hits
+across Ley 9943, the PNSEB and Decreto 45763; SINALEVI has no norm titled for a national
+interoperability platform. The Costa Rican framing is a domestic "marco de interoperabilidad país"
+administered by the ANGD. `[unverified: niis.org's member list was not checked, so a non-normative
+pilot cannot be excluded. This matters for how the demo is pitched — see docs/DECISIONS.md on the
+Conecta/X-Road framing.]`
 
 ## 6. Recommendation
 
@@ -1153,8 +1515,7 @@ Why this over BUSL, which is the obvious alternative:
 
 Why not BUSL: the mandatory GPL-compatible Change License and hard four-year conversion mean the code
 becomes freely commercialisable on a schedule, which is the opposite of R3 — and BUSL says nothing
-generic about government, with CockroachDB's AUG showing that the blank can be filled in against
-government (§2.1). Why not FSL: it expressly permits the professional-services case. Why not ELv2: its
+generic about government, leaving a blank he must fill correctly and a ministry must trust (§2.1). Why not FSL: it expressly permits the professional-services case. Why not ELv2: its
 own FAQ expressly permits the contractor case. Why not AGPL: §4 expressly permits charging — though
 see §6.7 for when to reconsider it.
 
@@ -1163,26 +1524,40 @@ date, fails the Standard for Public Code, and is not an "open source licence" un
 Europe Act's Art. 2(12) "for all uses" test. He is trading institutional legitimacy for control. §6.7
 argues the other side.
 
-**Documents (`docs/`): CC BY-NC-SA 4.0**
+**Written research (`docs/research/*`, `docs/CASE.md`, `docs/LEGAL.md`): CC BY-NC-SA 4.0**
 SPDX: `CC-BY-NC-SA-4.0`
 
 The research is the asset (§2.6). CC BY-NC-SA gets him a real attribution requirement (MIT does not),
 blocks commercial exploitation, and keeps derivative analysis open. CC BY-ND would be a mistake — it
 would stop a ministry adapting the legal analysis into policy, which is the best outcome available.
 
+**Note the scope.** This is the *written research*, not all of `docs/`. Ley 6683 art. 4(ñ) treats a
+program's technical documentation and manuals as part of the program, and `docs/CONTRACTS.md`,
+`ARCHITECTURE.md`, `DECISIONS.md`, `PRD.md`, `DEMO.md` and `DEPLOY.md` are program documentation —
+leave them under the code licence. **If reaching Costa Rican policy matters more than blocking closed
+derivative research, use CC BY 4.0's NonCommercial sibling without ShareAlike — `CC-BY-NC-4.0` — for
+the reason given in §2.6.**
+
 ### 6.3 Files to write
 
 ```
 /LICENSE                  PolyForm Noncommercial 1.0.0, verbatim from
                           https://polyformproject.org/licenses/noncommercial/1.0.0
-                          plus the Required Notice line (below)
-/LICENSE-docs             CC BY-NC-SA 4.0 (full legal code or the canonical URL)
+                          plus the Required Notice line (below).
+                          Covers all code AND docs/{CONTRACTS,ARCHITECTURE,DECISIONS,
+                          PRD,DEMO,DEPLOY}.md — program documentation per Ley 6683 art. 4(ñ)
+/docs/research/LICENSE    CC BY-NC-SA 4.0 (full legal code or the canonical URL).
+                          Also referenced from docs/CASE.md and docs/LEGAL.md headers
 /NOTICE                   Authorship, scope of each licence, the MIT-history statement
 /COMMERCIAL.md            Who needs a paid licence, what is on offer, how to make contact
 /CONTRIBUTING.md          CLA / assignment requirement (see §1.5)
 /README.md                Rewrite line 136 into a licensing section
-/package.json             line 6 → "SEE LICENSE IN LICENSE"
+/package.json             line 6 → "PolyForm-Noncommercial-1.0.0" (a valid SPDX expression)
 ```
+
+Put a one-line SPDX header at the top of each file that is not under the root licence, e.g.
+`<!-- SPDX-License-Identifier: CC-BY-NC-SA-4.0 -->` in `docs/CASE.md` and `docs/LEGAL.md`. It is what
+every scanning tool looks for, and it is what makes a two-licence repository legible.
 
 `Required Notice:` line to ship with the PolyForm licence — PolyForm requires this text to travel with
 every copy:
@@ -1197,11 +1572,14 @@ Required Notice: Copyright (c) 2026 George Chigrichenko — https://github.com/g
 PuraVidaGov
 Copyright (c) 2026 George Chigrichenko. All rights reserved.
 
-Source code in this repository is licensed under the PolyForm Noncommercial
-License 1.0.0 — see LICENSE.
+Source code in this repository, and the program documentation in
+docs/CONTRACTS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, docs/PRD.md,
+docs/DEMO.md and docs/DEPLOY.md, are licensed under the PolyForm
+Noncommercial License 1.0.0 — see LICENSE.
 
-Written material under docs/ is licensed under Creative Commons
-Attribution-NonCommercial-ShareAlike 4.0 International — see LICENSE-docs.
+The written research in docs/research/, docs/CASE.md and docs/LEGAL.md is
+licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International — see docs/research/LICENSE.
 
 Commercial licences are available. See COMMERCIAL.md.
 
@@ -1288,36 +1666,64 @@ Notes on the drafting choices, since they are all deliberate:
 - **(g)** matters more than it looks. Trademark is the durable right (§4.4); nothing here should
   accidentally license it away.
 
+**And one thing the Additional Use Grant cannot do.** It is a unilateral grant to the world. It is
+overridden by any contract he signs. If he later signs a Costa Rican *pliego de condiciones* that
+stipulates State ownership or third-party sub-licensing under Decreto 45763 art. 28, the AUG does not
+protect him — his own signature does the damage. §6.5 question 1 exists for this reason.
+
 ### 6.5 Where a lawyer is genuinely required
 
-Not "consult a lawyer" as boilerplate. These specific questions:
+Not "consult a lawyer" as boilerplate. These specific questions, in this order:
 
-1. **The AI-authorship question (§1.4).** Does Ley 6683 define "autor" as a natural person, and what is
-   the status of the fifteen AI-authored commits? Ask this **first** — a licence over a work of
-   uncertain copyright is a weak instrument, and the answer may change how he documents everything
-   going forward. Cheap to answer.
-2. **The contractor clause (§6.4(c)).** Whether a Costa Rican court would read it as drafted, and
+1. **The `pliego de condiciones` IP clause — Decreto 45763 art. 28 (§5.4).** This has overtaken the
+   licence choice as the most urgent item, and it is six months old. In *compra pública innovadora*
+   the default where the pliego is silent is **titularidad compartida — shared ownership**; and where
+   the Administration does stipulate, it may take rights "extensivos a toda la Administración", a
+   modification right, and the power to extend licences to third parties. A single ministry contract
+   drafted that way propagates PuraVidaGov across the whole Costa Rican State and out to third
+   parties. **No licence in §2 survives that clause.** Before he bids into or signs anything, a Costa
+   Rican lawyer must read the pliego on this point and negotiate it. This is where "big integrators…
+   buying this initiative off from me" would actually happen, and it would happen through a
+   procurement document, not a copyright licence.
+2. **The AI-authorship question (§1.4, §5.1b).** Reglamento 24611-J art. 3.1 defines the author as a
+   persona física, and there is no Costa Rican authority on machine-generated expression. Confirm that
+   the *productor* route (Reglamento arts. 6–7) and the art. 155 name presumption carry the weight
+   §5.1b assigns them. Cheap to answer and it validates the whole structure.
+3. **The contractor clause (§6.4(c)).** Whether a Costa Rican court would read it as drafted, and
    whether it survives as a *grant* rather than being recharacterised as a restriction. Also whether
    any consumer-protection or competition rule constrains it.
-3. **Procurement IP clauses (§5.4).** Before he bids into or signs any cartel, someone must read the
-   IP and deliverables clauses. A standard assignment-to-the-State clause would hand over exactly what
-   this whole memo is about.
 4. **Enforceability of a browse-wrap licence in Costa Rica.** PolyForm's Acceptance clause requires
    agreement "as both strict obligations and conditions". Whether that binds someone who merely cloned
    a repository is jurisdiction-specific.
-5. **Trademark filing (§5.2).** A local IP firm files this, provides the address for service, and
-   answers the fee and timeline questions this memo could not confirm. Small money.
+5. **Trademark filing (§5.2).** Ley 7978 art. 82 makes a locally-domiciled mandatario **mandatory** for
+   an applicant domiciled outside Costa Rica — this is the one step he structurally cannot do himself.
+   Registry fee is US$50 per class; the agent's fee and the three *edicto* insertions are extra.
 
 ### 6.6 What to do first, in order
 
 1. **Fix the copyright line and add `CONTRIBUTING.md`** — today, before anything else, and regardless
-   of which licence he picks. "PuraVidaGov contributors" must become his legal name (§1.5). One commit.
-2. **File the trademark in class 42** (§5.2). It is the only right that survives a clean-room
-   reimplementation and it is cheap. Do it before any publicity.
-3. **Ask a Costa Rican lawyer question 1** (§6.5). Cheap, fast, and it may change the plan.
+   of which licence he picks. "PuraVidaGov contributors" must become his legal name (§1.5). This is not
+   cosmetic: Ley 6683 art. 155 makes the name conspicuously shown on the work *the* statutory
+   presumption of authorship, and Reglamento art. 6 makes it the presumption of who the *productor* is
+   (§5.1b). One commit, and it is the highest-value line in this memo.
+2. **File the trademark in class 42** (§5.2), through a Costa Rican mandatario, as Ley 7978 art. 82
+   requires. US$50 registry fee per class. It is the only right that survives a clean-room
+   reimplementation — the X-Road precedent in §3.3 is exactly this. Do it before any publicity, since
+   publicity is what attracts a squatter.
+3. **Ask a Costa Rican lawyer questions 1 and 2** (§6.5). Question 1 in particular is time-sensitive:
+   the procurement rule is from March 2026 and will govern any engagement he enters.
 4. **Then relicense**: PolyForm Noncommercial for code, CC BY-NC-SA 4.0 for `docs/`, with `NOTICE`,
    `COMMERCIAL.md` and the honest MIT-history paragraph.
-5. **Keep publishing.** The moat is being the author and staying current (§4.4), and neither of those
+5. **Consider registering the copyright** (₡2,270, ~8 business days, no local agent needed) — but only
+   after reading §5.1a's art. 69 source-code deposit requirement. For this project it is harmless
+   because the source is already public.
+6. **Change how commits are authored, starting now.** Fifteen of twenty commits currently name
+   `Claude <noreply@anthropic.com>` as *primary author*. Everything in §1.4 and §5.1b turns on human
+   direction being visible in the record. Going forward, commits should be authored by George with
+   Claude as a `Co-Authored-By:` trailer — which is already this project's `CLAUDE.md` convention for
+   commit messages. It costs nothing and it is the difference between a history that reads as
+   AI-generated and one that reads as AI-assisted.
+7. **Keep publishing.** The moat is being the author and staying current (§4.4), and neither of those
    survives going quiet.
 
 ### 6.7 The honest counter-argument
@@ -1375,19 +1781,29 @@ the goal turns out to be "get this built in Costa Rica with my name on it."
 Listed so the reader knows where to spend their own scepticism. Everything here was attempted, not
 skipped.
 
-**Costa Rican law (lowest confidence in this memo):**
-- Ley 6683: article numbers for protection of programas de cómputo, the definition of "autor", the
-  evidential effect of registration, and the term of protection for software.
-- Registro Nacional de Derechos de Autor: registration procedure, fee and timeline for a software work,
-  and whether a foreign resident may file directly.
-- Ley 7978: whether a local apoderado or domicile is required for a foreign applicant; term and renewal;
-  opposition and edicto periods; **current official fees per class**.
-- Whether Costa Rica is a Madrid Protocol member — WIPO's member page did not render a list.
-- Ley 9986 and its reglamento: whether either addresses IP in deliverables, State ownership of procured
-  software, or any software-libre preference. **Also unverified: the reglamento's decree number.**
-- Whether any MICITT / ANGD / MIDEPLAN decree or directriz on software libre in the public sector
-  exists. Neither existence nor non-existence confirmed.
-- Any Costa Rican authority on AI-assisted authorship. None found.
+**Costa Rican law** — most of what was open in an earlier draft is now sourced from SCIJ/SINALEVI
+consolidated texts. What remains open:
+- **Total cost of an *edicto***, trademark (3 insertions, Ley 7978 art. 15) or copyright (1 insertion,
+  Ley 6683 art. 113). The rate ₡47/cm² incl. IVA is verified; the cm² of a standard edicto is not.
+- **Ley 8454's own consolidated text** could not be retrieved. Its title and date (30 August 2005) are
+  verified from a citing decree, but **no article number from Ley 8454 should be asserted**.
+- **The CNTD's own content.** Only the enabling decree 44507 was fetched; the six principles are quoted
+  second-hand from the PNSEB.
+- **Decreto 41248-MP-MICITT-PLAN-MEIC-MC and Directriz 019-MP-MICITT** — numbers quoted from the PNSEB,
+  not verified against the instruments.
+- **Whether a successor to the Estrategia de Transformación Digital (2018–2022) exists.** Not found.
+- **X-Road / NIIS membership.** Only the *absence* of any mention in Costa Rican legal instruments was
+  verified; niis.org's member list was not checked, so a non-normative pilot cannot be excluded.
+- **Real-world trademark pendency at the RPI.** The ~6–8 month figure is arithmetic from statutory
+  minima, not an observed statistic.
+- **Whether the Registro's DPI-DAC requirements PDF has been reissued** since Decreto 44727 (October
+  2024). The fetched version describes superseded procedure and was relied on only for the fee.
+- **The pre-derogation text of Reglamento 43808 art. 69**, needed only for contracts awarded before
+  9 March 2026.
+- **Any Costa Rican authority on AI-assisted authorship.** None found.
+- The Ley 6683 and Ley 7978 article texts were also independently read from a statute mirror
+  (`costa-rica.justia.com`) and matched the SCIJ readings on every article quoted in both — art. 1º,
+  4º, 58, 101, 102 of Ley 6683 and arts. 9, 15, 16, 20, 89, 94 of Ley 7978.
 
 **Licences and policy:**
 - Heather Meeker's and Kyle E. Mitchell's authorship of the PolyForm licences is widely reported and
@@ -1427,7 +1843,28 @@ Rica's accession dates; Costa Rica's WTO membership date; the U.S. Copyright Off
 conclusions; the OpenTofu, OpenSearch and Valkey fork dates and the Elastic and Redis reversals; and
 this repository's own licence files, `package.json`, git history and dependency licences.
 
-**Two corrections to widely repeated claims, worth carrying forward:** EUPL 1.2 has no "network
-clause" — the word does not appear; the trigger is "providing access to its essential functionalities".
-And the Interoperable Europe Act article numbers in circulating secondary summaries are wrong; the
-operative provisions are arts. 2(12), 4(6), 8(3)(d), 8(4) and Recital 36.
+Costa Rican statutes were read as consolidated full text from SCIJ/SINALEVI and grepped locally: Ley
+6683 (`nValor2=3396`), Reglamento 24611-J (`nValor2=24652`), Ley 7978 (`nValor2=45096`), Ley 9986
+(`nValor2=94469`), Reglamento 43808-H (`nValor2=98344`), Decreto 45763 (`nValor2=107143`), Decreto
+45167 (`nValor2=105176`), Decreto 44507 (`nValor2=102229`), Ley 9943 (`nValor2=95260`), PNSEB
+(`nValor2=96512`). Registro Nacional and Imprenta Nacional fee pages, and the Nice Classification 13th
+Edition (2026) class headings, were fetched directly.
+
+**Five corrections to claims that are easy to get wrong, worth carrying forward:**
+
+1. **EUPL 1.2 has no "network clause"** — the word does not appear; the trigger is "providing access to
+   its essential functionalities".
+2. **The Interoperable Europe Act article numbers** in circulating secondary summaries are wrong; the
+   operative provisions are arts. 2(12), 4(6), 8(3)(d), 8(4) and Recital 36.
+3. **Ley 6683 does not define "autor".** The persona-física definition is Reglamento 24611-J art. 3.1.
+   Citing "Ley 6683 art. 4" for it would be a wrong article number.
+4. **SCIJ `nValor2=42690` is Ley 8020, not Ley 7978.** Several search engines conflate them.
+5. **Costa Rica is not a Nice Agreement party** — it applies the Nice Classification by domestic
+   statute (Ley 7978 art. 89). And it is **not** a Madrid Protocol member, so it cannot be designated
+   in an international trademark registration.
+
+**A note on the boundary between this memo and `docs/research/legal-cr.md`.** That file already
+documents Costa Rican substantive law for the demo's trámites (Ley 8454, Ley 8220, Ley 9943). This memo
+overlaps it only on Ley 9943's silence about software licensing and on the absence of a confirmed
+X-Road adoption. Where the two disagree, `legal-cr.md` was researched for a different purpose and this
+memo's SCIJ readings are the more recent.

@@ -1,0 +1,38 @@
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+(CC BY-NC-SA 4.0)
+
+Applies to the research and the argument:
+
+  docs/research/      the legal and policy research
+  docs/LEGAL.md       what is possible today in Costa Rica, per step
+  docs/CASE.md        the case for reform
+  apps/web/src/content/    the Spanish text of the public pages
+
+It does NOT apply to the source code, nor to the technical documentation of the
+program — docs/CONTRACTS.md, docs/PRD.md, docs/DECISIONS.md, docs/DEPLOY.md and
+CLAUDE.md. Costa Rican copyright law (Ley 6683 art. 4) treats a program's
+technical documentation as part of the program itself, so those files follow the
+code and are licensed under LICENSE.
+
+Copyright (c) 2026 George Chigrichenko
+
+Full legal code:  https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+Summary:          https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+In short, and the summary does not replace the legal code:
+
+  You may share and adapt this material, including translating it, quoting it
+  in a report, or building a policy proposal on it, provided that you
+
+    Attribute      — credit George Chigrichenko, link to the licence, and say
+                     if you changed anything;
+    NonCommercial  — do not use it for commercial purposes;
+    ShareAlike     — license your adaptations under these same terms.
+
+A note on why ShareAlike and not NoDerivatives. Adapting this analysis into an
+actual policy document is the best thing that could happen to it. NoDerivatives
+would forbid exactly that. ShareAlike keeps the derived analysis open in turn.
+
+A note on attribution. The value of this research is that each claim carries
+its source and that unverified claims say so. If you reuse it, carry that
+discipline with it.
