@@ -1,7 +1,7 @@
 process.env.AGENCY_LATENCY_MS = '0';
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import { ageAt, createApp, firstDayOfNextMonthIso, monthlyContribution, monthlyPension, pensionStatus, voluntaryPremium } from '../src/app.js';
+import { ageAt, createApp, firstDayOfNextMonthIso, monthlyContribution, monthlyPension, pensionStatus, survivorPension, survivorStatus, voluntaryPremium } from '../src/app.js';
 
 const KEY = 'demo-ccss-key';
 const app = createApp();
@@ -233,7 +233,7 @@ describe('ccss v3: employment', () => {
     const ana = await request(app).get('/ccss/employment/2-0987-0654').set('x-api-key', KEY).expect(200);
     expect(ana.body).toMatchObject({ employerName: 'Café Grecia S.A.', employerNumber: 'E-30003', startDate: '2020-01-15', lastSalaryCrc: 610000, contributions: 80, status: 'activo' });
     const list = await request(app).get('/ccss/employment').set('x-api-key', KEY).expect(200);
-    expect(list.body).toHaveLength(3);
+    expect(list.body).toHaveLength(4); // v4: Luis E-30004
   });
 
   it('404 EMPLOYMENT_NOT_FOUND for an unknown citizen', async () => {
@@ -382,5 +382,85 @@ describe('ccss v3: enrollVoluntary', () => {
     await request(app).post('/ccss/enrollVoluntary').set('x-api-key', KEY).send(voluntaryBody).expect(200);
     await request(app).post('/__demo/reset').expect(200);
     expect((await request(app).get('/ccss/voluntary').set('x-api-key', KEY)).body).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------- v4
+
+describe('ccss v4: survivorPension', () => {
+  const ROSA = '7-0111-0222';
+  const LUIS = '7-0100-0300';
+  const year = Number(new Date().toISOString().slice(0, 4));
+  const today = new Date().toISOString().slice(0, 10);
+  const nextMonth = firstDayOfNextMonthIso(today);
+  const viudez = { survivorId: ROSA, deceasedId: LUIS, relationship: 'conyuge', deathCertificate: `DEF-${year}-000001`, iban: 'CR05015202001026284066' };
+
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('serves Luis\'s seeded employment record E-30004', async () => {
+    const r = await request(app).get(`/ccss/employment/${LUIS}`).set('x-api-key', KEY).expect(200);
+    expect(r.body).toEqual({
+      citizenId: LUIS,
+      employerName: 'Cooperativa de Cacao Talamanca R.L.',
+      employerNumber: 'E-30004',
+      startDate: '1985-01-15',
+      lastSalaryCrc: 680000,
+      contributions: 480,
+      status: 'activo',
+    });
+  });
+
+  it('viudez: 70 % of the IVM estimate (60 % of ₡680 000 → ₡408 000), aprobada with 480 contributions', async () => {
+    const r = await request(app).post('/ccss/survivorPension').set('x-api-key', KEY).send(viudez).expect(200);
+    expect(r.body).toEqual({
+      applicationNumber: `IVM-SV-${year}-000001`,
+      beneficiary: 'viudez',
+      monthlyPensionCrc: 285600,
+      firstPaymentDate: nextMonth,
+      status: 'aprobada',
+    });
+    expect(survivorPension(680000, 'conyuge')).toBe(285600);
+    expect(survivorPension(680000, 'hijo')).toBe(122400);
+    expect(survivorStatus(179)).toBe('en-estudio');
+    expect(survivorStatus(180)).toBe('aprobada');
+  });
+
+  it('orfandad: 30 % for a child; en-estudio when the deceased had < 180 contributions (María, 138)', async () => {
+    const hijo = await request(app)
+      .post('/ccss/survivorPension')
+      .set('x-api-key', KEY)
+      .send({ ...viudez, survivorId: '7-9999-0002', relationship: 'hijo' })
+      .expect(200);
+    expect(hijo.body).toMatchObject({ applicationNumber: `IVM-SV-${year}-000001`, beneficiary: 'orfandad', monthlyPensionCrc: 122400, status: 'aprobada' });
+    const study = await request(app)
+      .post('/ccss/survivorPension')
+      .set('x-api-key', KEY)
+      .send({ ...viudez, survivorId: '1-9999-0001', deceasedId: '1-2345-6789', relationship: 'hijo' })
+      .expect(200);
+    expect(study.body).toMatchObject({ beneficiary: 'orfandad', monthlyPensionCrc: 171000, status: 'en-estudio' });
+  });
+
+  it('is idempotent per (survivorId, deceasedId) and listed', async () => {
+    const a = await request(app).post('/ccss/survivorPension').set('x-api-key', KEY).send(viudez).expect(200);
+    const b = await request(app).post('/ccss/survivorPension').set('x-api-key', KEY).send({ ...viudez, relationship: 'hijo' }).expect(200);
+    expect(b.body).toEqual(a.body);
+    const list = await request(app).get('/ccss/survivorPensions').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0]).toMatchObject({ survivorId: ROSA, deceasedId: LUIS, relationship: 'conyuge', deathCertificate: viudez.deathCertificate });
+  });
+
+  it('404 EMPLOYMENT_NOT_FOUND when the deceased has no record, 400 on a bad body', async () => {
+    const nf = await request(app).post('/ccss/survivorPension').set('x-api-key', KEY).send({ ...viudez, deceasedId: '9-9999-9999' }).expect(404);
+    expect(nf.body.error.code).toBe('EMPLOYMENT_NOT_FOUND');
+    const bad = await request(app).post('/ccss/survivorPension').set('x-api-key', KEY).send({ ...viudez, relationship: 'primo', iban: 'x' }).expect(400);
+    expect(bad.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('reset clears survivor pensions', async () => {
+    await request(app).post('/ccss/survivorPension').set('x-api-key', KEY).send(viudez).expect(200);
+    await request(app).post('/__demo/reset').expect(200);
+    expect((await request(app).get('/ccss/survivorPensions').set('x-api-key', KEY)).body).toEqual([]);
   });
 });

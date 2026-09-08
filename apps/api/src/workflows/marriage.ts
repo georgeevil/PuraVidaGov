@@ -130,6 +130,7 @@ export const marriage: WorkflowSpec = {
       ],
       onceOnly: [
         { field: 'fullName', label: 'Nombre completo', source: 'registro', exchangeId: id('identidad') },
+        { field: 'id', label: 'Cédula', source: 'registro', exchangeId: id('identidad') },
         { field: 'maritalStatus', label: 'Estado civil previo (soltería)', source: 'registro', exchangeId: id('identidad') },
         { field: 'spouse', label: 'Identidad del cónyuge', source: 'registro', exchangeId: id('matrimonio') },
         ...(ins ? [{ field: 'certificateNumber', label: 'Vínculo matrimonial → CCSS', source: 'registro' as const, exchangeId: id('ccss') }] : []),
