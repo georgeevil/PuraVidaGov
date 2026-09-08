@@ -574,3 +574,56 @@ Consulted 8 September 2026. Official pages unless marked *(secondary)*.
 - Cloudflare, Self-Serve Subscription Agreement — <https://www.cloudflare.com/terms/>
 - Cloudflare, CNAME flattening — <https://developers.cloudflare.com/dns/cname-flattening/>
 - Netlify, Acceptable Use Policy (effective 8 Mar 2023) — <https://www.netlify.com/legal/acceptable-use-policy/>
+
+
+---
+
+# Addendum — Cloudflare Registrar (researched 8 September 2026)
+
+Added when choosing the project's domain. Same rule as above: verified against Cloudflare's own pages, with
+anything unconfirmed marked NOT VERIFIED.
+
+## The headline: there is no published price list
+
+Checked [products/registrar](https://www.cloudflare.com/products/registrar/),
+[tld-policies](https://www.cloudflare.com/tld-policies/), the
+[Registrar FAQ](https://developers.cloudflare.com/registrar/faq/) and
+[low-cost-domain-names](https://www.cloudflare.com/application-services/solutions/low-cost-domain-names/).
+**None of them carries per-TLD prices.** The only figure anywhere is a generic "some costing as little as
+$0.99". `domains.cloudflare.com` returns 403 to automated fetches because it is the live search UI.
+Cloudflare's own community guidance is that you must check the dashboard search
+([thread](https://community.cloudflare.com/t/domain-registration-renewal-price/637491)).
+
+So: no sourced price table is possible, and any that appears elsewhere is someone's stale memory.
+
+## What is verified
+
+| Point | Finding | Source |
+|---|---|---|
+| New registrations | Direct registration works, not transfer-in only; Free plan is enough; verified email and ASCII-only contact required | [register-domain](https://developers.cloudflare.com/registrar/get-started/register-domain/) |
+| "At cost" | "you pay the registry and ICANN list price with no markup" — the ICANN fee is passed through, not absorbed | [FAQ](https://developers.cloudflare.com/registrar/faq/) |
+| Renewal | Auto-renew on by default; "renew at the list price set by the registry"; renewals non-refundable; 1–10 year terms | [renew-domains](https://developers.cloudflare.com/registrar/account-options/renew-domains/) |
+| No year-1 trap **from Cloudflare** | Zero margin on year 1 and renewals alike, so renewal ≈ registration by construction. The trap that remains is registry-side promos (XYZ, Radix: `.xyz`, `.site`, `.online`, `.space`, `.website`) passed straight through. `.com`/`.org`/`.net` have flat registry pricing. Specific promo deltas: **NOT VERIFIED** | [FAQ](https://developers.cloudflare.com/registrar/faq/) |
+| WHOIS privacy | Free, ICANN-compliant redaction of name, email and postal address. On-by-default for new registrations: **partially NOT VERIFIED**, confirm in settings | [whois-redaction](https://developers.cloudflare.com/registrar/account-options/whois-redaction/) |
+| **`.cr` support** | **Not supported.** Absent from the TLD table; NIC.cr is the only path | [tld-policies](https://www.cloudflare.com/tld-policies/) |
+| Nameserver lock | "You will not be able to change to another DNS provider's nameservers while using Cloudflare Registrar" | [register-domain](https://developers.cloudflare.com/registrar/get-started/register-domain/) |
+| 60-day transfer-out lock | ICANN rule: no transfer within 60 days of registration, transfer, or a registrant WHOIS change | [transfer-out](https://developers.cloudflare.com/registrar/account-options/transfer-out-from-cloudflare/) |
+| Expiry timeline | Days 1–30 grace (still resolves); **31–40 suspended, site goes dark**; 41–70 redemption with a restore fee; 71–75 pending delete; 76+ released | [FAQ](https://developers.cloudflare.com/registrar/faq/) |
+| Pages custom domains | Work with no extra steps on a Registrar domain, but must be added **in the Pages dashboard** — a hand-created CNAME will not resolve | [Pages custom domains](https://developers.cloudflare.com/pages/configuration/custom-domains/) |
+| No IDN | No accented characters | [register-domain](https://developers.cloudflare.com/registrar/get-started/register-domain/) |
+| `.dev` / `.app` | HSTS-preloaded by Google Registry, HTTPS mandatory forever. Cloudflare's table only links to Google's policy: **NOT VERIFIED on a Cloudflare page** | [tld-policies](https://www.cloudflare.com/tld-policies/) |
+| `.us` | Registry forbids WHOIS privacy and requires a US nexus — avoid for an advocacy project | [us-domains](https://developers.cloudflare.com/registrar/top-level-domains/us-domains/) |
+
+## Name collisions found while checking availability
+
+Not a hosting fact, but the most consequential finding of this pass, so it is recorded here with its sources:
+
+- **`puravidadigital.go.cr` is the real national trámites portal** (MICITT, IDB-supported), plus a companion
+  "Pura Vida Móvil" app. Same name family *and* same function as this demo.
+  ([Presidencia](https://www.presidencia.go.cr/comunicados/2019/11/micitt-lanza-portal-nacional-pura-vida-digital/),
+  [MICITT](https://www.micitt.go.cr/pura-vida-movil),
+  [La República](https://www.larepublica.net/noticia/portal-pura-vida-digital-le-permite-hacer-en-linea-tramites-de-instituciones-publicas))
+- **`gobiernoabierto.go.cr`** is a live government open-government initiative.
+- Anything containing `gov`/`gob` reads as official; `.gov` is US-restricted and `.gob.cr` is NIC.cr-controlled.
+
+See `docs/DECISIONS.md` D-021 for what was decided.
