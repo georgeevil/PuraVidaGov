@@ -57,6 +57,10 @@ copy.
 - **Never add a support, donation or funding affordance to `/por-que` or `/marco-legal`** (D-026). The
   Ko-fi link belongs on `/quien-lo-hace` alone. `apps/web/src/content/author.ts` carries the reasoning at
   the top of the file; the research behind it is in a private companion repository.
+- **`/seguimiento` describes rights that exist; it never calls anyone to action.** The verbs are *puede*,
+  *la ley le reconoce*, *es gratuito* — never *exija*, *escríbale a*, *únase*. Its "lo que no se pudo
+  comprobar" section is content, not an unfinished placeholder: do not tidy it away, update it when the
+  manual check actually happens.
 - **Never add** *campaña*, *movimiento*, *únase*, *firme aquí*, or the name of any party, diputado or
   candidate, and never reference an electoral cycle. Same source, §6c.
 - Do not weaken the DEMO disclaimer in the banner, the PDF or the README, and do not make seed citizens
