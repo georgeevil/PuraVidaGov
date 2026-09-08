@@ -556,19 +556,55 @@ Suggested order for the demo: **1 (death) → 7 (vehicle) → 4 (marriage) → 6
 reuse existing bus actions; **2 (residency)**, **3 (school)** and **5 (disability)** each need one new mock (DGME,
 MEP, CONAPDIS) and give the best story for agencies the demo does not yet show.
 
-## 10b. Link check (8 September 2026)
+## 10b. Link check and primary-source verification in a real browser (8 September 2026)
 
-Every URL cited by `packages/shared/src/legal.ts` from this file was re-fetched on 8 Sept 2026. Reachable (HTTP 200):
-borger.dk/livssituationer, suomi.fi/citizen, efterlevandeguiden.se, justdigi.ee proactive-services, x-tee.ee factsheet,
-government.ru/news/57420, consultant.ru 210-FZ, life.gov.sg/guides, eur-lex 2018/1724.
+Every URL cited by `packages/shared/src/legal.ts` from this file was re-fetched on 8 Sept 2026. Reachable to plain
+HTTP: borger.dk/livssituationer, suomi.fi/citizen, efterlevandeguiden.se, justdigi.ee proactive-services, x-tee.ee
+factsheet, government.ru/news/57420, consultant.ru 210-FZ, life.gov.sg/guides, eur-lex 2018/1724.
 
-**Blocked to automation:** `regjeringen.no` and `digdir.no` return 403 to every automated request and serve a
-bot-verification interstitial even to a driven browser — the same situation as `tse.go.cr` and `migracion.go.cr` in
-`legal-cr.md`. This is a bot-manager, not a dead link; the documents exist and open normally in an ordinary browser.
-Because the demo's `LegalRef` for Norway must carry a link a reader can follow, it cites the **DIGG (Sweden) 2026
-report** instead, which is reachable and states the count directly: "Norge har 7, Tyskland har 40 och Finland har 70
-prioriterade livshändelser" (footnote: Digdir, 2025). The Norwegian strategy itself remains the primary source for the
-verbatim list of the seven events, quoted in section 3.
+**Two hosts refuse automated requests but open normally in an ordinary browser** (a bot-verification interstitial that
+clears after a few seconds, like `tse.go.cr` and `migracion.go.cr` in `legal-cr.md`). Both were opened in a real
+Chrome session and read directly, which resolved several items previously marked "not verified":
+
+**Norway — regjeringen.no (403 to automation; loads in ~15 s in a browser).** The English text of *One digital public
+sector — Digital strategy for the public sector 2019–2025* (11 June 2019, Ministry of Local Government and
+Modernisation), chapter 2 "Seamless services and a user-centric focus", verbatim: "Important situations and life
+events for the users shall form the basis for developing seamless services… Regardless of sector or administrative
+level, life events shall therefore form the basis for developing seamless services. The life events approach
+originates in the EU, which benchmarks Norway based on a number of life events… The strategy highlights seven life
+events for which development of seamless services shall initially be prioritised… The life events selected relate to
+important situations that affect almost everyone during their lifetime, such as births, deaths and inheritance.
+Situations have also been selected where a more seamless process would simplify citizens' difficult everyday life
+situations, such as caring a seriously ill child, losing or finding a job, and being new in Norway. Seamless services
+in connection with starting and managing a business or a voluntary organisation will simplify everyday life for the
+business and voluntary sectors, respectively."
+(https://www.regjeringen.no/en/documents/one-digital-public-sector/id2653874/?ch=3 — note the canonical path is
+`/en/documents/`, not `/en/dokumenter/`.) This supersedes the second-hand count taken from the DIGG report.
+
+**IDB — publications.iadb.org (403 to automation; opens in a browser).** *Wait No More: Citizens, Red Tape, and
+Digital Government* (Roseth, Reyes and Santiso, eds., June 2018, DOI 10.18235/0001150) was read in full through the
+publisher's viewer. Verbatim figures, all sourced by the book to Latinobarómetro (2017):
+
+- "completing a government transaction takes an average of 5.4 hours" region-wide; Bolivia over 11 hours, Chile
+  little more than two.
+- "region-wide, 89 percent are carried out in person"; 73 % of business transactions but over 90 % of identity and
+  registration transactions.
+- "nearly half of all government transactions require more than one interaction to be completed." **The "one in four
+  need three or more interactions" figure is a chart (Figures ES2 and 1.12), not text — it could not be read from the
+  text layer, so the demo now quotes the "nearly half / more than one interaction" wording instead.**
+- "29 percent of Latin Americans report having paid a bribe in the context of a public service in the last year,
+  equivalent to more than 90 million people".
+- Digital transactions "are faster (74 percent on average), cheaper to provide (they cost between 2.35 and 5 percent
+  of the cost of face-to-face transactions)" — i.e. roughly 20 to 42 times cheaper. The 74 % is a **time** reduction.
+- "**only 7 percent of citizens report having carried out their last government transaction online**" — this is a
+  **regional** figure, not a Costa Rican one. The case page previously implied it described Costa Rica; corrected.
+- **Costa Rica, p. 58, verbatim:** "Costa Rica, which in terms of hours records the second-best place in the region,
+  drops to only the sixth place in terms of ease, which means that transactions require on average more interactions
+  to complete than in the countries that fall above it in the ease ranking."
+- **Costa Rica, p. 127, verbatim:** "only Argentina, Chile, Costa Rica, Mexico, Peru and Uruguay (six countries)
+  reported having a national digital identity."
+- p. 78: of the five countries with the least regulatory complexity, "Mexico, Peru, Colombia, Costa Rica, and
+  Jamaica".
 
 ## 11. Could not verify — roll-up
 
@@ -585,3 +621,6 @@ verbatim list of the seven events, quoted in section 3.
 - EE: Riigikontroll audit (researcher-reported only); SKA date 14 Oct 2019; once-only clause of the Public Information
   Act; eesti.ee relaunch; Bürokratt; reconciliation of X-tee vs e-estonia.com transaction counts.
 - SG and frameworks: see the "Could not verify" lists inside sections 7 and 8.
+- **Resolved on 8 Sept 2026** (see 10b): the Norwegian seven-event list (now verbatim from the strategy) and the IDB
+  figures including the Costa Rica ranking, which section 9 of `legal-cr-life-events-2.md` had left unverified because
+  publications.iadb.org returned 403. The only IDB figure still unread is the per-country chart data (Figures ES2/1.12).

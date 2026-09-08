@@ -567,8 +567,7 @@ identity, mandatory acceptance 1 Jan 2027 by TSE resolución); TSE hospital birt
   municipal index figures are in `legal-cr.md` A.2.
 - **CGR / Defensoría reports on waiting times** (Migración citas, Registro Nacional, CCSS pensiones): **not
   verified** — none opened. The only official waiting-time admission found is CONAPDIS's own (section 7).
-- **IDB, "El fin del trámite eterno" (Roseth, Reyes, Santiso, 2018):** publications.iadb.org returned HTTP 403 to
-  both the fetch tool and curl, so **the Costa Rica figures are not verified**. The Latin America and Caribbean
+- **IDB, "El fin del trámite eterno" (Roseth, Reyes, Santiso, 2018):** publications.iadb.org returns HTTP 403 to automated requests, but the book was read in full in a real browser on 8 September 2026, so **the Costa Rica figures are now verified** — see `life-events-abroad.md` §10b for the verbatim passages (Costa Rica second-best in hours but sixth in ease; one of only six LAC countries reporting a national digital identity; the 7 % "last transaction online" figure is regional, not Costa Rican). The Latin America and Caribbean
   figures as quoted by IDB president Luis Alberto Moreno in La Nación (12 Sept 2018): "9 de cada 10 trámites requieren
   que los ciudadanos concurran en persona a una oficina pública"; "un trámite presencial toma más de cinco horas de
   espera"; "una de cada tres personas confiesa haber pagado coimas para agilizar un trámite"; identity documents are
