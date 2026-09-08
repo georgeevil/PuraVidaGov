@@ -357,7 +357,8 @@ export function Case() {
       )}
 
       {c.asks && (
-        <Section id="pedimos" title={c.asks.title} en="What we ask for">
+        <Section id="pedimos" title={c.asks.title} en="What would be required — described, not demanded">
+          {c.asks.intro ? <p className="text-slate-700">{c.asks.intro}</p> : null}
           <ol className="space-y-2">
             {c.asks.items?.map((a, i) => (
               <li key={i} className="flex gap-3 rounded-md border border-green-200 bg-green-50/60 px-4 py-3 text-sm text-slate-800">
