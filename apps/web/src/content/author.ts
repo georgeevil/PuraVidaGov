@@ -6,8 +6,16 @@
  * is not.** So this page presents a technical author publishing work, never a campaign — it states the
  * author's foreign residency openly (transparency is protective, discovered concealment is not), describes
  * the draft law as an illustrative artefact rather than a demand, and asks for correction rather than
- * support. Do not add: "campaña", "movimiento", "únase", "firme aquí", donations, or the name of any party,
- * diputado or candidate.
+ * support. Do not add: "campaña", "movimiento", "únase", "firme aquí", or the name of any party, diputado
+ * or candidate.
+ *
+ * On the Ko-fi link (D-026). The research's §6c warning — "do not fundraise for advocacy at all" — reads
+ * against Código Electoral art. 128, which bans foreigners funding *political parties*. Money for one's own
+ * software is not within it. The exposure is characterisation, so `support` below is scoped to it: it funds
+ * hosting and development time, it says on the page that it funds no political activity, and it lives on
+ * THIS page only. Never put a support link on /por-que or /marco-legal — a donate button on the page that
+ * argues for legislation is exactly the artefact §6c warns about. `facts.Financiamiento` must keep telling
+ * the truth about this; it is a factual claim, not a slogan.
  */
 export interface AuthorContent {
   title: string;
@@ -16,6 +24,13 @@ export interface AuthorContent {
   sections: { heading: string; paragraphs: string[] }[];
   facts: { label: string; value: string }[];
   invite: { heading: string; body: string; links: { label: string; href: string; note?: string }[] };
+  support: {
+    heading: string;
+    paragraphs: string[];
+    link: { label: string; href: string };
+    exclusion: string;
+    note: string;
+  };
 }
 
 export const AUTHOR: AuthorContent = {
@@ -23,7 +38,7 @@ export const AUTHOR: AuthorContent = {
   lead:
     'PuraVidaGov es una demostración técnica: software que funciona, publicado con su código y con la investigación que lo sustenta, para hacer concreta una discusión que normalmente ocurre en abstracto.',
   disclaimer:
-    'Trabajo técnico independiente. Sin afiliación a ningún partido, campaña, candidatura ni institución pública. Los datos del demo son ficticios y no se usa ningún dato personal real.',
+    'Trabajo técnico independiente, publicado al amparo de la libertad de expresión. Sin afiliación a ningún partido, campaña, candidatura ni institución pública. Los datos del demo son ficticios y no se usa ningún dato personal real.',
   sections: [
     {
       heading: 'Qué es esto',
@@ -54,13 +69,21 @@ export const AUTHOR: AuthorContent = {
         'Quien tenga que decidir sobre esto son las instituciones y las personas costarricenses. Mi aporte llega hasta acá: mostrar que es técnicamente posible, y decir con qué base legal cada pieza lo es o no lo es hoy.',
       ],
     },
+    {
+      heading: 'Publicación, no participación política',
+      paragraphs: [
+        'Conviene decirlo con todas sus letras, porque quien escribe es extranjero. Esto es un trabajo publicado: software que funciona, su código abierto y la investigación que lo sustenta. Publicarlo y sostener lo que dice es ejercicio de la libertad de expresión, que la Constitución le reconoce a todas las personas y no solo a la ciudadanía. El artículo 29 dice que «todos pueden comunicar sus pensamientos de palabra o por escrito, y publicarlos sin previa censura», y el 28, que «nadie puede ser inquietado ni perseguido por la manifestación de sus opiniones». El artículo 19 le da a las personas extranjeras los mismos derechos individuales que a las costarricenses.',
+        'Lo que la Constitución sí reserva a la ciudadanía es la participación política: votar, postularse, militar en un partido o financiarlo. Nada de eso ocurre aquí. Este sitio no respalda ni cuestiona a ningún partido, candidatura ni funcionario, no recoge firmas, no convoca a nada y no se dirige al electorado. Se dirige a quien trabaja en modernización del sector público, y lo que pide es corrección técnica.',
+        'La distinción es la que importa y es la que este sitio respeta: aportar a una discusión pública es una cosa, y buscar ejercer o repartir poder político es otra. Esto es lo primero.',
+      ],
+    },
   ],
   facts: [
     { label: 'Naturaleza', value: 'Demostración técnica con código abierto y datos ficticios' },
     { label: 'Eventos de vida', value: '12, sobre 13 instituciones simuladas' },
     { label: 'Autor', value: 'George Chigrichenko, arquitecto de software, residente en Costa Rica' },
     { label: 'Afiliación', value: 'Ninguna. Ni partido, ni campaña, ni institución' },
-    { label: 'Financiamiento', value: 'Ninguno. No se reciben ni se solicitan donaciones' },
+    { label: 'Financiamiento', value: 'Ninguno institucional. Solo aportes voluntarios de quien lee, para alojamiento y desarrollo' },
     { label: 'Datos', value: 'Ficticios. Ningún dato personal real, sin persistencia ni analítica' },
   ],
   invite: {
@@ -75,5 +98,17 @@ export const AUTHOR: AuthorContent = {
         note: 'Especialmente si es una cita legal',
       },
     ],
+  },
+  support: {
+    heading: 'Apoyar el demo',
+    paragraphs: [
+      'Este demo es gratuito y va a seguir siéndolo. No tiene anuncios, no guarda nada y no vende nada. Si quiere sostenerlo, conviene decir en qué se va la plata en vez de pedir «un apoyo» en abstracto.',
+      'El sitio público es estático y su alojamiento sale prácticamente en cero. Lo que cuesta es el dominio, y sobre todo los cinco dólares al mes del plan que mantiene despierto el portal interactivo en demo.sindarvueltas.org: sin eso el demo se puede leer, pero no se puede recorrer. Lo demás que cuesta es tiempo — leer una resolución nueva, comprobar si un trámite cambió, corregir una cita.',
+    ],
+    link: { label: '☕ Apoyar en Ko-fi', href: 'https://ko-fi.com/georgechi' },
+    exclusion:
+      'Esto paga alojamiento y tiempo de desarrollo del software. No financia actividad política de ninguna clase: no va a ningún partido, campaña ni candidatura, y no compra ni pretende comprar influencia sobre nada de lo que este sitio describe. Aportar tampoco cambia el contenido: la investigación se corrige cuando alguien demuestra que está equivocada, no cuando alguien paga.',
+    note:
+      'Ko-fi es un servicio de terceros: el pago ocurre allá, no aquí. Este sitio no tiene formulario de pago, no ve su tarjeta y no carga ningún script de Ko-fi — por eso es un enlace y no un botón incrustado.',
   },
 };
