@@ -15,6 +15,9 @@ export const AGENCY_LABELS_EN: Record<AgencyName, string> = {
   supen: 'Pension fund operator (ROP/FCL, supervised by SUPEN)',
   mtss: 'Ministry of Labour (National Employment Agency)',
   cosevi: 'Road Safety Council (COSEVI, MOPT): licences and fines',
+  ins: 'National Insurance Institute (INS): road tax and mandatory motor insurance',
+  mep: 'Ministry of Public Education (MEP): school enrolment',
+  imas: 'Social Welfare Institute (IMAS): scholarships through SINIRUBE',
 };
 
 export function agencyLabel(agency: string): string {

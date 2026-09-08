@@ -1,7 +1,8 @@
 process.env.AGENCY_LATENCY_MS = '0';
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import { createApp } from '../src/app.js';
+import { addYearsIso } from '@pvg/shared';
+import { createApp, propertyTax } from '../src/app.js';
 
 const KEY = 'demo-municipalidad-key';
 const app = createApp();
@@ -321,5 +322,50 @@ describe('municipalidad v2: updateAddress', () => {
     await request(app).post('/__demo/reset').expect(200);
     const list = await request(app).get('/municipalidad/addresses').set('x-api-key', KEY).expect(200);
     expect(list.body).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------- v4
+
+describe('municipalidad v4: declareProperty', () => {
+  const year = Number(new Date().toISOString().slice(0, 4));
+  const today = new Date().toISOString().slice(0, 10);
+  const declare = { citizenId: '1-1111-2222', folio: '2-111222-000', municipality: 'Grecia', declaredValueCrc: 45000000, registrationNumber: `BI-${year}-000001` };
+
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('issues a DBI number, 0.25 % annual tax and a 5-year validity', async () => {
+    const r = await request(app).post('/municipalidad/declareProperty').set('x-api-key', KEY).send(declare).expect(200);
+    expect(r.body).toEqual({
+      municipality: 'Grecia',
+      declarationNumber: `DBI-${year}-00001`,
+      declaredValueCrc: 45000000,
+      annualTaxCrc: 112500,
+      validUntil: addYearsIso(today, 5),
+    });
+    expect(propertyTax(45000000)).toBe(112500);
+  });
+
+  it('is idempotent per (folio, citizenId) and listed', async () => {
+    const a = await request(app).post('/municipalidad/declareProperty').set('x-api-key', KEY).send(declare).expect(200);
+    const b = await request(app).post('/municipalidad/declareProperty').set('x-api-key', KEY).send({ ...declare, declaredValueCrc: 1 }).expect(200);
+    expect(b.body).toEqual(a.body);
+    const other = await request(app).post('/municipalidad/declareProperty').set('x-api-key', KEY).send({ ...declare, citizenId: '2-0987-0654' }).expect(200);
+    expect(other.body.declarationNumber).toBe(`DBI-${year}-00002`);
+    const list = await request(app).get('/municipalidad/declarations').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(2);
+    expect(list.body[0]).toMatchObject({ citizenId: '1-1111-2222', folio: '2-111222-000', registrationNumber: declare.registrationNumber });
+  });
+
+  it('422 MUNICIPALITY_UNKNOWN, 400 on a bad body, reset clears declarations', async () => {
+    const unk = await request(app).post('/municipalidad/declareProperty').set('x-api-key', KEY).send({ ...declare, municipality: 'Atlantis' }).expect(422);
+    expect(unk.body.error.code).toBe('MUNICIPALITY_UNKNOWN');
+    const bad = await request(app).post('/municipalidad/declareProperty').set('x-api-key', KEY).send({ ...declare, declaredValueCrc: 0 }).expect(400);
+    expect(bad.body.error.code).toBe('VALIDATION_ERROR');
+    await request(app).post('/municipalidad/declareProperty').set('x-api-key', KEY).send(declare).expect(200);
+    await request(app).post('/__demo/reset').expect(200);
+    expect((await request(app).get('/municipalidad/declarations').set('x-api-key', KEY)).body).toEqual([]);
   });
 });

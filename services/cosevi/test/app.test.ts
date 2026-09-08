@@ -126,3 +126,28 @@ describe('cosevi', () => {
     expect(jose.body.pendingFines).toBe(1);
   });
 });
+
+// ---------------------------------------------------------------- v4
+
+describe('cosevi v4: checkVehicleFines', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('SJB-456 carries one fine of ₡55 000; other plates are clean', async () => {
+    const jose = await request(app).post('/cosevi/checkVehicleFines').set('x-api-key', KEY).send({ plate: 'SJB-456' }).expect(200);
+    expect(jose.body).toEqual({ plate: 'SJB-456', pendingFines: 1, pendingAmountCrc: 55000 });
+    const ana = await request(app).post('/cosevi/checkVehicleFines').set('x-api-key', KEY).send({ plate: 'bcr-123' }).expect(200);
+    expect(ana.body).toEqual({ plate: 'BCR-123', pendingFines: 0, pendingAmountCrc: 0 });
+    const unknown = await request(app).post('/cosevi/checkVehicleFines').set('x-api-key', KEY).send({ plate: 'ZZZ-999' }).expect(200);
+    expect(unknown.body).toEqual({ plate: 'ZZZ-999', pendingFines: 0, pendingAmountCrc: 0 });
+    const list = await request(app).get('/cosevi/vehicleFines').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(1);
+  });
+
+  it('401 without key and 400 VALIDATION_ERROR on a short plate', async () => {
+    await request(app).post('/cosevi/checkVehicleFines').send({ plate: 'SJB-456' }).expect(401);
+    const r = await request(app).post('/cosevi/checkVehicleFines').set('x-api-key', KEY).send({ plate: 'AB' }).expect(400);
+    expect(r.body.error.code).toBe('VALIDATION_ERROR');
+  });
+});
