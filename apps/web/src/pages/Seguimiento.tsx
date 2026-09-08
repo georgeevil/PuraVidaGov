@@ -32,7 +32,34 @@ export function Seguimiento() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-slate-900">{s.actores.heading}</h2>
         <p className="text-slate-700">{s.actores.intro}</p>
-        <div className="overflow-x-auto">
+        {/*
+          Measured at 390px this table was 640px wide inside a 326px viewport — two screens of sideways
+          scrolling, which is where a reader on a phone gives up. Below `sm:` the same `filas` array renders as
+          stacked blocks instead. Both renderings map the SAME array: never fork the content to suit a layout,
+          or the two will drift and one of them will start lying.
+        */}
+        <ul className="space-y-3 sm:hidden">
+          {s.actores.filas.map((f) => (
+            <li key={f.quien} className="rounded-lg border border-slate-200 bg-white p-3">
+              <p className="text-sm font-semibold text-slate-900">{f.quien}</p>
+              <dl className="mt-2 space-y-1.5 text-sm">
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Base</dt>
+                  <dd className="text-slate-700">{f.base}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Qué le toca</dt>
+                  <dd className="text-slate-700">{f.deber}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Dónde está</dt>
+                  <dd className="text-slate-700">{f.donde}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[40rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-300 text-left">

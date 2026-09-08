@@ -17,7 +17,7 @@ export function LegalChip({ refId, withFlag = false }: { refId: string; withFlag
   }
   const j = JURISDICTION_LABELS[ref.jurisdiction];
   const cls =
-    'inline-flex max-w-full items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 hover:border-primary-600 hover:text-primary-700';
+    'inline-flex min-h-6 max-w-full items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 hover:border-primary-600 hover:text-primary-700';
   const body = (
     <>
       {withFlag && j ? <span aria-hidden="true">{j.flag}</span> : null}

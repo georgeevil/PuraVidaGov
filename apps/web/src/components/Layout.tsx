@@ -32,8 +32,13 @@ const PUBLIC_NAV: NavItem[] = [
   { to: '/quien-lo-hace', label: 'Quién lo hace', en: 'Who builds this, and why' },
 ];
 
+/**
+ * `min-h-11` (44px) is the touch target, not decoration: measured at 390px the menu links were 32px, which
+ * clears WCAG 2.5.8's 24px but is below the 44px that a thumb actually wants. `md:min-h-0` keeps the desktop
+ * header the same height it always was, where the pointer is precise and the row is dense on purpose.
+ */
 const navClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+  `flex min-h-11 items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors md:min-h-0 ${
     isActive ? 'bg-primary-50 text-primary-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
   }`;
 
