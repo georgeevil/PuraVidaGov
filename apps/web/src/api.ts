@@ -19,6 +19,21 @@ import type {
 
 export const TOKEN_KEY = 'pvg.token';
 
+/**
+ * Static deployment (docs/CONTRACTS.md v4 → "Static mode in apps/web"). With `VITE_DEPLOY_MODE=static`
+ * the bundle is served by a plain file host with no backend: the read-only public endpoints are answered
+ * from `/api-static/*.json` (written by `scripts/build-static-api.mjs`) and everything else fails fast
+ * with an `ApiError` whose code is `STATIC_MODE`.
+ */
+export const IS_STATIC: boolean = import.meta.env.VITE_DEPLOY_MODE === 'static';
+
+/** Absolute URL of the interactive deployment (all-in-one), without a trailing slash; undefined when unset. */
+export const PORTAL_URL: string | undefined = (() => {
+  const raw = import.meta.env.VITE_PORTAL_URL;
+  const trimmed = typeof raw === 'string' ? raw.trim().replace(/\/+$/, '') : '';
+  return trimmed === '' ? undefined : trimmed;
+})();
+
 export interface Provenance {
   source: AgencyName;
   exchangeId: string;
@@ -112,7 +127,59 @@ async function toApiError(res: Response): Promise<ApiError> {
 
 const NETWORK_ERROR = () => new ApiError(0, 'NETWORK', 'No se pudo conectar con el servidor. Intente de nuevo.');
 
+/** Message shown wherever the static build cannot answer: the interactive portal lives elsewhere. */
+export const STATIC_MODE_MESSAGE =
+  'Esta es la versión estática: solo incluye las páginas públicas. El portal interactivo corre en otro despliegue.';
+
+const staticError = () => new ApiError(501, 'STATIC_MODE', STATIC_MODE_MESSAGE);
+
+/** Read-only endpoints backed by a generated JSON file. */
+const STATIC_FILES: Record<string, string> = {
+  '/workflows': 'workflows.json',
+  '/legal': 'legal.json',
+  '/registry': 'registry.json',
+  '/benefits': 'benefits.json',
+  '/activities': 'activities.json',
+};
+
+async function staticJson<T>(file: string): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`/api-static/${file}`, { headers: { Accept: 'application/json' } });
+  } catch {
+    throw NETWORK_ERROR();
+  }
+  if (!res.ok) throw new ApiError(res.status, 'STATIC_FETCH', `No se pudo cargar ${file} (${res.status}).`);
+  try {
+    return (await res.json()) as T;
+  } catch {
+    throw new ApiError(0, 'STATIC_FETCH', `El archivo ${file} no es JSON válido.`);
+  }
+}
+
+/** The static-mode half of `request`: only GETs of the public catalogue resolve. */
+async function staticRequest<T>(path: string, init: RequestInit): Promise<T> {
+  const method = (init.method ?? 'GET').toUpperCase();
+  if (method !== 'GET') throw staticError();
+
+  const file = STATIC_FILES[path];
+  if (file) return staticJson<T>(file);
+
+  // `/workflows/<id>` is resolved client-side from the generated list.
+  const match = /^\/workflows\/([^/]+)$/.exec(path);
+  if (match) {
+    const id = decodeURIComponent(match[1]);
+    const all = await staticJson<WorkflowDefinition[]>('workflows.json');
+    const found = all.find((w) => w.id === id);
+    if (!found) throw new ApiError(404, 'WORKFLOW_NOT_FOUND', 'No existe ese trámite');
+    return found as T;
+  }
+
+  throw staticError();
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (IS_STATIC) return staticRequest<T>(path, init);
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
@@ -158,6 +225,7 @@ export const api = {
   transactionResult: (txnId: string) => get<WorkflowTransaction>(`/transactions/${enc(txnId)}/result`),
   /** Fetches the PDF with the Bearer header and returns it as a Blob. */
   transactionPdf: async (txnId: string): Promise<Blob> => {
+    if (IS_STATIC) throw staticError();
     let res: Response;
     try {
       res = await fetch(`/api/transactions/${enc(txnId)}/pdf`, {
