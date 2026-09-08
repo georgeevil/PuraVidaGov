@@ -18,6 +18,7 @@ const NAV: NavItem[] = [
   { to: '/marco-legal', label: 'Marco legal', en: 'Legal framework — what is possible today' },
   { to: '/por-que', label: 'Por qué', en: 'Why — the case for a once-only government' },
   { to: '/arquitectura', label: 'Cómo funciona', en: 'How it works' },
+  { to: '/quien-lo-hace', label: 'Quién lo hace', en: 'Who builds this, and why' },
 ];
 
 /** Public pages (v3): what an anonymous visitor can read without a session. */
@@ -25,6 +26,7 @@ const PUBLIC_NAV: NavItem[] = [
   { to: '/por-que', label: 'Por qué', en: 'Why — the case for a once-only government' },
   { to: '/marco-legal', label: 'Marco legal', en: 'Legal framework — what is possible today' },
   { to: '/arquitectura', label: 'Cómo funciona', en: 'How it works' },
+  { to: '/quien-lo-hace', label: 'Quién lo hace', en: 'Who builds this, and why' },
 ];
 
 const navClass = ({ isActive }: { isActive: boolean }) =>

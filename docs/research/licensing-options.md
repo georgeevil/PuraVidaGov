@@ -102,7 +102,7 @@ independent reasons:
 ### 1.3 Does the public history change anything? Yes, twice over
 
 **First, GitHub's own terms grant fork rights independent of the LICENSE file.** GitHub Terms of
-Service §5, "License Grant to Other Users":
+Service, section D.5, "License Grant to Other Users":
 
 > "By setting your repositories to be viewed publicly, you agree to allow others to view and 'fork'
 > your repositories (this means that others may make their own copies within the Service in
@@ -115,9 +115,17 @@ and
 > GitHub's functionality. You may grant additional rights by adopting a license."
 
 (https://github.com/github/site-policy/blob/main/Policies/github-terms/github-terms-of-service.md,
-§5, retrieved 7 September 2026.) Note the scope: this ToS grant covers viewing and forking *within
+§D.5, retrieved 7 September 2026.) Note the scope: this ToS grant covers viewing and forking *within
 GitHub*. It is narrower than MIT. But it survives a relicence and it survives making the repo private
-later — a fork already taken stays taken.
+later — a fork already taken stays taken. Section D.6 codifies inbound=outbound: content added to a
+repository is licensed under that repository's licence unless a separate CLA supersedes it — which is
+exactly why §1.5 recommends a CLA.
+
+A second thing to be aware of while reading the same terms: a **section D.9, "Access Reciprocity"**,
+was present at this fetch. It waives your restrictions on GitHub's own scraping if you scrape publicly
+available content to train a commercial AI system, with carve-outs for academic research and entities
+under 700M monthly active users. `[unverified: when D.9 was added.]` Not directly relevant to the
+licence choice, but relevant to any public-sector publishing policy this project ends up informing.
 
 **Second, the history is the archive.** `github.com/georgeevil/PuraVidaGov` has 20 commits, all public.
 Relicensing tomorrow changes the terms of tomorrow's code. It does not change the terms of commit
@@ -676,16 +684,37 @@ happen to this work.
 | Licence | SPDX | OSI | Gov may run internally | Blocks integrator selling services | Converts to OSS |
 |---|---|---|---|---|---|
 | MIT | `MIT` | Yes | Yes | **No** | n/a |
-| BUSL-1.1 | `BUSL-1.1` | No | Only if the AUG says so | **Only if custom-drafted for it** | Yes, ≤4 yrs, GPL-compatible |
-| FSL-1.1-MIT / -ALv2 | both listed | No | Yes | **No — expressly permits it** | Yes, 2 yrs |
-| PolyForm Noncommercial | `PolyForm-Noncommercial-1.0.0` | No | **Yes, by name** | **Yes** (subject to §6) | No |
+| BUSL-1.1 | `BUSL-1.1` | No | Only if the AUG says so — CockroachDB's says no | **Only if custom-drafted for it** | Yes, ≤4 yrs, GPL-compatible |
+| FSL-1.1-MIT / -ALv2 | both listed | No | Yes, by name | **No — expressly permits it** | Yes, 2 yrs |
+| PolyForm Noncommercial | `PolyForm-Noncommercial-1.0.0` | No | **Yes, by name** | Probably — but grey, see §6.1 | No |
 | PolyForm Shield | none | No | Yes | Arguably, if he has a competing offering | No |
-| PolyForm Perimeter | none | No | Yes | Weakly | No |
+| PolyForm Perimeter (1.0.1) | none | No | Yes | Weakly | No |
 | PolyForm Small Business | `PolyForm-Small-Business-1.0.0` | No | **Unclear — no "company"** | Yes for large firms | No |
 | PolyForm Internal Use | none | No | Yes | Yes, but forbids redistribution | No |
-| AGPL-3.0 + commercial | `AGPL-3.0-only` | **Yes** | Yes | **No** | n/a |
-| Elastic 2.0 | `Elastic-2.0` | No | Yes | **No** | No |
-| CC BY-NC-SA 4.0 (prose) | `CC-BY-NC-SA-4.0` | No | Yes | Yes, for the documents | No |
+| AGPL-3.0 + commercial | `AGPL-3.0-only` | **Yes** | Yes | **No — §4 permits charging** | n/a |
+| Elastic 2.0 | `Elastic-2.0` | No | Yes | **No — FAQ permits contractors** | No |
+| EUPL-1.2 | `EUPL-1.2` | **Yes** | Yes | **No** | n/a |
+| CC BY-NC-SA 4.0 (prose) | `CC-BY-NC-SA-4.0` | No | Yes, but by purpose not status | Yes, for the documents | No |
+
+### 2.8 The two questions that discriminate
+
+Cutting across all of the above, two distinctions do all the work:
+
+**Whose act is restricted?** BUSL restricts *the customer's production use* — so the government's own
+use is the gating question and the integrator's fee is irrelevant. FSL, PolyForm Shield/Perimeter and
+ELv2 restrict *the provider's offering* — so a government running it internally is always fine, and a
+vendor hosting it as a service is not. PolyForm Noncommercial restricts *by the user's character*.
+Only the third of these is aimed at the thing he wants to stop.
+
+**How is "noncommercial" defined — by entity or by purpose?** PolyForm Noncommercial uses an
+entity-status test and names government institutions. Creative Commons uses a purpose test and says
+explicitly that the identity of the reuser does not decide it. That is why the recommendation in §6.2
+puts the entity test on the code and the purpose test on the prose.
+
+**And one uncomfortable observation:** FSL is the only licence in this set that answers both the
+government question and the integrator question in its own operative text — and it answers *yes* to
+both. ELv2 answers both via an official FAQ, also yes to both. The licences that are clearest are
+clearest because they have decided *not* to restrict what he wants to restrict.
 
 ---
 
@@ -733,12 +762,38 @@ Two things follow, and they bite:
    Standard. So the CLA recommended in §1.5 and the licence change are two independent departures from
    it. He should make that choice knowingly.
 
+**But most public-sector policy is softer than that.** The Standard for Public Code is the outlier, and
+the contrast is worth having in front of him:
+
+| Source | Strength | What it actually says |
+|---|---|---|
+| Standard for Public Code | **MUST** | "Software source code MUST be licensed under an OSI-approved or FSF Free/Libre license" (https://standard.publiccode.net/criteria/publish-with-an-open-license.html) |
+| UK Government Service Manual | **SHOULD** | "You should publish your code under an Open Source Initiative compatible licence." Names MIT as GDS's own choice (https://www.gov.uk/service-manual/technology/making-source-code-open-and-reusable) |
+| US OMB M-16-21 | descriptive | OSS "is **often** distributed under licenses that comply with the definition of 'Open Source' provided by the Open Source Initiative … and/or … the Free Software Foundation." Not a mandate. §5.1 requires agencies to release 20% of new custom code as OSS |
+| FSFE Public Money Public Code | campaign | "Implement legislation requiring that publicly financed software developed for the public sector be made publicly available under a Free and Open Source Software licence" (https://publiccode.eu/) — FSF framing, does not name OSI |
+
+**And one Latin American statute is directly on point.** Uruguay's **Ley 19.179 (2013)**
+(https://www.impo.com.uy/bases/leyes/19179-2013) requires, art. 2: "cuando se contraten licencias de
+software se dará preferencia a licenciamientos de software libre. En caso de que se opte por software
+privativo se deberá fundamentar la razón." Article 5 defines software libre by the four freedoms, the
+first being "Pueda ser usado para cualquier propósito", and defines *software privativo* as anything
+depriving the user of one of them. **Under that statute, BUSL — and PolyForm Noncommercial — are
+software privativo**: still procurable, but only with a written justification on the file. Costa Rica
+is not Uruguay, and no equivalent Costa Rican statute was confirmed (see §5.4), but this is the shape
+of rule that exists in the region and the shape a Costa Rican institution's legal office may reach for.
+
 ### 3.2 The EU picture
 
-**EUPL 1.2** is the European Commission's own licence, published in the Official Journal of
-19 May 2017 (https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12). SPDX lists
-`EUPL-1.2` as **OSI-approved and FSF-libre**. Its distinctive feature is that its copyleft reaches
-network provision, because of how it defines the trigger — verbatim from the official English text
+**EUPL 1.2** is the European Commission's own licence. The authoritative text is the Annex to
+**Commission Implementing Decision (EU) 2017/863 of 18 May 2017**, OJ L 128/59
+(https://interoperable-europe.ec.europa.eu/collection/eupl). SPDX lists `EUPL-1.2` as **OSI-approved
+and FSF-libre**; it is copyleft (Article 5). Since the Commission Decision of 8 December 2021
+(2021/C 495 I/01), art. 5(a), "the open source licence granted by the Commission shall be the EUPL,
+except in the cases listed in points (b) and (c)"
+(https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32021D1209(01)).
+
+Its copyleft reaches network provision, because of how it defines the trigger — verbatim from the
+official English text
 (https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt, §1):
 
 > "'Distribution' or 'Communication': any act of selling, giving, lending, renting, distributing,
@@ -746,22 +801,50 @@ network provision, because of how it defines the trigger — verbatim from the o
 > **providing access to its essential functionalities at the disposal of any other natural or legal
 > person**."
 
-Its grant is expansive: "use the Work in any circumstance and for all usage", including the right to
-"sublicense rights in the Work". So **EUPL does not stop an integrator either** — it is an open-source
-licence and cannot, by OSD 6. It is listed here because it is the licence a European public body would
-expect, and because if he ever wants maximum institutional legitimacy rather than maximum control,
-EUPL 1.2 is the single best-signalling choice available.
+**Do not call this a "network clause".** The word "network" does not appear anywhere in EUPL 1.2; the
+trigger is "providing access to its essential functionalities". Quote it, don't paraphrase it.
 
-`[unverified in this pass: the Interoperable Europe Act (Regulation (EU) 2024/903) and the European
-Commission Open Source Strategy 2020–2023 and any successor. I did not fetch these. My understanding
-is that the Act promotes and in places requires sharing of interoperability solutions under open
-licences, but the precise obligation and whether "source available" satisfies it should be read from
-the regulation text before relying on it.]`
+Its grant is expansive: "use the Work in any circumstance and for all usage", including the right to
+"sublicense rights in the Work", and Article 9 explicitly contemplates paid services — "you may choose
+to conclude an additional agreement, defining obligations or services consistent with this Licence."
+So **EUPL does not stop an integrator either** — it is an open-source licence and cannot, by OSD 6.
+Article 13 gives all approved linguistic versions "identical value", which is why it is the licence a
+European public body expects. If he ever wants maximum institutional legitimacy rather than maximum
+control, EUPL 1.2 is the single best-signalling choice available.
+
+**The Interoperable Europe Act, Regulation (EU) 2024/903 of 13 March 2024.** Article numbers
+circulating in secondary summaries are wrong; these were read from the OJ text
+(https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ:L_202400903):
+
+- **Art. 2(12)** defines "open source licence" without reference to OSI: "a licence whereby the reuse,
+  redistribution and modification of software is permitted **for all uses** on the basis of a
+  unilateral declaration by the right holder… and where the source code of the software is made
+  available to users indiscriminately".
+- **Art. 4(6)** — Union entities and public sector bodies "shall prioritise the implementation of
+  interoperability solutions that do not carry restrictive licensing terms, such as open source
+  solutions, where such interoperability solutions are equivalent" on functionality, total cost,
+  user-centricity, cybersecurity and other objective criteria.
+- **Art. 8(3)(d)** — the binding obligation is only to "use a licence that allows the solution at least
+  to be reused by other Union entities or public sector bodies, or be issued as open source".
+- **Art. 8(4)** — portals collecting open source solutions "shall allow for the use of the European
+  Union Public Licence". **Recital 36** carries the EUPL rationale (not "Article 36(4)", which does not
+  exist).
+
+**Would a source-available licence satisfy it?** The Act never requires OSI approval. But Art. 2(12)
+requires permission "for all uses" — so BUSL and PolyForm Noncommercial are **not** "open source
+licences" for the Act's purposes. The binding duty in Art. 8(3)(d) is weaker and a bespoke
+public-sector-reuse licence would clear it. What is lost is the Art. 4(6) prioritisation. This is EU
+law and does not bind Costa Rica; it is here because it is the most developed statement anywhere of
+what a public body is expected to do, and Costa Rican policy tends to follow European models.
+
+`[unverified: any successor to the European Commission Open Source Software Strategy 2020–2023
+("Think Open", adopted 21 October 2020); none is named on the Commission's page.]`
 
 ### 3.3 The closest analogue, and it cuts against restriction
 
 **X-Road — the interoperability platform this project is modelled on — is MIT-licensed.**
-`https://raw.githubusercontent.com/nordic-institute/X-Road/master/LICENSE` begins:
+`https://raw.githubusercontent.com/nordic-institute/X-Road/master/LICENSE` (and the same file on
+`develop`, which carries a literal `SPDX-License-Identifier: MIT` header) begins:
 
 > "The MIT License
 >
@@ -770,17 +853,45 @@ the regulation text before relying on it.]`
 > Solutions (NIIS), Population Register Centre (VRK)
 > Copyright (c) 2015-2017 Estonian Information System Authority (RIA), Population Register Centre (VRK)"
 
-(retrieved 7 September 2026.) This is worth sitting with. The actual national interoperability
-platform of Estonia and Finland, with a real integrator ecosystem selling real implementations, is
-under the most permissive licence there is — and NIIS still exists, is still funded, and is still the
-recognised authority on X-Road. **Their moat is not the licence.** It is institutional standing,
-certification, the trust framework and the relationships. That is the §4 argument, demonstrated by the
-nearest real-world case.
+(retrieved 7 September 2026. A trap: GitHub's API reports `"spdx_id": "NOASSERTION"` for this repo
+because the multi-line copyright block defeats its detector. Cite the file, not the API.)
+
+This is worth sitting with. The actual national interoperability platform of Estonia and Finland —
+with NIIS members including Estonia and Finland as strategic members, Iceland contributing, and
+Ukraine, Schleswig-Holstein, Québec, the Faroe Islands and Åland associated (https://www.niis.org/) —
+with a real integrator ecosystem selling real implementations, is under the most permissive licence
+there is. And NIIS still exists, is still funded, and is still the recognised authority on X-Road.
+
+**Their moat is not the licence. It is the trademark and the institution.** X-Road® is a registered
+trademark of the Estonian Information System Authority. That is the §4.4 argument, demonstrated by the
+nearest real-world case there is: give away the code, own the name.
+
+### 3.3a Every verified government reference implementation is OSI-licensed
+
+Checked by reading LICENSE files and the GitHub licence API:
+
+| Project | Licence |
+|---|---|
+| `alphagov/govuk-design-system`, `govuk-frontend`, `govuk-prototype-kit`, `publisher`, `govuk-infrastructure` | MIT |
+| Estonia RIA: `AJ`, `DHX`, `eIDAS-SpecificProxyService-Test`, `Klassifikaatorite-Standard` | MIT |
+| Denmark **`OS2web/os2web8`** | **EUPL-1.2** |
+| Denmark `OS2iot-backend` / `-frontend` / `-payloaddecoders` | MPL-2.0 |
+| Denmark `OS2Forms/os2forms8` | GPL-2.0 |
+| Brazil `govbr/caixapostal-cli`, `qwtransfer`, `orgaosbr` | MIT |
+| Brazil `govbr/ml-data`, `suindara.govbr`, `wsin.govbr` | GPL-3.0 / GPL-2.0 / Unlicense |
+| Argentina `argob/poncho`, `argob/estandares` | MIT |
+| Argentina `argob/cuidar-android` | GPL-3.0 |
+
+**Not one uses a source-available licence.** That is not proof that a source-available government
+reference implementation cannot work — it may simply be that nobody has tried. But it means
+PuraVidaGov would be the first, and being first is a cost as well as an asset.
 
 ### 3.4 Costa Rican rules
 
 See §5.4 for Ley 9986 and for the search for a Costa Rican software-libre policy. Summary of what was
-and was not found is in the gap list.
+and was not found is in the gap list. The short version: **no Costa Rican equivalent of Uruguay's Ley
+19.179 was confirmed to exist, and none was confirmed not to exist.** Treat it as an open question and
+have a Costa Rican lawyer check before assuming either way.
 
 ---
 
@@ -1005,11 +1116,19 @@ drafting.
 
 If the licence permits government use, then when a ministry hires Accenture to deploy PuraVidaGov,
 **Accenture's activity is arguably use "by" the permitted user**. The ministry is the licensee; the
-integrator is its hands. Under FSL this is explicit and lost (§2.2, Permitted Purpose clause 4). Under
-ELv2 it is not caught at all. Under BUSL it depends entirely on drafting. Under PolyForm Noncommercial
-it is *probably* caught, because the integrator is a company using the software for a commercial
-purpose and the "Noncommercial Organizations" clause names institutions, not their contractors — but
-"probably" is not a business plan.
+integrator is its hands. Scoring the candidates on that exact fact pattern:
+
+- **FSL** — explicit and lost. Permitted Purpose clause 4 names "professional services that you
+  provide to a licensee using the Software" (§2.2).
+- **ELv2** — explicit and lost. Elastic's own FAQ answers the contractor-installs-for-client scenario
+  with "This is permitted under ELv2" (§2.5).
+- **BUSL** — depends entirely on how the Additional Use Grant is drafted, and the grant can only add
+  rights, never restrict (§2.1).
+- **PolyForm Noncommercial** — *probably* caught, because the integrator is a company using the
+  software for a commercial purpose, and the "Noncommercial Organizations" clause names institutions,
+  not their contractors. But "probably" is not a business plan.
+
+Only PolyForm Noncommercial gets to "probably". Everything else gets to "no".
 
 The fix is to make the grant turn on **who performs the work and whether they are paid for it**, not
 only on who benefits. And — critically for BUSL — that fix must be expressed as a *narrower grant*,
@@ -1033,9 +1152,16 @@ Why this over BUSL, which is the obvious alternative:
 - It grants distribution and modification, so the "see, run and evaluate" story survives intact.
 
 Why not BUSL: the mandatory GPL-compatible Change License and hard four-year conversion mean the code
-becomes freely commercialisable on a schedule, which is the opposite of R3. Why not FSL: it expressly
-permits the professional-services case. Why not ELv2: it only blocks hosted service providers. Why not
-AGPL: it does not restrict services at all — though see §6.6 for when to reconsider it.
+becomes freely commercialisable on a schedule, which is the opposite of R3 — and BUSL says nothing
+generic about government, with CockroachDB's AUG showing that the blank can be filled in against
+government (§2.1). Why not FSL: it expressly permits the professional-services case. Why not ELv2: its
+own FAQ expressly permits the contractor case. Why not AGPL: §4 expressly permits charging — though
+see §6.7 for when to reconsider it.
+
+**Cost of this choice, stated plainly:** PolyForm Noncommercial is not OSI-approved, has no conversion
+date, fails the Standard for Public Code, and is not an "open source licence" under the Interoperable
+Europe Act's Art. 2(12) "for all uses" test. He is trading institutional legitimacy for control. §6.7
+argues the other side.
 
 **Documents (`docs/`): CC BY-NC-SA 4.0**
 SPDX: `CC-BY-NC-SA-4.0`
@@ -1198,12 +1324,41 @@ Not "consult a lawyer" as boilerplate. These specific questions:
 
 It should be on the record, because the case against relicensing is not weak.
 
-X-Road is MIT (§3.3). The Standard for Public Code requires an OSI licence and PuraVidaGov would fail
-it (§3.1). A ministry's procurement team meeting a licence they have not seen before will escalate it,
-and escalation is where unfunded projects die. The demo's value is as a conversation-starter, and
-restrictive licensing makes the conversation harder to start. Meanwhile the MIT-era fork already
-exists and cannot be recalled (§1.2), so relicensing buys future versions only — and the durable
-assets are trademark, authorship and relationships, none of which need the licence change at all.
+X-Road is MIT and its moat is its trademark (§3.3). Every verified government reference implementation
+is OSI-licensed (§3.3a). The Standard for Public Code requires an OSI licence and PuraVidaGov would
+fail it (§3.1). Under the Interoperable Europe Act's own definition, a "for all uses" test, PolyForm
+Noncommercial is not an open source licence (§3.2). A ministry's procurement team meeting a licence
+they have not seen before will escalate it, and escalation is where unfunded projects die. The demo's
+value is as a conversation-starter, and restrictive licensing makes the conversation harder to start.
+Meanwhile the MIT-era fork already exists and cannot be recalled (§1.2), so relicensing buys future
+versions only — and the durable assets are trademark, authorship and relationships, none of which need
+the licence change at all.
+
+**And the strongest evidence is not the forks — it is that the relicensers reversed.**
+
+| Relicence | Fork it triggered | Outcome |
+|---|---|---|
+| Terraform → BUSL 1.1, 10 Aug 2023 | OpenTofu, repo public 5 Sep 2023, Linux Foundation project 20 Sep 2023, MPL-2.0 | HashiCorp acquired by IBM; Terraform still BUSL |
+| Elasticsearch → SSPL/ELv2, Jan 2021 | OpenSearch, 1.0 GA 12 Jul 2021 (AWS), Apache-2.0; OpenSearch Software Foundation under the LF, 16 Sep 2024 | **Elastic added AGPL back, 29 Aug 2024** |
+| Redis → RSALv2/SSPLv1, Mar 2024 | Valkey, 28 Mar 2024, Linux Foundation, BSD-3-Clause, backed by AWS, Google Cloud, Oracle, Ericsson, Snap | **Redis added AGPLv3 back, 1 May 2025** |
+
+Elastic's Shay Banon, 29 August 2024: the company "will be adding AGPL as another license option next
+to ELv2 and SSPL in the coming weeks", so that Elasticsearch and Kibana "can be called Open Source
+again" because AGPL is OSI-approved
+(https://www.elastic.co/blog/elasticsearch-is-open-source-again).
+
+Redis, at the Redis 8 GA on 1 May 2025, gave a reason that lands squarely on this project:
+
+> "**We heard from some customers that it is easier for them to operate under an OSI-approved
+> license**, so we've added that option."
+
+(https://redis.io/blog/redis-8-ga/. Redis also renamed the product from "Community Edition" back to
+"Open Source".) Redis reversed roughly fourteen months after relicensing and thirteen months after
+Valkey forked. Elastic took three and a half years.
+
+Two companies with far more leverage than this project ran the experiment, and both walked it back —
+one of them explicitly because *customers* found the non-OSI licence harder to operate under. If
+"customers" in that sentence is read as "public institutions", it is a direct warning.
 
 A defensible alternative, if he decides visibility matters more than control: **keep the code under a
 permissive or OSI licence, move `docs/` to CC BY-NC-SA 4.0, register the trademark, and sell his time.**
@@ -1235,24 +1390,44 @@ skipped.
 - Any Costa Rican authority on AI-assisted authorship. None found.
 
 **Licences and policy:**
-- AGPL-3.0 §13 was not quoted verbatim in this pass.
-- MongoDB/SSPL, Grafana (2021), Redis (2025) and Elastic (2024) announcements were not fetched. OSI's
-  own SSPL statement was.
-- Sentry's and CockroachDB's BUSL announcements were not fetched; HashiCorp/IBM's licence file was
-  read directly.
-- Heather Meeker's authorship of the PolyForm licences is widely reported but not confirmed from
-  polyformproject.org.
-- Interoperable Europe Act (Regulation (EU) 2024/903) and the European Commission Open Source Strategy
-  were not fetched. Do not rely on §3.2's characterisation of them without reading the regulation.
+- Heather Meeker's and Kyle E. Mitchell's authorship of the PolyForm licences is widely reported and
+  appears on their own blogs, but is not confirmed anywhere on polyformproject.org.
+- PolyForm Perimeter 1.0.0 was not fetched; what changed in 1.0.1 is unknown.
+- FSL 1.1's release date and the 1.0 → 1.1 transition were not checked against the repo history.
+- CockroachDB's 2019 BSL parameters (change date, change licence) were not verified; the 2024 move to
+  its own bespoke licence was not read from the licence text.
+- MongoDB's SSPL *rationale* is paraphrase; only the licence header (v1, 16 October 2018) was verified.
+- HashiCorp's August 2023 announcement page is behind bot protection; the date is verified but the AUG
+  details came from Terraform's LICENSE file, which is the better source anyway.
+- IBM appears as Licensor in Terraform's LICENSE; the acquisition date and terms were not verified.
+- Whether any BUSL adopter other than CockroachDB excludes government was not surveyed.
+- When GitHub ToS section D.9 "Access Reciprocity" was added.
 - Whether MIT is legally revocable is genuinely unsettled; §1.2 states the practitioner consensus, not
   a decided rule.
-- Government OSS procurement policies beyond the Standard for Public Code (UK service manual, US
-  M-16-21, Germany's ZenDiS, France's DINUM) were not checked in this pass.
+- Successor to the EC Open Source Software Strategy 2020–2023: none found named.
+- Germany's ZenDiS/openCode licensing rule and France's SILL inclusion criteria could not be confirmed
+  from a primary rules page.
+- Uruguay AGESIC, Chile Digital Government and Costa Rican government GitHub organisations: no primary
+  source located; the probed organisation names do not exist.
+- Whether Brazil's Portal do Software Público uses a Brazilian public-administration licence rather
+  than an OSI one.
+- Exact OpenSearch *fork announcement* date (only "established 2021" and "1.0 GA 12 July 2021" are
+  verified).
 
-**Verified directly and quotable with confidence:** the MIT, BUSL 1.1, FSL 1.1, all PolyForm variants
-cited, Elastic 2.0, EUPL 1.2 and CC BY-NC-SA 4.0 texts; the SPDX licence list (version dated
-2026-09-03); OSD clause 6; OSI's SSPL statement; the Standard for Public Code licensing criterion;
-GitHub ToS §5 and §6; X-Road's LICENSE file; Fair Source's definition and licence list; CC's FAQ on
-software; TRIPS art. 9.2 and 10.1; WCT art. 2 and 4; Berne art. 5(2) and Costa Rica's accession dates;
-Costa Rica's WTO membership date; the U.S. Copyright Office's January 2025 conclusions; the OpenTofu
-fork date; and this repository's own licence files, `package.json`, git history and dependency licences.
+**Verified directly and quotable with confidence:** the MIT, BUSL 1.1 (via SPDX's canonical text, not
+MariaDB's defective HTML), FSL 1.1, all PolyForm variants cited, Elastic 2.0 and its official FAQ,
+AGPL-3.0 §4 and §13, EUPL 1.2 (OJ text) and CC BY-NC-SA 4.0 texts; the SPDX licence list (version dated
+2026-09-03) and the OSI approved list; OSD clause 6; OSI's SSPL statement; the Standard for Public Code
+licensing criterion; OMB M-16-21; the UK Service Manual; FSFE Public Money Public Code; Uruguay's Ley
+19.179; Interoperable Europe Act arts. 2(12), 4(6), 8(3)(d), 8(4); the Commission Decision of
+8 December 2021; GitHub ToS D.5, D.6 and D.9; X-Road's LICENSE file and the government-repo licence
+table; Fair Source's definition and licence list at fair.io; CC's FAQ on software and its
+NonCommercial interpretation wiki; TRIPS art. 9.2 and 10.1; WCT art. 2 and 4; Berne art. 5(2) and Costa
+Rica's accession dates; Costa Rica's WTO membership date; the U.S. Copyright Office's January 2025
+conclusions; the OpenTofu, OpenSearch and Valkey fork dates and the Elastic and Redis reversals; and
+this repository's own licence files, `package.json`, git history and dependency licences.
+
+**Two corrections to widely repeated claims, worth carrying forward:** EUPL 1.2 has no "network
+clause" — the word does not appear; the trigger is "providing access to its essential functionalities".
+And the Interoperable Europe Act article numbers in circulating secondary summaries are wrong; the
+operative provisions are arts. 2(12), 4(6), 8(3)(d), 8(4) and Recital 36.

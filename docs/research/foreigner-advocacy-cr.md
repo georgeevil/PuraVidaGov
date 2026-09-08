@@ -426,12 +426,16 @@ the descendant of a genuinely repressive instrument — not as evidence about pr
 
 ### Risk assessment
 
-**Probability: low.** No enforcement mechanism in the migration law; no reported modern precedent; strong
-constitutional cover under arts. 27–29; a subject matter (administrative digitalisation) that is technocratic and
-politically unaligned; and an activity type (external, published advocacy) that falls on the *non-institucional*
-side of 3076-2011.
+**Probability: low.** No provision targets political activity; the two public-order clauses would each need a
+strained reading to reach published technical advocacy; no reported modern precedent; strong constitutional cover
+under arts. 25–29; a subject matter (administrative digitalisation) that is technocratic and politically unaligned;
+and an activity type (external, published advocacy) that falls on the *non-institucional* side of 3076-2011.
 
-**Consequence: severe.** Loss of status without additional process, and a ten-year bar on return.
+**Consequence: severe.** Loss of legal status, and — under expulsion — a ten-year bar on return.
+
+**One asymmetry worth naming.** Because art. 129(9) turns on *"antecedentes o actuaciones"*, the practical risk is
+not any single publication but an accumulated public profile that an official could characterise as agitation. That
+is precisely what §6's framing is designed to prevent, and it is why the framing matters more than any one sentence.
 
 **Therefore: the framing choices in §6 are worth making even though the legal risk is small.** They cost nothing and
 they remove the hook.
