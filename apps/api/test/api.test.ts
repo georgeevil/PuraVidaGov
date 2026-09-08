@@ -268,7 +268,7 @@ describe('workflow catalogue', () => {
   it('GET /api/workflows lists 6 definitions with legal notes and no functions', async () => {
     const r = await request(app).get('/api/workflows').expect(200);
     const defs = r.body as WorkflowDefinition[];
-    expect(defs.map((d) => d.id)).toEqual(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license']);
+    expect(defs.map((d) => d.id)).toEqual(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license', 'bereavement', 'vehicle-purchase', 'home-purchase', 'marriage', 'school-enrolment']);
     for (const d of defs) {
       expect(['hoy', 'parcial', 'ley']).toContain(d.legal.status);
       expect(d.legal.today.length).toBeGreaterThan(20);
@@ -523,7 +523,7 @@ describe('legal', () => {
     const r = await request(app).get('/api/legal').expect(200);
     expect(r.body.refs.find((x: { id: string }) => x.id === 'cr-8220')).toMatchObject({ jurisdiction: 'CR', short: 'Ley 8220 arts. 2 y 8' });
     expect(r.body.refs.some((x: { jurisdiction: string }) => x.jurisdiction === 'EE')).toBe(true);
-    expect(r.body.workflows.map((w: { id: string }) => w.id)).toEqual(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license']);
+    expect(r.body.workflows.map((w: { id: string }) => w.id)).toEqual(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license', 'bereavement', 'vehicle-purchase', 'home-purchase', 'marriage', 'school-enrolment']);
     const sb = r.body.workflows.find((w: { id: string }) => w.id === 'start-business');
     expect(sb).toMatchObject({ title: 'Iniciar un negocio', legal: { status: 'parcial' } });
     expect(sb.steps[0]).toMatchObject({ id: 'identidad', agency: 'registro', legal: { status: 'hoy' } });

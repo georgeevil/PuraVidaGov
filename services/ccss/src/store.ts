@@ -4,6 +4,7 @@ import type {
   DependentInsuranceResponse,
   EmploymentRecord,
   PensionApplicationResponse,
+  SurvivorPensionResponse,
   VoluntaryInsuranceResponse,
 } from '@pvg/shared';
 
@@ -62,7 +63,28 @@ const SEED_EMPLOYMENT: EmploymentRecord[] = [
     contributions: 80,
     status: 'activo',
   },
+  {
+    citizenId: '7-0100-0300', // Luis (v4) — dies in the bereavement demo; his record backs the survivor pension
+    employerName: 'Cooperativa de Cacao Talamanca R.L.',
+    employerNumber: 'E-30004',
+    startDate: '1985-01-15',
+    lastSalaryCrc: 680000,
+    contributions: 480,
+    status: 'activo',
+  },
 ];
+
+/** Pensión por viudez/orfandad (v4). */
+export interface SurvivorPension extends SurvivorPensionResponse {
+  survivorId: string;
+  deceasedId: string;
+  relationship: 'conyuge' | 'hijo';
+  deathCertificate: string;
+  iban: string;
+  applicationDate: string;
+}
+
+const survivorKeyOf = (survivorId: string, deceasedId: string) => `${survivorId}::${deceasedId}`;
 
 export interface PensionApplication extends PensionApplicationResponse {
   citizenId: string;
@@ -85,6 +107,8 @@ class CcssStore {
   private pensionCounters = new Map<number, number>(); // year -> last sequence
   private voluntary = new Map<string, VoluntaryInsurance>(); // keyed by citizenId
   private voluntaryCounters = new Map<number, number>();
+  private survivorPensions = new Map<string, SurvivorPension>(); // keyed by (survivorId, deceasedId)
+  private survivorCounters = new Map<number, number>();
   private employers = new Map<string, Employer>(); // keyed by NITE
   private numbers = new Set<string>();
   private dependents = new Map<string, Dependent>(); // keyed by dependentId
@@ -101,6 +125,8 @@ class CcssStore {
     this.pensionCounters.clear();
     this.voluntary.clear();
     this.voluntaryCounters.clear();
+    this.survivorPensions.clear();
+    this.survivorCounters.clear();
     this.employers.clear();
     this.numbers.clear();
     this.dependents.clear();
@@ -133,6 +159,25 @@ class CcssStore {
 
   listPensions(): PensionApplication[] {
     return [...this.pensions.values()];
+  }
+
+  findSurvivorPension(survivorId: string, deceasedId: string): SurvivorPension | undefined {
+    return this.survivorPensions.get(survivorKeyOf(survivorId, deceasedId));
+  }
+
+  nextSurvivorSequence(year: number): number {
+    const next = (this.survivorCounters.get(year) ?? 0) + 1;
+    this.survivorCounters.set(year, next);
+    return next;
+  }
+
+  saveSurvivorPension(p: SurvivorPension): SurvivorPension {
+    this.survivorPensions.set(survivorKeyOf(p.survivorId, p.deceasedId), p);
+    return p;
+  }
+
+  listSurvivorPensions(): SurvivorPension[] {
+    return [...this.survivorPensions.values()];
   }
 
   findVoluntary(citizenId: string): VoluntaryInsurance | undefined {

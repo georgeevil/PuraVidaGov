@@ -10,7 +10,7 @@ function sha256(s: string): string {
 
 /** cédula → sha256(password). Computed once at startup; plaintext is never compared. */
 const CREDENTIALS: ReadonlyMap<string, string> = new Map(
-  ['1-2345-6789', '7-0123-0456', '2-0987-0654'].map((id) => [id, sha256('demo')]),
+  ['1-2345-6789', '7-0123-0456', '2-0987-0654', '7-0111-0222', '1-1111-2222'].map((id) => [id, sha256('demo')]),
 );
 
 export function verifyCredentials(id: string, password: string): boolean {

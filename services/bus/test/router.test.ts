@@ -10,11 +10,16 @@ describe('buildUrl', () => {
     expect(buildUrl('http://a', '/ccss/employment/:citizenId', 'GET', { citizenId: '7-0123-0456' })).toBe(
       'http://a/ccss/employment/7-0123-0456',
     );
+    expect(buildUrl('http://a', '/registro-nacional/vehicle/:plate', 'GET', { plate: 'BCR-123' })).toBe('http://a/registro-nacional/vehicle/BCR-123');
+    expect(buildUrl('http://a', '/registro/dependants/:id', 'GET', { id: '7-0111-0222' })).toBe('http://a/registro/dependants/7-0111-0222');
   });
 
   it('appends declared query keys from data and URL-encodes them', () => {
     expect(buildUrl('http://a', '/registro-nacional/properties', 'GET', { ownerId: '1-2345-6789', other: 'x' }, ['ownerId'])).toBe(
       'http://a/registro-nacional/properties?ownerId=1-2345-6789',
+    );
+    expect(buildUrl('http://a', '/registro-nacional/vehicles', 'GET', { ownerId: '2-0987-0654' }, ['ownerId'])).toBe(
+      'http://a/registro-nacional/vehicles?ownerId=2-0987-0654',
     );
     expect(buildUrl('http://a', '/x', 'GET', { q: 'a b&c' }, ['q'])).toBe('http://a/x?q=a+b%26c');
     expect(buildUrl('http://a', '/x', 'GET', {}, ['q'])).toBe('http://a/x');

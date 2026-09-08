@@ -172,8 +172,52 @@ describe('supen', () => {
     expect((await request(app).get('/supen/withdrawals').set('x-api-key', KEY)).body).toEqual([]);
     expect((await request(app).get('/supen/statements').set('x-api-key', KEY)).body).toEqual([]);
     const affiliates = await request(app).get('/supen/affiliates').set('x-api-key', KEY).expect(200);
-    expect(affiliates.body).toHaveLength(3);
+    expect(affiliates.body).toHaveLength(4); // v4: Luis
     const again = await request(app).post('/supen/withdrawFcl').set('x-api-key', KEY).send(fclBody).expect(200);
     expect(again.body.requestNumber).toBe(`FCL-${year}-000001`);
+  });
+});
+
+// ---------------------------------------------------------------- v4
+
+describe('supen v4: beneficiaryPayout', () => {
+  const ROSA = '7-0111-0222';
+  const LUIS = '7-0100-0300';
+  const year = Number(new Date().toISOString().slice(0, 4));
+  const today = new Date().toISOString().slice(0, 10);
+  const payout = { beneficiaryId: ROSA, deceasedId: LUIS, deathCertificate: `DEF-${year}-000001`, iban: 'CR05015202001026284066' };
+
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('pays Luis\'s ROP ₡28 000 000 and FCL ₡2 600 000 to Rosa in 15 days', async () => {
+    const r = await request(app).post('/supen/beneficiaryPayout').set('x-api-key', KEY).send(payout).expect(200);
+    expect(r.body).toEqual({
+      requestNumber: `ROP-BEN-${year}-000001`,
+      operator: 'Operadora Demo de Pensiones',
+      ropBalanceCrc: 28000000,
+      fclBalanceCrc: 2600000,
+      paymentDate: addDaysIso(today, 15),
+    });
+  });
+
+  it('is idempotent per deceasedId and listed', async () => {
+    const a = await request(app).post('/supen/beneficiaryPayout').set('x-api-key', KEY).send(payout).expect(200);
+    const b = await request(app).post('/supen/beneficiaryPayout').set('x-api-key', KEY).send({ ...payout, beneficiaryId: '1-2345-6789' }).expect(200);
+    expect(b.body).toEqual(a.body);
+    const list = await request(app).get('/supen/payouts').set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0]).toMatchObject({ beneficiaryId: ROSA, deceasedId: LUIS, deathCertificate: payout.deathCertificate });
+  });
+
+  it('404 AFFILIATE_NOT_FOUND for an unknown deceased, 400 on a bad body, reset clears payouts', async () => {
+    const nf = await request(app).post('/supen/beneficiaryPayout').set('x-api-key', KEY).send({ ...payout, deceasedId: '9-9999-9999' }).expect(404);
+    expect(nf.body.error.code).toBe('AFFILIATE_NOT_FOUND');
+    const bad = await request(app).post('/supen/beneficiaryPayout').set('x-api-key', KEY).send({ ...payout, iban: 'CR1', deathCertificate: '' }).expect(400);
+    expect(bad.body.error.code).toBe('VALIDATION_ERROR');
+    await request(app).post('/supen/beneficiaryPayout').set('x-api-key', KEY).send(payout).expect(200);
+    await request(app).post('/__demo/reset').expect(200);
+    expect((await request(app).get('/supen/payouts').set('x-api-key', KEY)).body).toEqual([]);
   });
 });

@@ -7,19 +7,21 @@ import {
   insureDependentSchema,
   registerEmployerSchema,
   simulatedLatency,
+  survivorPensionSchema,
   todayIso,
   updateAddressSchema,
   type AddressUpdateResponse,
   type CcssResponse,
   type DependentInsuranceResponse,
   type PensionApplicationResponse,
+  type SurvivorPensionResponse,
   type VoluntaryInsuranceResponse,
 } from '@pvg/shared';
 import type { Express } from 'express';
 import { randomInt } from 'node:crypto';
 import type { z } from 'zod';
 import { requireApiKey, validateBody, wrap } from './middleware.js';
-import { store, type Dependent, type Employer, type PensionApplication, type VoluntaryInsurance } from './store.js';
+import { store, type Dependent, type Employer, type PensionApplication, type SurvivorPension, type VoluntaryInsurance } from './store.js';
 
 export const SERVICE_NAME = 'ccss';
 export const ADDRESS_REGISTRY = 'CCSS (SICERE)';
@@ -29,6 +31,7 @@ type InsureDependentBody = z.infer<typeof insureDependentSchema>;
 type UpdateAddressBody = z.infer<typeof updateAddressSchema>;
 type ApplyPensionBody = z.infer<typeof applyPensionSchema>;
 type EnrollVoluntaryBody = z.infer<typeof enrollVoluntarySchema>;
+type SurvivorPensionBody = z.infer<typeof survivorPensionSchema>;
 
 /** Demo figures: contribution = 26.67 % of a reference monthly salary (CRC), per person covered. */
 export const CONTRIBUTION_RATE = 0.2667;
@@ -85,6 +88,31 @@ export function voluntaryPremium(declaredIncomeCrc: number): number {
 export function firstDayOfNextMonthIso(iso: string): string {
   const d = new Date(iso);
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)).toISOString().slice(0, 10);
+}
+
+// ---------------------------------------------------------------- v4: pensión por viudez / orfandad
+
+/** Share of the deceased's IVM pension estimate per survivor (docs/CONTRACTS.md v4 → CCSS). */
+export const SURVIVOR_SHARE: Record<SurvivorPensionBody['relationship'], number> = { conyuge: 0.7, hijo: 0.3 };
+/** Contributions the deceased needed for the survivor pension to be approved outright. */
+export const SURVIVOR_MIN_CONTRIBUTIONS = 180;
+
+export const SURVIVOR_BENEFICIARY: Record<SurvivorPensionBody['relationship'], SurvivorPensionResponse['beneficiary']> = {
+  conyuge: 'viudez',
+  hijo: 'orfandad',
+};
+
+export function survivorPension(lastSalaryCrc: number, relationship: SurvivorPensionBody['relationship']): number {
+  return Math.round(monthlyPension(lastSalaryCrc) * SURVIVOR_SHARE[relationship]);
+}
+
+export function survivorStatus(contributions: number): SurvivorPensionResponse['status'] {
+  return contributions >= SURVIVOR_MIN_CONTRIBUTIONS ? 'aprobada' : 'en-estudio';
+}
+
+function survivorToResponse(p: SurvivorPension): SurvivorPensionResponse {
+  const { applicationNumber, beneficiary, monthlyPensionCrc, firstPaymentDate, status } = p;
+  return { applicationNumber, beneficiary, monthlyPensionCrc, firstPaymentDate, status };
 }
 
 function pensionToResponse(p: PensionApplication): PensionApplicationResponse {
@@ -306,6 +334,44 @@ export function createApp(): Express {
         coveredFrom: today,
       });
       res.json(voluntaryToResponse(policy));
+    }),
+  );
+
+  // ---------------------------------------------------------------- v4
+
+  app.get('/ccss/survivorPensions', (_req, res) => {
+    res.json(store.listSurvivorPensions());
+  });
+
+  app.post(
+    '/ccss/survivorPension',
+    validateBody(survivorPensionSchema),
+    wrap(async (req, res) => {
+      const body = req.body as SurvivorPensionBody;
+      await simulatedLatency();
+
+      const existing = store.findSurvivorPension(body.survivorId, body.deceasedId);
+      if (existing) return res.json(survivorToResponse(existing));
+
+      const record = store.findEmployment(body.deceasedId);
+      if (!record) return res.status(404).json(employmentNotFound(body.deceasedId));
+
+      const today = todayIso();
+      const year = Number(today.slice(0, 4));
+      const pension = store.saveSurvivorPension({
+        survivorId: body.survivorId,
+        deceasedId: body.deceasedId,
+        relationship: body.relationship,
+        deathCertificate: body.deathCertificate,
+        iban: body.iban,
+        applicationDate: today,
+        applicationNumber: `IVM-SV-${year}-${String(store.nextSurvivorSequence(year)).padStart(6, '0')}`,
+        beneficiary: SURVIVOR_BENEFICIARY[body.relationship],
+        monthlyPensionCrc: survivorPension(record.lastSalaryCrc, body.relationship),
+        firstPaymentDate: firstDayOfNextMonthIso(today),
+        status: survivorStatus(record.contributions),
+      });
+      res.json(survivorToResponse(pension));
     }),
   );
 

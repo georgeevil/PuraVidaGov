@@ -1,4 +1,4 @@
-import type { CompanyResponse, Property } from '@pvg/shared';
+import type { CompanyResponse, Property, PropertyTransferResponse, Vehicle, VehicleTransferResponse } from '@pvg/shared';
 
 /** Seed properties (docs/CONTRACTS.md v2 → "Registro Nacional"). All data is fictitious. */
 const SEED: Property[] = [
@@ -46,7 +46,40 @@ const SEED: Property[] = [
     address: 'Frente al parque central, Grecia centro, Grecia, Alajuela',
     encumbrances: [],
   },
+  {
+    folio: '7-077888-000', // v4: Luis, part of the estate in the bereavement demo
+    ownerId: '7-0100-0300',
+    province: 'Limón',
+    canton: 'Talamanca',
+    district: 'Cahuita',
+    areaM2: 2000,
+    landUse: 'mixto',
+    address: 'Cahuita centro, frente a la plaza',
+    encumbrances: [],
+  },
 ];
+
+/** Seed vehicles (docs/CONTRACTS.md v4 → "Registro Nacional additions"). All data is fictitious. */
+const SEED_VEHICLES: Vehicle[] = [
+  { plate: 'BCR-123', ownerId: '2-0987-0654', make: 'Toyota', model: 'Yaris', year: 2019, fiscalValueCrc: 7500000, encumbrances: [] }, // Ana
+  { plate: 'SJB-456', ownerId: '7-0123-0456', make: 'Hyundai', model: 'Tucson', year: 2021, fiscalValueCrc: 14000000, encumbrances: ['Prenda Banco Popular'] }, // José
+  { plate: 'LAV-777', ownerId: '7-0100-0300', make: 'Nissan', model: 'Frontier', year: 2015, fiscalValueCrc: 6200000, encumbrances: [] }, // Luis
+];
+
+export interface VehicleTransfer extends VehicleTransferResponse {
+  sellerId: string;
+  taxReceipt: string;
+  priceCrc: number;
+}
+
+export interface PropertyTransfer extends PropertyTransferResponse {
+  sellerId: string;
+  taxReceipt: string;
+  priceCrc: number;
+}
+
+export const normalizePlate = (plate: string) => plate.trim().toUpperCase();
+const transferKeyOf = (reference: string, taxReceipt: string) => `${reference.trim()}::${taxReceipt.trim()}`;
 
 export interface Company extends CompanyResponse {
   citizenId: string;
@@ -61,6 +94,11 @@ class RegistroNacionalStore {
   private properties = new Map<string, Property>();
   private companies = new Map<string, Company>();
   private cedulasJuridicas = new Set<string>();
+  private vehicles = new Map<string, Vehicle>();
+  private vehicleTransfers = new Map<string, VehicleTransfer>(); // keyed by (plate, taxReceipt)
+  private vehicleCounters = new Map<number, number>(); // year -> last BM sequence
+  private propertyTransfers = new Map<string, PropertyTransfer>(); // keyed by (folio, taxReceipt)
+  private propertyCounters = new Map<number, number>(); // year -> last BI sequence
 
   constructor() {
     this.reset();
@@ -70,6 +108,78 @@ class RegistroNacionalStore {
     this.properties = new Map(SEED.map((p) => [p.folio, structuredClone(p)]));
     this.companies.clear();
     this.cedulasJuridicas.clear();
+    this.vehicles = new Map(SEED_VEHICLES.map((v) => [v.plate, structuredClone(v)]));
+    this.vehicleTransfers.clear();
+    this.vehicleCounters.clear();
+    this.propertyTransfers.clear();
+    this.propertyCounters.clear();
+  }
+
+  // ---- v4: vehicles, transfers, estates
+
+  getVehicle(plate: string): Vehicle | undefined {
+    const v = this.vehicles.get(normalizePlate(plate));
+    return v ? structuredClone(v) : undefined;
+  }
+
+  vehiclesOf(ownerId: string): Vehicle[] {
+    return [...this.vehicles.values()].filter((v) => v.ownerId === ownerId).map((v) => structuredClone(v));
+  }
+
+  listVehicles(): Vehicle[] {
+    return [...this.vehicles.values()].map((v) => structuredClone(v));
+  }
+
+  putVehicle(v: Vehicle): Vehicle {
+    this.vehicles.set(normalizePlate(v.plate), structuredClone(v));
+    return v;
+  }
+
+  putProperty(p: Property): Property {
+    this.properties.set(p.folio, structuredClone(p));
+    return p;
+  }
+
+  companiesOf(citizenId: string): Company[] {
+    return [...this.companies.values()].filter((c) => c.citizenId === citizenId);
+  }
+
+  findVehicleTransfer(plate: string, taxReceipt: string): VehicleTransfer | undefined {
+    return this.vehicleTransfers.get(transferKeyOf(normalizePlate(plate), taxReceipt));
+  }
+
+  nextVehicleTransferSequence(year: number): number {
+    const next = (this.vehicleCounters.get(year) ?? 0) + 1;
+    this.vehicleCounters.set(year, next);
+    return next;
+  }
+
+  saveVehicleTransfer(t: VehicleTransfer): VehicleTransfer {
+    this.vehicleTransfers.set(transferKeyOf(normalizePlate(t.plate), t.taxReceipt), t);
+    return t;
+  }
+
+  listVehicleTransfers(): VehicleTransfer[] {
+    return [...this.vehicleTransfers.values()];
+  }
+
+  findPropertyTransfer(folio: string, taxReceipt: string): PropertyTransfer | undefined {
+    return this.propertyTransfers.get(transferKeyOf(folio, taxReceipt));
+  }
+
+  nextPropertyTransferSequence(year: number): number {
+    const next = (this.propertyCounters.get(year) ?? 0) + 1;
+    this.propertyCounters.set(year, next);
+    return next;
+  }
+
+  savePropertyTransfer(t: PropertyTransfer): PropertyTransfer {
+    this.propertyTransfers.set(transferKeyOf(t.folio, t.taxReceipt), t);
+    return t;
+  }
+
+  listPropertyTransfers(): PropertyTransfer[] {
+    return [...this.propertyTransfers.values()];
   }
 
   getProperty(folio: string): Property | undefined {

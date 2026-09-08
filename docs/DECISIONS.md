@@ -93,7 +93,21 @@ Chrome translates the Spanish portal for visitors whose browser is in another la
 button instead of a blank page if anything else goes wrong. Blocking translation with `notranslate` was rejected: the
 audience is often English-speaking.
 
-## D-021 · The domain is sindarvueltas.org, and deliberately not a `puravida*` one
+## D-021 · Five more life events, chosen by cross-country frequency and Costa Rican friction
+Death of a spouse, vehicle purchase, home purchase, marriage and school enrolment appear in most life-event portals
+(Gosuslugi, Norway's seven, borger.dk, Suomi.fi, Estonia's roadmap, LifeSG, the EU Single Digital Gateway list) and
+each costs a Costa Rican several visits today. Residency for foreigners and disability were researched and left as
+next steps: the first needs a login that is not a cédula, the second rests on a certification backlog the State is
+extending by resolution rather than fixing. Three new mock agencies (INS, MEP, IMAS); the death event is run by a new
+seed citizen (Rosa) so José's retirement demo stays intact.
+
+## D-022 · Reference countries are cited for organisation, not politics
+Gosuslugi is referenced for its 2010 statutory once-only rule (210-FZ art. 7) and its 2023 "life situations"
+grouping, with a note that it is not a political endorsement. The Nordic and Estonian sources include their own
+audits (Rigsrevisionen 2015, Riigikontroll 2024), which is why the case page repeats that the law comes before the
+platform.
+
+## D-023 · The domain is sindarvueltas.org, and deliberately not a `puravida*` one
 Registered at Cloudflare Registrar on 8 September 2026. "Sin dar vueltas" is the Costa Rican idiom for the
 bureaucratic runaround, so it reads as a citizen complaint rather than as a ministry.
 

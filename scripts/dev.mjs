@@ -13,6 +13,9 @@ const services = [
   ['supen', 'services/supen'],
   ['mtss', 'services/mtss'],
   ['cosevi', 'services/cosevi'],
+  ['ins', 'services/ins'],
+  ['mep', 'services/mep'],
+  ['imas', 'services/imas'],
   ['bus', 'services/bus'],
   ['api', 'apps/api'],
 ];

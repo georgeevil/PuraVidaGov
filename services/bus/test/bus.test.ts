@@ -43,6 +43,33 @@ function startFakeAgency(): Promise<void> {
     const ownerId = String(req.query.ownerId ?? '');
     res.json(ownerId === MARIA.id ? [{ folio: '1-123456-000', ownerId }] : []);
   });
+  a.get('/registro/dependants/:id', (req, res) => {
+    seenUrl = req.originalUrl;
+    seenHeaders = { 'x-api-key': req.header('x-api-key') };
+    if (req.params.id !== MARIA.id) {
+      return res.status(404).json({ error: { code: 'CITIZEN_NOT_FOUND', message: 'No existe' } });
+    }
+    res.json({ children: [{ id: '1-9999-0001', fullName: 'Lucas Fernández Gómez' }] });
+  });
+  a.get('/registro-nacional/vehicles', (req, res) => {
+    seenUrl = req.originalUrl;
+    const ownerId = String(req.query.ownerId ?? '');
+    res.json(ownerId === '2-0987-0654' ? [{ plate: 'BCR-123', ownerId }] : []);
+  });
+  a.get('/registro-nacional/vehicle/:plate', (req, res) => {
+    seenUrl = req.originalUrl;
+    if (req.params.plate !== 'BCR-123') {
+      return res.status(404).json({ error: { code: 'VEHICLE_NOT_FOUND', message: 'No existe' } });
+    }
+    res.json({ plate: req.params.plate, ownerId: '2-0987-0654', encumbrances: [] });
+  });
+  a.post('/registro-nacional/transferVehicle', (req, res) => {
+    seenBody = req.body;
+    if (req.body.sellerId !== '2-0987-0654') {
+      return res.status(409).json({ error: { code: 'SELLER_MISMATCH', message: 'No es el titular' } });
+    }
+    res.json({ plate: req.body.plate, newOwnerId: req.body.buyerId, registrationNumber: 'BM-2026-000001', registeredAt: '2026-09-07' });
+  });
   a.get('/registro-nacional/property/:folio', (req, res) => {
     seenUrl = req.originalUrl;
     if (req.params.folio !== '1-123456-000') {
@@ -109,6 +136,9 @@ beforeAll(async () => {
   process.env.CFIA_URL = 'http://127.0.0.1:1';
   process.env.MTSS_URL = 'http://127.0.0.1:1';
   process.env.COSEVI_URL = 'http://127.0.0.1:1';
+  process.env.INS_URL = 'http://127.0.0.1:1';
+  process.env.MEP_URL = 'http://127.0.0.1:1';
+  process.env.IMAS_URL = 'http://127.0.0.1:1';
   const mod = await import('../src/app.js');
   app = mod.createApp();
 });
@@ -254,8 +284,47 @@ describe('POST /bus/request', () => {
     expect(JSON.stringify(a.body[0])).not.toContain('1250000');
   });
 
+  it('v4: registro.getDependants substitutes :id and maps 404', async () => {
+    const r = await authed(bus().post('/bus/request')).send({ ...baseReq, action: 'getDependants', data: { id: MARIA.id }, purpose: 'Hijos a cargo' });
+    expect(r.status).toBe(200);
+    expect(r.body.data.children).toHaveLength(1);
+    expect(seenUrl).toBe(`/registro/dependants/${MARIA.id}`);
+    expect(seenHeaders['x-api-key']).toBe(REGISTRO_KEY);
+    const a = await authed(bus().get('/bus/audit'));
+    expect(a.body[0].fieldsReturned).toEqual(['children']);
+    expect(JSON.stringify(a.body[0])).not.toContain('Lucas');
+    const nf = await authed(bus().post('/bus/request')).send({ ...baseReq, action: 'getDependants', data: { id: '9-9999-9999' } });
+    expect(nf.status).toBe(404);
+    expect(nf.body.error.code).toBe('CITIZEN_NOT_FOUND');
+  });
+
+  it('v4: registro-nacional.getVehicle substitutes :plate and listVehicles maps ownerId to the query', async () => {
+    const ok = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'registro-nacional', action: 'getVehicle', data: { plate: 'BCR-123' } });
+    expect(ok.status).toBe(200);
+    expect(ok.body.data.plate).toBe('BCR-123');
+    expect(seenUrl).toBe('/registro-nacional/vehicle/BCR-123');
+    const nf = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'registro-nacional', action: 'getVehicle', data: { plate: 'ZZZ-999' } });
+    expect(nf.status).toBe(404);
+    expect(nf.body.error.code).toBe('VEHICLE_NOT_FOUND');
+    const list = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'registro-nacional', action: 'listVehicles', data: { ownerId: '2-0987-0654', plate: 'ignored' } });
+    expect(list.status).toBe(200);
+    expect(list.body.data).toEqual([{ plate: 'BCR-123', ownerId: '2-0987-0654' }]);
+    expect(seenUrl).toBe('/registro-nacional/vehicles?ownerId=2-0987-0654');
+  });
+
+  it('v4: registro-nacional.transferVehicle forwards the body and maps 409 SELLER_MISMATCH', async () => {
+    const data = { plate: 'BCR-123', sellerId: '2-0987-0654', buyerId: '1-1111-2222', taxReceipt: 'HAC-2026-000001', priceCrc: 8000000 };
+    const ok = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'registro-nacional', action: 'transferVehicle', data });
+    expect(ok.status).toBe(200);
+    expect(ok.body.data.registrationNumber).toBe('BM-2026-000001');
+    expect(seenBody).toEqual(data);
+    const bad = await authed(bus().post('/bus/request')).send({ ...baseReq, service: 'registro-nacional', action: 'transferVehicle', data: { ...data, sellerId: MARIA.id } });
+    expect(bad.status).toBe(409);
+    expect(bad.body.error.code).toBe('SELLER_MISMATCH');
+  });
+
   it('accepts the new agencies in the request schema (502 when unreachable)', async () => {
-    for (const [service, action] of [['salud', 'issueSanitaryPermit'], ['cfia', 'reviewPlans'], ['mtss', 'registerJobSeeker'], ['cosevi', 'checkFines'], ['ccss', 'getEmployment']] as const) {
+    for (const [service, action] of [['salud', 'issueSanitaryPermit'], ['cfia', 'reviewPlans'], ['mtss', 'registerJobSeeker'], ['cosevi', 'checkFines'], ['ccss', 'getEmployment'], ['ins', 'marchamoStatus'], ['mep', 'enrolStudent'], ['imas', 'applyScholarship'], ['cosevi', 'checkVehicleFines'], ['ccss', 'survivorPension'], ['municipalidad', 'declareProperty']] as const) {
       const r = await authed(bus().post('/bus/request')).send({ ...baseReq, service, action, data: {} });
       expect(r.status).toBe(502);
       expect(r.body.error.code).toBe('AGENCY_UNAVAILABLE');
@@ -309,7 +378,7 @@ describe('GET /bus/registry', () => {
     const r = await authed(bus().get('/bus/registry'));
     expect(r.status).toBe(200);
     const entries = r.body as RegistryEntry[];
-    expect(entries.map((e) => e.service)).toEqual(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia', 'supen', 'mtss', 'cosevi']);
+    expect(entries.map((e) => e.service)).toEqual(['registro', 'tributacion', 'ccss', 'municipalidad', 'registro-nacional', 'salud', 'cfia', 'supen', 'mtss', 'cosevi', 'ins', 'mep', 'imas']);
     const by = Object.fromEntries(entries.map((e) => [e.service, e]));
     expect(by.registro.healthy).toBe(true);
     expect(by.tributacion.healthy).toBe(true);
@@ -321,24 +390,34 @@ describe('GET /bus/registry', () => {
     expect(by.supen.healthy).toBe(true);
     expect(by.mtss.healthy).toBe(false);
     expect(by.cosevi.healthy).toBe(false);
+    expect(by.ins.healthy).toBe(false);
+    expect(by.mep.healthy).toBe(false);
+    expect(by.imas.healthy).toBe(false);
     expect(by.registro.baseUrl).toBe(fakeUrl);
     expect(by.registro.actions.getCitizen).toEqual({ method: 'GET', path: '/registro/citizen/:id' });
     expect(typeof by.registro.lastChecked).toBe('string');
   });
 
-  it('lists every v2/v3 action per agency (docs/CONTRACTS.md → "Bus registry additions")', async () => {
+  it('lists every v2/v3/v4 action per agency (docs/CONTRACTS.md → "Bus registry additions")', async () => {
     const r = await authed(bus().get('/bus/registry'));
     const by = Object.fromEntries((r.body as RegistryEntry[]).map((e) => [e.service, e]));
-    expect(Object.keys(by.registro.actions).sort()).toEqual(['getCitizen', 'registerBirth', 'updateAddress']);
-    expect(Object.keys(by.tributacion.actions).sort()).toEqual(['createTaxId', 'updateAddress']);
-    expect(Object.keys(by.ccss.actions).sort()).toEqual(['applyPension', 'enrollVoluntary', 'getEmployment', 'insureDependent', 'registerEmployer', 'updateAddress']);
-    expect(Object.keys(by.municipalidad.actions).sort()).toEqual(['issueBuildingPermit', 'issueLandUse', 'issueLicense', 'updateAddress']);
-    expect(Object.keys(by['registro-nacional'].actions).sort()).toEqual(['getProperty', 'listProperties', 'registerCompany']);
+    expect(Object.keys(by.registro.actions).sort()).toEqual(['getCitizen', 'getDependants', 'registerBirth', 'registerDeath', 'registerMarriage', 'updateAddress']);
+    expect(Object.keys(by.tributacion.actions).sort()).toEqual(['createTaxId', 'transferTax', 'updateAddress', 'updateCivilStatus']);
+    expect(Object.keys(by.ccss.actions).sort()).toEqual(['applyPension', 'enrollVoluntary', 'getEmployment', 'insureDependent', 'registerEmployer', 'survivorPension', 'updateAddress']);
+    expect(Object.keys(by.municipalidad.actions).sort()).toEqual(['declareProperty', 'issueBuildingPermit', 'issueLandUse', 'issueLicense', 'updateAddress']);
+    expect(Object.keys(by['registro-nacional'].actions).sort()).toEqual(['getProperty', 'getVehicle', 'listEstate', 'listProperties', 'listVehicles', 'registerCompany', 'transferProperty', 'transferVehicle']);
     expect(Object.keys(by.salud.actions).sort()).toEqual(['issueSanitaryPermit', 'medicalCertificate', 'openVaccinationRecord']);
     expect(Object.keys(by.cfia.actions).sort()).toEqual(['reviewPlans']);
-    expect(Object.keys(by.supen.actions).sort()).toEqual(['ropStatement', 'withdrawFcl']);
+    expect(Object.keys(by.supen.actions).sort()).toEqual(['beneficiaryPayout', 'ropStatement', 'withdrawFcl']);
     expect(Object.keys(by.mtss.actions).sort()).toEqual(['registerJobSeeker']);
-    expect(Object.keys(by.cosevi.actions).sort()).toEqual(['checkFines', 'renewLicence']);
+    expect(Object.keys(by.cosevi.actions).sort()).toEqual(['checkFines', 'checkVehicleFines', 'renewLicence']);
+    expect(Object.keys(by.ins.actions).sort()).toEqual(['marchamoStatus']);
+    expect(Object.keys(by.mep.actions).sort()).toEqual(['enrolStudent']);
+    expect(Object.keys(by.imas.actions).sort()).toEqual(['applyScholarship']);
+    expect(by.ins.baseUrl).toBe('http://127.0.0.1:1');
+    expect(by.registro.actions.getDependants).toEqual({ method: 'GET', path: '/registro/dependants/:id' });
+    expect(by['registro-nacional'].actions.getVehicle).toEqual({ method: 'GET', path: '/registro-nacional/vehicle/:plate' });
+    expect(by['registro-nacional'].actions.listVehicles).toEqual({ method: 'GET', path: '/registro-nacional/vehicles', query: ['ownerId'] });
     expect(by.ccss.actions.getEmployment).toEqual({ method: 'GET', path: '/ccss/employment/:citizenId' });
     expect(by.supen.baseUrl).toBe(fakeUrl);
     expect(by['registro-nacional'].actions.listProperties).toEqual({ method: 'GET', path: '/registro-nacional/properties', query: ['ownerId'] });
@@ -367,6 +446,9 @@ describe('POST /__demo/reset', () => {
       supen: true,
       mtss: false,
       cosevi: false,
+      ins: false,
+      mep: false,
+      imas: false,
     });
     expect(resetCalls).toBe(4);
     const a = await authed(bus().get('/bus/audit'));

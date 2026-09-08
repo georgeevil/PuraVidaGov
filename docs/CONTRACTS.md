@@ -387,3 +387,97 @@ The single seam is `request<T>(path)` in `apps/web/src/api.ts`. When `import.met
   link. Nothing must throw an unhandled error or spin forever.
 
 The default (unset `VITE_DEPLOY_MODE`) is unchanged: relative `/api/...` against a real backend.
+
+---
+
+# v5 — death of a relative, vehicle purchase, home purchase, marriage, school enrolment
+
+Five more life events chosen because Gosuslugi, the Nordic portals, Estonia and LifeSG all bundle them and Costa
+Ricans lose the most time on them (`docs/research/life-events-abroad.md`, `docs/research/legal-cr-life-events-2.md`).
+
+## New agencies
+
+| Package | Name | Dev port | Docker | Key env |
+|---|---|---|---|---|
+| `services/ins` | INS: marchamo (derechos de circulación) y SOA | 4011 | `ins` | `INS_URL/_API_KEY` (`demo-ins-key`) |
+| `services/mep` | Ministerio de Educación Pública: matrícula | 4012 | `mep` | `MEP_URL/_API_KEY` (`demo-mep-key`) |
+| `services/imas` | IMAS: becas Crecemos/Avancemos vía SINIRUBE | 4013 | `imas` | `IMAS_URL/_API_KEY` (`demo-imas-key`) |
+
+`AgencyName` gains `'ins' | 'mep' | 'imas'`. All v1–v3 rules apply.
+
+## Seed changes (Registro Civil)
+
+`Citizen` gains optional `spouseId`, `children`, `deceased`. Seed:
+- María `1-2345-6789`: `children: ['1-9999-0001']`.
+- New minor **Lucas Fernández Gómez** `1-9999-0001`, born 2020-03-10, single, same address/canton as María, email/phone
+  empty strings, no password (cannot log in).
+- New citizen **Diego Alonso Solano Vega** `1-1111-2222`, born 1988-07-22, single, address "Curridabat centro, 50 m
+  este del parque", province San José, canton Curridabat, district Curridabat; password `demo`.
+- New couple: **Rosa María Brenes Castro** `7-0111-0222`, born 1963-02-14, married, `spouseId: '7-0100-0300'`, address
+  "Cahuita centro, frente a la plaza", Limón / Talamanca / Cahuita, phone `+506 8555-1122`, password `demo`; and
+  **Luis Ángel Vargas Mora** `7-0100-0300`, born 1958-09-30, married, `spouseId: '7-0111-0222'`, same address, no
+  password. Luis has a CCSS employment record (employer "Cooperativa de Cacao Talamanca R.L." `E-30004`, start
+  1985-01-15, activo, salary ₡680 000, 480 contributions), SUPEN balances ROP ₡28 000 000 / FCL ₡2 600 000, a
+  Registro Nacional property `7-077888-000` (Talamanca, mixto, 2 000 m², clean) and a vehicle `LAV-777`.
+- New actions: `POST /registro/registerDeath` body `registerDeathSchema` → `DeathRegistrationResponse`
+  (`certificateNumber` `DEF-<year>-NNNNNN`, `medicalCertificate` `SEDIMEC-DEF-NNNNNN`); marks the citizen
+  `deceased`; 404 `CITIZEN_NOT_FOUND`; 409 `ALREADY_DECEASED`; idempotent per deceasedId (returns the same certificate).
+  `POST /registro/registerMarriage` body `registerMarriageSchema` → `MarriageRegistrationResponse` (`MAT-<year>-NNNNNN`);
+  both must be alive and not married → 409 `ALREADY_MARRIED`; sets both `maritalStatus:'married'` and `spouseId`.
+  Idempotent per sorted pair. `GET /registro/dependants/:id` → `{ spouse?: Citizen, children: Citizen[] }`.
+
+## Registro Nacional additions
+- Vehicle store (`Vehicle`): seed `BCR-123` owner Ana `2-0987-0654` (Toyota Yaris 2019, fiscal ₡7 500 000, clean);
+  `SJB-456` owner José `7-0123-0456` (Hyundai Tucson 2021, fiscal ₡14 000 000, encumbrance "Prenda Banco Popular");
+  `LAV-777` owner Luis `7-0100-0300` (Nissan Frontier 2015, fiscal ₡6 200 000, clean).
+- `GET /registro-nacional/vehicle/:plate` → `Vehicle`; 404 `VEHICLE_NOT_FOUND`. `GET /registro-nacional/vehicles?ownerId=`.
+- `POST /registro-nacional/transferVehicle` body `transferVehicleSchema` → `VehicleTransferResponse`
+  (`BM-<year>-NNNNNN`); 409 `SELLER_MISMATCH` if sellerId ≠ owner; 422 `ENCUMBERED` if encumbrances non-empty;
+  updates owner. Idempotent per `(plate, taxReceipt)`.
+- `POST /registro-nacional/transferProperty` body `transferPropertySchema` → `PropertyTransferResponse`
+  (`BI-<year>-NNNNNN`); same rules on owner/encumbrances; updates owner. Idempotent per `(folio, taxReceipt)`.
+- `POST /registro-nacional/listEstate` body `listEstateSchema` → `EstateResponse` for the deceased's properties,
+  vehicles and companies, annotation "Sucesión abierta — certificado <deathCertificate>".
+
+## Other new actions
+- Tributación: `POST /tributacion/transferTax` body `transferTaxSchema` → `TransferTaxResponse`: base = max(price,
+  fiscal); rate 2.5 % for `vehiculo` (Ley 7088 art. 13 — rate secondary-source), 1.5 % for `inmueble` (Ley 6999);
+  stamps = 0.5 % of base rounded; idempotent per `(kind, reference, buyerId)`. `POST /tributacion/updateCivilStatus`
+  body `updateCivilStatusSchema` → `CivilStatusUpdateResponse` (`registry: "Tributación (RUT)"`).
+- CCSS: `POST /ccss/survivorPension` body `survivorPensionSchema` → `SurvivorPensionResponse`: needs the deceased's
+  employment record (404 `EMPLOYMENT_NOT_FOUND`); `conyuge` → 70 % of the deceased's IVM pension estimate (60 % of last
+  salary), `hijo` → 30 %; `aprobada` if the deceased had ≥ 180 contributions, else `en-estudio`; first payment next
+  month. Idempotent per `(survivorId, deceasedId)`.
+- SUPEN: `POST /supen/beneficiaryPayout` body `beneficiaryPayoutSchema` → `BeneficiaryPayoutResponse` (ROP + FCL
+  balances of the deceased from the seed table; 404 `AFFILIATE_NOT_FOUND`; payment today + 15 days). Idempotent per deceasedId.
+- COSEVI: `POST /cosevi/checkVehicleFines` body `checkVehicleFinesSchema` → `VehicleFinesResponse` (seed: `SJB-456`
+  1 fine ₡55 000; others clean).
+- INS: `POST /ins/marchamoStatus` body `marchamoStatusSchema` → `MarchamoStatusResponse` (seed: all paid for the
+  current year; `amountCrc` = 3 % of fiscal value from a plate→value table: BCR-123 ₡225 000, SJB-456 ₡420 000,
+  LAV-777 ₡186 000; `soaPolicy` `SOA-<year>-NNNNNN`). Unknown plate → 404 `VEHICLE_NOT_FOUND`. `GET /ins/policies`.
+- Municipalidad: `POST /municipalidad/declareProperty` body `declarePropertySchema` → `PropertyDeclarationResponse`
+  (`DBI-<year>-NNNNN`, tax 0.25 % of declared value, valid 5 years); 422 `MUNICIPALITY_UNKNOWN`. Idempotent per `(folio, citizenId)`.
+- MEP: `POST /mep/enrolStudent` body `enrolStudentSchema` → `SchoolEnrolmentResponse`; schools table (name, canton,
+  circuit): "Escuela Roosevelt" (Montes de Oca, 01), "Escuela Dante Alighieri" (Montes de Oca, 01), "Escuela José
+  Figueres Ferrer" (Curridabat, 02), "Escuela Líder de Cahuita" (Talamanca, 07), "Escuela Central de Grecia" (Grecia,
+  03); unknown school → 422 `SCHOOL_UNKNOWN`; age rule: `materno` ≥ 4, `transicion` ≥ 5, `primero` ≥ 6, `septimo` ≥ 12
+  by 15 Feb of next year else 422 `AGE_RULE`; `services` = ["Comedor (PANEA)"] plus "Transporte estudiantil" when
+  `needsTransport`; `startDate` = next 1 Feb. Idempotent per `studentId`. `GET /mep/schools`, `GET /mep/enrolments`.
+- IMAS: `POST /imas/applyScholarship` body `applyScholarshipSchema` → `ScholarshipResponse`: per-capita income =
+  income / size; eligible if per-capita < ₡130 000 (demo poverty line); programme `Crecemos` for materno/transición/
+  primero, `Avancemos` for séptimo; amount ₡25 000 (Crecemos) / ₡40 000 (Avancemos) when eligible else 0; `basis`
+  text mentions SINIRUBE. Idempotent per `studentId`. `GET /imas/applications`.
+
+## Bus registry additions
+`registro.registerDeath`, `registro.registerMarriage`, `registro.getDependants` (GET `/registro/dependants/:id`),
+`registro-nacional.getVehicle` (GET `/registro-nacional/vehicle/:plate`), `registro-nacional.listVehicles` (GET, query
+`ownerId`), `registro-nacional.transferVehicle`, `registro-nacional.transferProperty`, `registro-nacional.listEstate`,
+`tributacion.transferTax`, `tributacion.updateCivilStatus`, `ccss.survivorPension`, `supen.beneficiaryPayout`,
+`cosevi.checkVehicleFines`, `ins.marchamoStatus`, `municipalidad.declareProperty`, `mep.enrolStudent`, `imas.applyScholarship`.
+
+## Workflows (apps/api)
+`bereavement` ("Falleció mi cónyuge", run as Rosa), `vehicle-purchase` ("Compré un carro"), `home-purchase`
+("Compré una casa"), `marriage` ("Me caso"), `school-enrolment` ("Mi hijo entra a la escuela"). New option sources:
+`children` (bus `registro.getDependants` for the caller → the children), `schools` (static copy of the MEP table),
+`grades`, `vehicles-for-sale` (static: BCR-123, LAV-777 with labels), `properties-for-sale` (static: 2-111222-000,
+7-077888-000). Demo logins gain Rosa `7-0111-0222` and Diego `1-1111-2222` (password `demo`).
