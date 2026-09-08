@@ -3,10 +3,10 @@
   // Cómo funciona) with no backend. See docs/DEPLOY.md §1.
   //
   //   npm run build:static
-  //   npx wrangler pages deploy apps/web/dist-static --project-name puravidagov
+  //   npx wrangler pages deploy apps/web/dist-static --project-name sindarvueltas
   //
   // The interactive portal is a container, not a Worker — it is not deployed from here.
   "$schema": "https://developers.cloudflare.com/schema/wrangler.json",
-  "name": "puravidagov",
+  "name": "sindarvueltas",
   "pages_build_output_dir": "apps/web/dist-static"
 }
