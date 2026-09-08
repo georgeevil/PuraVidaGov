@@ -4,10 +4,11 @@
 > and institution response is simulated. Nothing is persisted.
 
 PuraVidaGov shows what a Costa Rican e-government built around **one digital identity**, the **once-only
-principle** and an **interoperability bus** (X-Road style) could feel like. Seven life events run end to end across
-ten simulated institutions (Registro Civil, Registro Nacional, Tributación, CCSS, Municipalidad, Ministerio de Salud,
-CFIA/APC, operadora de pensiones/SUPEN, MTSS, COSEVI): *Iniciar un negocio*, *Tuve un hijo*, *Voy a construir*,
-*Cambié de domicilio*, *Perdí el empleo*, *Me jubilo* and *Renovar licencia de conducir*. María logs in with her
+principle** and an **interoperability bus** (X-Road style) could feel like. Twelve life events run end to end across
+thirteen simulated institutions (Registro Civil, Registro Nacional, Tributación, CCSS, Municipalidad, Ministerio de
+Salud, CFIA/APC, operadora de pensiones/SUPEN, MTSS, COSEVI, INS, MEP, IMAS): *Iniciar un negocio*, *Tuve un hijo*,
+*Voy a construir*, *Cambié de domicilio*, *Perdí el empleo*, *Me jubilo*, *Renovar licencia de conducir*, *Falleció mi
+cónyuge*, *Compré un carro*, *Compré una casa*, *Me caso* and *Mi hijo entra a la escuela*. María logs in with her
 cédula and a simulated firma digital, her data arrives from the registries, she types only what the State does not
 already know, and in seconds the institutions answer. She downloads a PDF, sees how much time and money the
 electronic process saved, and can inspect every data exchange made on her behalf.
@@ -40,7 +41,7 @@ docker compose -f infra/docker-compose.yml up --build
 | Portal ciudadano (HTTP) | http://localhost:3000 |
 | Backend / orquestador | http://localhost:3001/api/registry |
 | Bus de interoperabilidad | http://localhost:4000/health · `/bus/registry` (needs `x-api-key`) |
-| Agencies | http://localhost:4001–4010/health |
+| Agencies | http://localhost:4001–4013/health |
 
 **Without Docker (Node 22):**
 
@@ -50,13 +51,14 @@ npm run dev          # six services + Vite on http://localhost:5173
 ```
 
 **Demo login:** cédula `1-2345-6789`, contraseña `demo`, código `123456` (shown on screen — there is no SMS).
-Other citizens: `7-0123-0456` (José, Talamanca, born 1961: use him for *Me jubilo*), `2-0987-0654` (Ana, Grecia).
+Other citizens: `7-0123-0456` (José, Talamanca, born 1961: use him for *Me jubilo*), `7-0111-0222` (Rosa, Cahuita: use
+her for *Falleció mi cónyuge*), `1-1111-2222` (Diego, María's fiancé), `2-0987-0654` (Ana, Grecia).
 
 ## Verify
 
 ```bash
 npm run typecheck && npm test        # unit tests per package (vitest + supertest)
-npm run e2e                          # boots all services and runs the journey (8 trámites, two citizens) over HTTP, twice
+npm run e2e                          # boots all services and runs the journey (13 trámites, three citizens) over HTTP, twice
 npm run smoke -- http://localhost:3001   # same journey against a running stack (Docker)
 ```
 
@@ -71,7 +73,7 @@ apps/api        Express: login + OTP, signed session tokens, data-driven workflo
                 once-only provenance, legal notes per step, generic PDF.
 services/bus    Interoperability bus: data-driven registry, per-agency API keys, timeouts, append-only audit log.
 services/*      Registro Civil · Tributación · CCSS · Municipalidad · Registro Nacional · Salud · CFIA · SUPEN · MTSS ·
-                COSEVI — independent mocks with their own stores.
+                COSEVI · INS · MEP · IMAS — independent mocks with their own stores.
 packages/shared Types, zod schemas, activity catalogue, legal catalogue (legal.ts), common Express bootstrap.
 infra/          Dockerfiles, Compose, Caddy (HTTPS).
 scripts/        dev.mjs, e2e.mjs, smoke.mjs.

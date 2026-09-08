@@ -58,13 +58,13 @@ export async function runMariaJourney(apiBase, { log = console.log, pollMs = 300
   // registry: every agency healthy through the bus
   const registry = await get('/api/registry');
   const down = registry.filter((r) => !r.healthy).map((r) => r.service);
-  assert(registry.length === 10 && down.length === 0, `registry healthy (10 agencies; down: ${down.join(',') || 'none'})`);
+  assert(registry.length === 13 && down.length === 0, `registry healthy (13 agencies; down: ${down.join(',') || 'none'})`);
   log(`✓ registro de servicios: ${registry.map((r) => r.service).join(', ')} — todos disponibles`);
 
   // catalogue with legal status
   const workflows = await get('/api/workflows');
   const available = workflows.filter((w) => w.available).map((w) => w.id);
-  assert(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license'].every((id) => available.includes(id)), 'seven life events available');
+  assert(['start-business', 'newborn', 'construction', 'move', 'job-loss', 'retirement', 'driver-license', 'bereavement', 'vehicle-purchase', 'home-purchase', 'marriage', 'school-enrolment'].every((id) => available.includes(id)), 'twelve life events available');
   assert(workflows.every((w) => w.legal?.status && w.legal.basis?.length), 'every life event carries a legal note with a Costa Rican basis');
   log(`✓ eventos de vida: ${workflows.map((w) => `${w.id}[${w.legal.status}${w.available ? '' : ', próximamente'}]`).join(' · ')}`);
 
@@ -162,22 +162,61 @@ export async function runMariaJourney(apiBase, { log = console.log, pollMs = 300
   const joseAudit = await json(await fetch(`${apiBase}/api/audit`, { headers: jose.auth }));
   assert(joseAudit.every((a) => a.subjectId === '7-0123-0456'), "José's audit shows only José");
 
+  // 8. school enrolment — Lucas comes from the Registro Civil's dependants, not typed
+  const children = await get('/api/options/children');
+  assert(children.length === 1 && children[0].value === '1-9999-0001', "María's child loaded once-only from the Registro Civil");
+  const school = await runWorkflow(apiBase, auth, 'school-enrolment', {
+    studentId: '1-9999-0001',
+    school: 'Escuela Roosevelt',
+    grade: 'primero',
+    needsTransport: 'no',
+    householdMonthlyIncomeCrc: 350000,
+    householdSize: 3,
+  }, opts);
+  const beca = school.result.cards.find((c) => c.agency === 'imas');
+  assert(/Crecemos/.test(beca.rows[1].value) && /Elegible/.test(beca.rows[2].value), 'Crecemos scholarship granted for a low-income household');
+
+  // 9. vehicle purchase — Ana's Yaris; fines, marchamo and tax come from three registries
+  const car = await runWorkflow(apiBase, auth, 'vehicle-purchase', { plate: 'BCR-123', priceCrc: 8500000 }, opts);
+  const taxCard = car.result.cards.find((c) => c.agency === 'tributacion');
+  assert(/2\.5/.test(taxCard.rows[2].label), 'vehicle transfer tax at 2.5 %');
+  assert(car.result.cards[3].rows[1].value === 'María Fernández Gómez', 'car registered to María');
+
+  // 10. home purchase — Ana's house in Grecia; municipal declaration follows automatically
+  const home = await runWorkflow(apiBase, auth, 'home-purchase', { folio: '2-111222-000', priceCrc: 62000000 }, opts);
+  const decl = home.result.cards.find((c) => c.agency === 'municipalidad');
+  assert(decl.rows[0].value === 'Grecia', 'declared in Grecia, the property\'s canton');
+
+  // 11. marriage — María marries Diego; spouse insured; Hacienda updated
+  const wed = await runWorkflow(apiBase, auth, 'marriage', { spouseId: '1-1111-2222', date: '2026-09-12', regime: 'gananciales', notary: 'Lic. Ana Mora', insureSpouse: 'si' }, opts);
+  assert(wed.result.cards.length === 3, 'marriage produced three cards');
+  const married = await get('/api/profile');
+  assert(married.citizen.maritalStatus === 'married' && married.citizen.spouseId === '1-1111-2222', 'profile shows the marriage');
+
+  // 12. bereavement — as Rosa (7-0111-0222), whose husband Luis died in hospital
+  const rosa = await login(apiBase, { id: '7-0111-0222', log: () => {} });
+  const loss = await runWorkflow(apiBase, rosa.auth, 'bereavement', { deceasedId: '7-0100-0300', date: '2026-09-05', hospital: 'Hospital Tony Facio (Limón)', iban: 'CR11112222333344445555' }, opts);
+  const widow = loss.result.cards.find((c) => c.title === 'Pensión por viudez');
+  assert(widow.rows[1].value === 'Aprobada', `widow pension approved (got ${widow.rows[1].value})`);
+  const estate = loss.result.cards.find((c) => c.agency === 'registro-nacional');
+  assert(/7-077888-000/.test(estate.rows[0].value) && /LAV-777/.test(estate.rows[1].value), 'estate lists Luis\'s property and vehicle');
+
   // legal endpoint and audit
   const legal = await get('/api/legal');
-  assert(legal.refs.length >= 15 && legal.workflows.length === 7, 'legal endpoint: refs + 7 workflows');
+  assert(legal.refs.length >= 30 && legal.workflows.length === 12, 'legal endpoint: refs + 12 workflows');
   const audit = await get('/api/audit');
   const agenciesSeen = new Set(audit.map((a) => a.service));
-  assert(agenciesSeen.size === 10, `María's audit covers 10 agencies (got ${[...agenciesSeen].join(',')})`);
+  assert(agenciesSeen.size === 13, `María's audit covers 13 agencies (got ${[...agenciesSeen].join(',')})`);
   assert(audit.every((a) => a.subjectId === citizen.id), 'audit scoped to the citizen');
   assert(audit.every((a) => Array.isArray(a.fieldsReturned)), 'audit carries field names only');
   log(`✓ auditoría: ${audit.length} intercambios, ${agenciesSeen.size} instituciones`);
   const mine = await get('/api/transactions');
-  assert(mine.length === 7, `seven transactions listed for María (got ${mine.length}: ${mine.map((t) => t.workflowId).join(',')})`);
+  assert(mine.length === 11, `eleven transactions listed for María (got ${mine.length}: ${mine.map((t) => t.workflowId).join(',')})`);
 
   const out = await fetch(`${apiBase}/api/logout`, { method: 'POST', headers: auth });
   assert(out.status === 204, 'logout 204');
   const elapsedMs = Date.now() - t0;
-  log(`✓ recorrido completo (8 trámites, dos personas) en ${(elapsedMs / 1000).toFixed(1)} s (meta PRD: < 120 s por trámite)`);
+  log(`✓ recorrido completo (13 trámites, tres personas) en ${(elapsedMs / 1000).toFixed(1)} s (meta PRD: < 120 s por trámite)`);
   assert(elapsedMs < 120000, 'under 2 minutes');
   return { elapsedMs, transactions: mine.length, audit: audit.length };
 }
