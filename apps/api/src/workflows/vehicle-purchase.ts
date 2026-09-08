@@ -24,13 +24,13 @@ export const vehiclePurchase: WorkflowSpec = {
   legal: {
     status: 'parcial',
     today:
-      'El traspaso es un acto notarial que se inscribe en el Registro de Bienes Muebles con escritura, entero del impuesto de transferencia y timbres «por el valor más alto entre valor contractual y fiscal», marchamo al día y aceptación de gravámenes e infracciones. Cada dato ya es digital en alguna institución: el Registro, COSEVI (multas anotadas), el INS (marchamo) y Hacienda; el comprador o su notario los recopila. Es el servicio más usado de Gosuslugi en Rusia y uno de los 21 procedimientos obligatorios en línea de la Pasarela Digital Única europea.',
+      'El traspaso es un acto notarial que se inscribe en el Registro de Bienes Muebles con escritura, entero del impuesto de transferencia y timbres «por el valor más alto entre valor contractual y fiscal», marchamo al día y aceptación de gravámenes e infracciones. Cada dato ya es digital en alguna institución: el Registro, COSEVI (multas anotadas), el INS (marchamo) y Hacienda; el comprador o su notario los recopila. Registrar un vehículo es uno de los 21 procedimientos que la Pasarela Digital Única europea obliga a ofrecer en línea (Anexo II) y figuraba ya en la lista europea de 20 servicios básicos de 2001; según la ONU, solo 87 países lo ofrecían en línea en 2024.',
     todayEn:
-      'The transfer is a notarial act registered at the Registro de Bienes Muebles with the deed, the transfer tax and stamps "on the higher of the contractual and fiscal value", road tax up to date and acceptance of encumbrances and fines. Each item is already digital somewhere: the Registro, COSEVI (annotated fines), the INS (road tax) and the tax authority; the buyer or the notary gathers them. It is Gosuslugi\'s most used service in Russia and one of the 21 mandatory online procedures of the EU Single Digital Gateway.',
+      'The transfer is a notarial act registered at the Registro de Bienes Muebles with the deed, the transfer tax and stamps "on the higher of the contractual and fiscal value", road tax up to date and acceptance of encumbrances and fines. Each item is already digital somewhere: the Registro, COSEVI (annotated fines), the INS (road tax) and the tax authority; the buyer or the notary gathers them. Registering a vehicle is one of the 21 procedures the EU Single Digital Gateway requires online (Annex II) and was already on Europe\'s 2001 list of 20 basic services; per the UN, only 87 countries offered it online in 2024.',
     gap: 'Reglamento del Registro Nacional que liquide el impuesto y verifique marchamo y multas por el bus dentro de la presentación electrónica; no hace falta ley salvo para cambiar la tasa.',
     gapEn: 'A Registro Nacional regulation that settles the tax and checks road tax and fines through the bus inside the electronic filing; no statute is needed except to change the rate.',
     basis: ['cr-7088', 'cr-8454', 'cr-9078', 'cr-8220'],
-    model: ['ru-210fz', 'eu-sdg', 'ee-pia'],
+    model: ['eu-sdg', 'ru-210fz', 'ee-pia'],
   },
   fields: [
     {

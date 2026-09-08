@@ -1,6 +1,7 @@
 import {
   addYearsIso,
   checkFinesSchema,
+  checkVehicleFinesSchema,
   createServiceApp,
   errorHandler,
   renewLicenceSchema,
@@ -23,6 +24,7 @@ export const ISSUANCE_FEE_CRC = 5000;
 
 type CheckFinesBody = z.infer<typeof checkFinesSchema>;
 type RenewLicenceBody = z.infer<typeof renewLicenceSchema>;
+type CheckVehicleFinesBody = z.infer<typeof checkVehicleFinesSchema>;
 
 export function renewalFee(validityYears: number): number {
   return FEE_PER_YEAR_CRC * validityYears + ISSUANCE_FEE_CRC;
@@ -58,6 +60,21 @@ export function createApp(): Express {
       const body = req.body as CheckFinesBody;
       await simulatedLatency();
       res.json(store.finesFor(body.citizenId));
+    }),
+  );
+
+  // v4: fines attached to a plate (the buyer checks before the traspaso).
+  app.get('/cosevi/vehicleFines', (_req, res) => {
+    res.json(store.listVehicleFines());
+  });
+
+  app.post(
+    '/cosevi/checkVehicleFines',
+    validateBody(checkVehicleFinesSchema),
+    wrap(async (req, res) => {
+      const body = req.body as CheckVehicleFinesBody;
+      await simulatedLatency();
+      res.json(store.vehicleFinesFor(body.plate));
     }),
   );
 
