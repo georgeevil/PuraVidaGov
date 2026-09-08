@@ -193,25 +193,37 @@ The earlier draft of `DEPLOY.md` listed Cloudflare Containers under "do not plan
 not free. That was written before the footprint was measured and before the domain moved to Cloudflare, and
 it is now wrong; the list no longer contains the option the project actually uses.
 
-## D-026 · Per-deployment commercial pricing, and a support link confined to `/quien-lo-hace`
+## D-026 · Commercial terms are negotiated, not priced, and a support link confined to `/quien-lo-hace`
 
 D-024 chose PolyForm Noncommercial and named systems integrators as needing a commercial licence, but left the
-terms as "negotiable". Unpriced terms are not a business model: a firm that has to open a negotiation before it
-can quote a client will quietly use something else, and the licence stops being enforced by anything but
-goodwill. `COMMERCIAL.md` now publishes the schedule.
+terms as "negotiable". The first draft of this entry treated that as the defect and published a per-deployment
+price schedule. That was wrong, and the reason is worth recording because it is easy to make again.
 
-**The unit is a deployment — one client, one set of environments — not a seat and not a share of revenue.** A
-royalty on the integrator's engagement fee was the obvious alternative and was rejected: collecting it means
-auditing someone's books, which needs an audit clause, which needs a relationship adversarial enough to use it.
-A flat figure per deployment is checkable by both sides without an accountant. It is paired with one obligation
-— written notice before a deployment goes live — because a per-deployment fee nobody reports is not a fee. The
-figures are left `TBD` in the file; they are the author's to set.
+**A price list prices a repeatable transaction. This one is not repeatable.** There is one Costa Rican State,
+and `docs/CASE.md` records that it has already chosen X-Road for national interoperability (project Conecta,
+March 2026, 30 institutions, pilot June 2026). PuraVidaGov is not going to be bought and deployed as the
+national portal; its own PRD names the audience as "policymakers, technologists and international development
+partners", which is a readership, not a buyer list. Publishing per-deployment rates for a deployment that will
+not occur misdescribes the offer, and a firm that reads it learns mainly that the author has misjudged his own
+market.
 
-**There is deliberately no audit clause, no licence key and no telemetry.** The software does not phone home and
-must not be made to: a demo whose whole argument is about what public systems should not do with people's data
-cannot ship a call-home. The model runs on the integrator telling the author, which is also why the price has to
-sit where a firm can pay it without escalating to finance. The free carve-out for governments, universities and
-charities is unchanged and is not up for revision — it is what makes the integrator clause fair rather than a toll.
+**So `COMMERCIAL.md` names two shapes instead.** Co-delivery is the expected route — no licence fee, the author
+joins the engagement — because the part that is hard to reproduce is the research and the judgement behind it,
+not the code; a team that licenses the repository without that has bought the easy half. A bought-out licence
+is available for anyone who wants it without the author, priced against the engagement and agreed in writing.
+
+**The licence's job here is defensive, not revenue.** It exists so a consultancy cannot lift the work into a
+bid, bill a ministry to deliver it, and leave the author with neither fee nor credit. PolyForm already does
+that; a price table added nothing to it. The free carve-out for governments, universities and charities is
+unchanged and is not up for revision — it is what makes the integrator clause fair rather than a toll. The
+written-notice obligation stays, since it is how the author finds out at all; there is deliberately no audit
+clause, no licence key and no telemetry, because a demo whose argument is about what public systems should do
+with people's data cannot ship a call-home.
+
+**The general rule, for next time:** published prices suit many small transactions nobody wants to negotiate
+one at a time; negotiated terms suit one large transaction you do. `muni-platform` is the first kind — 84
+municipalities, a tenant is a YAML file — and that is where a per-tenant schedule belongs. This repository is
+the second.
 
 **The Ko-fi link goes on `/quien-lo-hace` and nowhere else.** `docs/research/foreigner-advocacy-cr.md` §6c says
 "do not fundraise for advocacy at all", against Código Electoral art. 128 — which, read at §2c, bans foreigners

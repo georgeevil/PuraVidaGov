@@ -33,40 +33,45 @@ ministry to deploy it should not get the work for free.
 
 ## What a commercial licence costs
 
-Priced per deployment, not per seat and not per line of revenue. A percentage of your engagement fee would
-mean auditing your books, which neither of us wants; a flat figure per deployment is checkable by both sides
-and needs no accountant.
+**By negotiation, and deliberately not a price list.** There is one Costa Rican State, and it has already chosen
+X-Road as its national interoperability platform (project Conecta, March 2026 — see `docs/CASE.md`). So this is
+not a product with a repeatable per-deployment market, and pricing it as though it were would misdescribe what
+is actually on offer. Published rates make sense for many small transactions nobody wants to negotiate one at a
+time; this is the other kind.
 
-| | |
-|---|---|
-| **Per-deployment licence** | TBD, once per deployment. Perpetual for that deployment at the version delivered. |
-| **Annual renewal** | TBD per deployment per year, for as long as it runs. Covers updates and the right to keep operating it. |
-| **Firm-wide annual licence** | TBD per year. Unlimited deployments; worth it from roughly the fourth concurrent deployment. |
-| **Co-delivery** | No licence fee. The author joins the engagement on normal professional terms instead. |
-| **Exclusivity or ownership** of some part | By negotiation. Say what you need and why. |
+Two shapes cover almost every real case:
 
-Rates are the same whoever the client is. A licence bought for a ministry costs what one bought for a bank costs.
+**Co-delivery — the expected route.** No licence fee. The author joins the engagement on normal professional
+terms. This is usually the cheaper answer for you and the better answer for the client, because the part that
+is hard to reproduce is not the code: it is the research in `docs/research/`, the judgement about which claims
+survive contact with a primary source, and knowing which of the thirteen institutions actually behaves the way
+the demo says. A team that licenses the repository and not that has bought the easy half.
 
-### What counts as one deployment
+**A bought-out licence — if you want it without the author.** A one-off fee for a named engagement, or an
+annual licence for a firm expecting to use it repeatedly. Priced against the size of the engagement, agreed in
+writing before delivery. Ask and you will get a number, not a negotiation ritual.
 
-**One client, one set of environments.** Everything you run for a single client organisation — production plus
-whatever staging, test and demo environments serve it — is one deployment and attracts one fee. A second client
-is a second deployment, even if you reuse the same build, the same pipeline and the same people.
+Beyond those: exclusivity, ownership of some part, or a white-label are all possible. Say what you need and why.
 
-Splitting one client's system into several instances to make it cheaper is not how this works, and neither is
-running one instance for several clients to make it cheaper. If your architecture genuinely does not fit the
-unit — a shared multi-tenant platform, say — say so and we will price the actual shape of it.
+Terms are the same whoever the client is. Nothing here changes for a ministry versus a bank.
 
 ### Telling me about a deployment
 
-**Write to me before it goes live**, naming the client, the environments and the intended go-live date. That is
-the whole administrative burden, and it is a condition of the licence rather than a courtesy: a per-deployment
-fee nobody reports is not a fee.
+**Write to me before it goes live**, naming the client and the intended date. That is the whole administrative
+burden, and it is a condition of the licence rather than a courtesy.
 
 There is no audit clause, no telemetry and no licence key. The software does not phone home and it never will —
 it would contradict the demo's own argument about what public systems should do with people's data. The model
-runs on you telling me, which is why the figures are set where a firm can pay them without a conversation with
-its finance department.
+runs on you telling me.
+
+### What this licence is honestly for
+
+Not revenue. It exists so that a consultancy cannot lift this work into a bid, bill a ministry for delivering
+it, and leave the author with neither the fee nor the credit. A ministry running it for free is the point; a
+firm being paid to deliver it while treating the research as found material is not.
+
+If you are reading this because you want to use it and are unsure whether you owe anything, the answer is
+usually "let's talk, and it will cost less than you fear".
 
 ## Contact
 
