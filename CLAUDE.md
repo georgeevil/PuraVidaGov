@@ -38,7 +38,11 @@ docker compose -f infra/docker-compose.yml up --build        # web :3000, https 
 npm run typecheck && npm test && npm run e2e                 # minimum before calling anything done
 npm start                                                    # all 15 apps in ONE process on $PORT (free-tier target)
 npm run build:static                                         # public pages only, no backend → apps/web/dist-static
+npm run enlaces                                              # source links: SCIJ ids resolve to the norm we claim
 ```
+`enlaces` is not in CI and must not be: it reads each SCIJ norm's own title from sinalevi.go.cr, and GitHub
+runners cannot reach several `.go.cr` hosts. Run it by hand after touching `packages/shared/src/legal.ts`.
+A SCIJ link that returns 200 proves nothing — four of them opened the wrong law until 8 Sept 2026.
 Three deployment targets, all in CI; see `docs/DEPLOY.md`. **Compose stays the reference architecture** — do
 not collapse it to fit a host. `apps/web/dist` is the default bundle the all-in-one serves; `dist-static` is
 the static one. Never let a static bundle end up in front of a live backend.

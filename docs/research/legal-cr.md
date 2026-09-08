@@ -341,7 +341,8 @@ adhesion).
 - **APC (Administrador de Proyectos de Construcción), CFIA:** created by **Decreto 36550-MP-MIVAH-S-MEIC** (Reglamento
   para el Trámite de Revisión de los Planos para la Construcción, in force 20 Sept 2011) — INVU, Ministerio de Salud,
   Bomberos, AyA and CFIA review one digital set of plans; no physical plans —
-  https://www.bomberos.go.cr/revision-de-proyectos-constructivos-en-la-plataforma-apc/ ; SCIJ:
+  https://www.bomberos.go.cr/revision-de-proyectos-constructivos-en-la-plataforma-apc/ (404 desde el 8 sep 2026;
+  el catálogo cita ahora el decreto en SCIJ) ; SCIJ:
   http://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=70485&nValor3=96939&strTipM=TC ;
   CFIA legal list https://cfia.or.cr/apc/profesional/legislacion-aplicable.html. **TODAY**.
 - **SETENA:** a 2021 CFIA–SETENA convenio started integrating viabilidad ambiental into APC; completion status
