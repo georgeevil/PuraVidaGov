@@ -272,8 +272,11 @@ static bundle asserted to stand alone with its generated JSON. If a deployment b
 
 ## Correo de contacto — `contact@sindarvueltas.org`
 
-The site publishes this address on `/quien-lo-hace` and `/seguimiento`. **It must deliver before those pages
-ship**: a published address that bounces costs more credibility than having none, and the whole posture of the
+**Live since 8 September 2026**, confirmed by a message from an address that is not the forwarding
+destination — which is the only test that proves it, per step 5 below.
+
+The site publishes this address on `/quien-lo-hace`, `/seguimiento` and the footer of every page. **It had to
+deliver before those pages shipped**: a published address that bounces costs more credibility than having none, and the whole posture of the
 site is that its claims can be checked.
 
 Delivery is Cloudflare Email Routing on the `sindarvueltas.org` zone — free, and the domain is already at

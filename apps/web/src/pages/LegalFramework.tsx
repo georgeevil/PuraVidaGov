@@ -51,9 +51,114 @@ function ExpandableRow({ cells, note, indent, className = '' }: { cells: ReactNo
   );
 }
 
+/** The trámite title, shared by the table and the card list so the NO_PORTAL rule is written once. */
+function WorkflowTitle({ w, className }: { w: LegalOverview['workflows'][number]; className: string }) {
+  // Static build with no interactive deployment: the trámite is not reachable from here.
+  if (NO_PORTAL) return <span className={className}>{w.title}</span>;
+  return (
+    <PortalLink path={`/tramite/${encodeURIComponent(w.id)}`} className={className}>
+      {w.title}
+    </PortalLink>
+  );
+}
+
+/**
+ * One legal row as a block instead of a `<tr>`.
+ *
+ * Measured at 390px, this page rendered TWELVE workflow tables of 860–996px each inside a 358px viewport —
+ * about 2.7 screens of sideways scrolling, twelve times over. It is invisible to an audit run against a build
+ * with no `api-static/`, because the tables only exist once the data loads; that is how the first pass missed it.
+ */
+function ExpandableEntry({
+  title,
+  agency,
+  status,
+  basis,
+  model,
+  note,
+  indent,
+}: {
+  title: ReactNode;
+  agency: ReactNode;
+  status: LegalStatus;
+  basis: string[];
+  model: string[];
+  note: LegalNote;
+  indent?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <li className={`rounded-lg border border-slate-200 bg-white p-3 ${indent ? 'ml-3' : ''}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">{title}</div>
+        <LegalBadge status={status} size="xs" />
+      </div>
+      <p className="mt-1 text-xs text-slate-600">{agency}</p>
+      <dl className="mt-2 space-y-1.5">
+        <div>
+          <dt className="text-[11px] uppercase tracking-wide text-slate-500">Base en Costa Rica</dt>
+          <dd className="mt-0.5">
+            <Chips ids={basis} />
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-wide text-slate-500">Modelo de referencia</dt>
+          <dd className="mt-0.5">
+            <Chips ids={model} withFlag />
+          </dd>
+        </div>
+      </dl>
+      <button
+        type="button"
+        className="mt-1 inline-flex min-h-11 items-center text-xs text-primary-700 hover:underline"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? 'Cerrar' : 'Detalle'}
+      </button>
+      {open && <LegalPanel note={note} compact />}
+    </li>
+  );
+}
+
+function WorkflowMobileList({ w }: { w: LegalOverview['workflows'][number] }) {
+  return (
+    <ul className="space-y-2 sm:hidden">
+      <ExpandableEntry
+        // 44px: the link into the trámite is the most consequential target on the card.
+        title={<WorkflowTitle w={w} className="inline-flex min-h-11 items-center text-sm font-semibold text-slate-900" />}
+        agency="todo el evento"
+        status={w.legal.status}
+        basis={w.legal.basis}
+        model={w.legal.model}
+        note={w.legal}
+      />
+      {w.steps.map((s) => (
+        <ExpandableEntry
+          key={s.id}
+          indent
+          title={<span className="text-sm text-slate-800">{s.label}</span>}
+          agency={<span title={agencyLabelEn(s.agency)}>{(AGENCY_SHORT as Record<string, string>)[s.agency] ?? s.agency}</span>}
+          status={s.legal.status}
+          basis={s.legal.basis}
+          model={s.legal.model}
+          note={s.legal}
+        />
+      ))}
+      {w.steps.length === 0 && (
+        <li className="px-1 text-xs italic text-slate-500">
+          Sin pasos definidos todavía: el evento no está disponible en el demo.
+        </li>
+      )}
+    </ul>
+  );
+}
+
 function WorkflowTable({ w }: { w: LegalOverview['workflows'][number] }) {
   return (
-    <div className="card overflow-x-auto !p-0">
+    <>
+      <WorkflowMobileList w={w} />
+      <div className="card hidden overflow-x-auto !p-0 sm:block">
       <table className="w-full min-w-[860px] text-sm">
         <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
           <tr>
@@ -70,16 +175,7 @@ function WorkflowTable({ w }: { w: LegalOverview['workflows'][number] }) {
             className="bg-primary-50/40"
             note={w.legal}
             cells={[
-              NO_PORTAL ? (
-                // Static build with no interactive deployment: the trámite is not reachable from here.
-                <span key="t" className="font-semibold text-slate-900">
-                  {w.title}
-                </span>
-              ) : (
-                <PortalLink key="t" path={`/tramite/${encodeURIComponent(w.id)}`} className="font-semibold text-slate-900 hover:text-primary-700 hover:underline">
-                  {w.title}
-                </PortalLink>
-              ),
+              <WorkflowTitle key="t" w={w} className="font-semibold text-slate-900 hover:text-primary-700 hover:underline" />,
               <span key="a" className="text-xs text-slate-500">
                 todo el evento
               </span>,
@@ -115,7 +211,8 @@ function WorkflowTable({ w }: { w: LegalOverview['workflows'][number] }) {
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -130,8 +227,18 @@ function RefCard({ r }: { r: LegalRef }) {
       <p className="mt-1 flex-1 text-xs text-slate-600" title={r.whatEn}>
         {r.what}
       </p>
+      {/*
+        There are 36 of these on the page. At `text-xs` with no padding each was a 16px-tall tap target — below
+        WCAG 2.5.8's 24px minimum and far below what a thumb can hit. `min-h-11` makes the hit area 44px;
+        `-mb-2` keeps the card's visual rhythm unchanged. Do not shrink it back to save vertical space.
+      */}
       {r.url && (
-        <a href={r.url} target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-primary-700 hover:underline">
+        <a
+          href={r.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="-mb-2 mt-1 inline-flex min-h-11 items-center text-xs text-primary-700 hover:underline"
+        >
           Ver texto ↗
         </a>
       )}
@@ -139,15 +246,27 @@ function RefCard({ r }: { r: LegalRef }) {
   );
 }
 
-function MatrixCell({ value, note }: { value: MatrixValue; note: string }) {
+/**
+ * The glyph and its note without the cell, so the table and the small-screen list render the same mark from
+ * the same code rather than two copies that drift about what "parcial" looks like.
+ */
+function MatrixValueMark({ value, note }: { value: MatrixValue; note: string }) {
   const v = MATRIX_VALUE_LABELS[value];
   const cls = value === 'si' ? 'text-green-700' : value === 'parcial' ? 'text-amber-700' : 'text-rose-700';
   return (
-    <td className="px-3 py-2 align-top">
+    <>
       <div className={`text-sm font-semibold ${cls}`} title={v.en}>
         {v.glyph}
       </div>
       <div className="mt-0.5 text-[11px] leading-snug text-slate-600">{note}</div>
+    </>
+  );
+}
+
+function MatrixCell({ value, note }: { value: MatrixValue; note: string }) {
+  return (
+    <td className="px-3 py-2 align-top">
+      <MatrixValueMark value={value} note={note} />
     </td>
   );
 }
@@ -255,7 +374,32 @@ export function LegalFramework() {
         <p className="max-w-3xl text-sm text-slate-600">
           Seis cimientos que todo gobierno digital maduro tiene por ley, comparados con lo que Costa Rica tiene hoy.
         </p>
-        <div className="card overflow-x-auto !p-0">
+        {/*
+          820px of table in a 358px viewport is 2.3 screens of sideways scrolling. Below `sm:` the same rows
+          render as blocks, one cimiento each, from the same MATRIX_COLUMNS and the same MatrixValueMark.
+        */}
+        <ul className="space-y-3 sm:hidden">
+          {LEGAL_MATRIX.map((row) => (
+            <li key={row.id} className="card !p-3">
+              <p className="text-sm font-semibold text-slate-900" title={row.labelEn}>
+                {row.label}
+              </p>
+              <dl className="mt-2 space-y-2">
+                {MATRIX_COLUMNS.map((c) => (
+                  <div key={c.id}>
+                    <dt className="text-xs uppercase tracking-wide text-slate-500">
+                      <span aria-hidden="true">{c.flag}</span> {c.label}
+                    </dt>
+                    <dd>
+                      <MatrixValueMark value={row.cells[c.id].value} note={row.cells[c.id].note} />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <div className="card hidden overflow-x-auto !p-0 sm:block">
           <table className="w-full min-w-[820px] text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>

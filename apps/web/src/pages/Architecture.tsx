@@ -220,7 +220,11 @@ export function Architecture() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {registry.map((r) => (
-              <article key={r.service} className="card" title={agencyLabelEn(r.service)}>
+              /* `min-w-0` on the grid ITEM, not the row inside it: a grid track sizes to max-content while its
+                 item keeps min-width:auto, so the column resolved to 461px inside a 358px grid and the whole
+                 page scrolled sideways. Fixing the flex row within the card was necessary but not sufficient —
+                 the constraint has to be released at the grid item. */
+              <article key={r.service} className="card min-w-0" title={agencyLabelEn(r.service)}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-slate-900">{r.label || agencyLabel(r.service)}</h3>
@@ -230,10 +234,16 @@ export function Architecture() {
                 </div>
                 <ul className="mt-3 space-y-1 text-xs text-slate-700">
                   {Object.entries(r.actions ?? {}).map(([name, a]) => (
-                    <li key={name} className="flex items-center gap-2">
+                    <li key={name} className="flex min-w-0 items-center gap-2">
                       <span className="w-10 shrink-0 rounded bg-slate-100 px-1 text-center font-mono text-[10px] text-slate-600">{a.method}</span>
-                      <span className="font-medium">{name}</span>
-                      <span className="truncate font-mono text-slate-400">{a.path}</span>
+                      {/*
+                        `min-w-0` on both the row and the path is what makes `truncate` work at all: a flex
+                        item defaults to min-width:auto, so an unbreakable path like /registro/citizen/:id
+                        refuses to shrink and widens the card instead. That was the one page-level horizontal
+                        scroll on the site at 390px — 461px of card in a 390px viewport.
+                      */}
+                      <span className="min-w-0 shrink truncate font-medium">{name}</span>
+                      <span className="min-w-0 flex-1 truncate font-mono text-slate-400">{a.path}</span>
                     </li>
                   ))}
                 </ul>
