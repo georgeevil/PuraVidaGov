@@ -1,14 +1,17 @@
-# Deploying PuraVidaGov, including on free tiers
+# Deploying PuraVidaGov
+
+**Live:** the public site is at <https://sindarvueltas.org> (Cloudflare Pages) and the interactive portal at
+<https://demo.sindarvueltas.org> (Cloudflare Containers). Both are deployed from this repo; see §1 and §2 option C.
 
 Three targets, one codebase. Pick by what the audience needs, not by what is cheapest.
 
 | Target | What it is | Cold start | Cost | Use it for |
 |---|---|---|---|---|
 | **Compose** (`infra/docker-compose.yml`) | 17 containers: 13 agencies + bus + API + web + Caddy | none | your machine | Local demos, CI, showing the architecture |
-| **All-in-one** (`infra/Dockerfile.allinone`) | the same 15 Express apps in **one** Node process | 10–60 s on free plans | free tier | The interactive portal on a public URL |
+| **All-in-one** (`infra/Dockerfile.allinone`) | the same 15 Express apps in **one** Node process | 20 s on Cloudflare, up to 60 s on free plans | free tier, or included in Workers Paid | The interactive portal on a public URL |
 | **Static** (`npm run build:static`) | the three public pages, **no backend** | none | free | The link you send to legislators and press |
 
-The Compose stack is unchanged and remains the reference architecture: twelve separate containers are what
+The Compose stack is unchanged and remains the reference architecture: seventeen separate containers are what
 make "the institutions are independent and the bus is the only link" visible. Nothing below replaces it.
 
 **The domain is `sindarvueltas.org`**, registered at Cloudflare Registrar on 8 September 2026 and on
@@ -21,29 +24,28 @@ before you commit to one.
 
 ---
 
-## 0. What is live right now
+## 0. Independent verification of the live deployment
 
-Verified end to end on 8 September 2026. Both stages are deployed.
+Checked against the public URLs on 8 September 2026, from outside the deploying session.
 
-| URL | Serves | Verified |
+| URL | Checked | Result |
 |---|---|---|
-| `https://sindarvueltas.org` | static case pages, Cloudflare Pages project **`sindarvueltas`** | apex 200, `/por-que` `/marco-legal` `/arquitectura` all 200 through the SPA rule, `workflows.json` 12, `registry.json` 13, all thirteen agencies named on `/arquitectura`, zero console or page errors, DEMO banner present |
-| `https://demo.sindarvueltas.org` | the all-in-one container | `/healthz` → `{"status":"ok","mode":"all-in-one","agencies":13}`, and `node scripts/smoke.mjs https://demo.sindarvueltas.org` → **SMOKE OK**: 13 trámites, three citizens, 59 exchanges across 13 institutions, 71.5 s |
-
-**The Pages project is named `sindarvueltas`, not `puravidagov`.** `wrangler.jsonc` says so; deploying with the
-old name creates a second project with no custom domain attached, leaving the live site stale. Both custom
-domains (`sindarvueltas.org` and `www.sindarvueltas.org`) are already attached to it, so redeploys need no
-DNS work.
-
-Both hostnames are **proxied** (orange cloud) now that their certificates have issued, which is why the
-origin host is not visible in response headers — only `x-powered-by: Express` leaks from the container.
+| `https://sindarvueltas.org` | apex, `/por-que`, `/marco-legal`, `/arquitectura`; generated JSON; headless browser | all 200 through the SPA rule; `workflows.json` 12, `registry.json` 13; all thirteen agencies named on `/arquitectura` with no DOWN state; DEMO banner present; **zero console or page errors** |
+| `https://demo.sindarvueltas.org` | `/healthz`, then the full journey | `{"status":"ok","mode":"all-in-one","agencies":13}`, and `node scripts/smoke.mjs https://demo.sindarvueltas.org` → **SMOKE OK**: 13 trámites, three citizens, 59 exchanges across 13 institutions, 71.5 s |
 
 WHOIS redaction is on and confirmed: RDAP returns a registrar entity only, with no registrant name, e-mail,
 telephone or address.
 
-**The deployed static bundle was built with `VITE_PORTAL_URL=https://demo.sindarvueltas.org`**, so every
-"Probar el demo" affordance links to `https://demo.sindarvueltas.org/login`. That is correct only while the
-container is up — see the note on `VITE_PORTAL_URL` in §1 before rebuilding.
+Both hostnames are proxied, so the origin is not visible in response headers — only `x-powered-by: Express`
+leaks from the container. That is why §2 is the only place that records which host actually runs it.
+
+**The Pages project is `sindarvueltas`.** The root `wrangler.jsonc` used to say `puravidagov`, which would
+have created a second project with no custom domain attached and left the live site stale, with nothing
+failing to say so. Both names now agree; do not reintroduce the old one.
+
+**The deployed static bundle has `VITE_PORTAL_URL=https://demo.sindarvueltas.org` baked in**, so every
+"Probar el demo" affordance links to `https://demo.sindarvueltas.org/login`. Correct only while the container
+is up — see the `VITE_PORTAL_URL` note in §1 before rebuilding.
 
 ---
 
@@ -69,8 +71,10 @@ Or connect the repo in the Cloudflare dashboard with:
 | Environment variable | `VITE_PORTAL_URL` = `https://demo.sindarvueltas.org` |
 | Custom domain | `sindarvueltas.org` |
 
-**Add the custom domain in the Pages dashboard** (Workers & Pages → the project → Custom domains), which
-creates the record for you. Hand-creating the CNAME instead will not resolve.
+**Already configured.** The apex and `www` are attached to the `sindarvueltas` Pages project and the proxied
+`CNAME`s to `sindarvueltas.pages.dev` exist. If you ever rebuild this from scratch: attach the domain first
+(Pages dashboard → the project → Custom domains, or the Pages domains API), then let it create the record —
+hand-creating the CNAME without attaching the domain will not resolve.
 
 `wrangler.jsonc` at the repo root already sets the output directory.
 
@@ -157,6 +161,42 @@ Three warnings, in order of how much they will cost you:
 3. `--source` builds through Cloud Build and stores images in Artifact Registry, whose free storage is
    **0.5 GB**. A Node image plus a few retained revisions exceeds that, so set a cleanup policy.
 
+### Option C — Cloudflare Containers (what sindarvueltas.org actually runs)
+
+If you are already paying the $5/month Workers Paid plan, this keeps the static site and the portal on one
+platform, one bill and one domain.
+
+```bash
+npx wrangler deploy -c infra/cloudflare/wrangler.jsonc
+```
+
+`infra/cloudflare/worker.ts` is a Worker whose only job is to hand the request to a container running
+`infra/Dockerfile.allinone` — the same image as Option A and B. `infra/cloudflare/wrangler.jsonc` pins it to the
+`lite` instance type (1/16 vCPU, 256 MiB, 2 GB disk), `max_instances: 1`, and `sleepAfter = '10m'`.
+
+**Why those numbers.** Measured footprint of the all-in-one after a full thirteen-trámite journey is **79 MiB**, so
+256 MiB is ample. The Workers Paid plan includes 25 GiB-hours of memory, 200 GB-hours of disk and 375 vCPU-minutes a
+month. At 256 MiB and 2 GB that works out to roughly **100 hours of awake time a month before anything is billed on
+top of the $5**, and the same 100 hours is where the CPU allowance lands if the container ever saturated its 1/16
+vCPU. A demo that sleeps after ten minutes idle does not come close. Cold start measured at **20 seconds**.
+
+**Keep the ceiling.** `max_instances: 1` is the thing that makes the bill predictable — remove it and a traffic spike
+scales out and bills per instance. Watch usage under Workers & Pages → sindarvueltas-portal → Metrics.
+
+Custom domain (`demo.sindarvueltas.org`) is a Worker Custom Domain, not a DNS record you write by hand:
+
+```bash
+# once, then Cloudflare manages the record and the certificate
+npx wrangler triggers deploy -c infra/cloudflare/wrangler.jsonc
+```
+
+Then rebuild the static site so its "Probar el demo" buttons point at it:
+
+```bash
+VITE_PORTAL_URL=https://demo.sindarvueltas.org npm run build:static
+npx wrangler pages deploy apps/web/dist-static --project-name sindarvueltas
+```
+
 ### Do not plan around these
 
 - **Koyeb** — the free tier closed to new sign-ups on 17 February 2026 (Mistral AI acquisition).
@@ -165,9 +205,9 @@ Three warnings, in order of how much they will cost you:
 - **Oracle Always Free** — the Ampere allowance was halved in 2026, it is a bare ARM VM you must administer,
   and Oracle documents reclaiming instances that sit under 20 % CPU, network **and** memory for 7 days. An
   idle demo meets all three.
-- **Cloudflare Containers** — not free; requires Workers Paid at $5/month. Worth knowing anyway: if $5 is ever
-  acceptable, it puts DNS, the static site, the container and TLS with one vendor you already run, and removes
-  both the Cloud Run billing risk and the Render cold start.
+Cloudflare Containers is **not** in this list any more: it is what the demo actually runs (option C). It is
+not free — it needs Workers Paid at $5/month — but that $5 buys DNS, the static site, the container and TLS
+from one vendor, with no Cloud Run billing risk and no Render cold start.
 
 ---
 
@@ -191,8 +231,8 @@ For this project specifically, the layout is:
 
 | Host | Serves | Record |
 |---|---|---|
-| `sindarvueltas.org` (apex) | static case pages, Cloudflare Pages | added via the Pages dashboard |
-| `demo.sindarvueltas.org` | the all-in-one container | `CNAME` to the host, grey-cloud until its cert issues |
+| `sindarvueltas.org` (apex) and `www` | static case pages, Cloudflare Pages | proxied `CNAME` → `sindarvueltas.pages.dev`, created by attaching the domain to the project |
+| `demo.sindarvueltas.org` | the all-in-one container | Worker Custom Domain on `sindarvueltas-portal`; Cloudflare manages the record and the certificate |
 
 `sindarvueltas.org` is its own zone at Cloudflare Registrar, so nothing here touches `denuncia.cr` (whose
 registrar NIC.cr needs manual DNS changes) or `cartacaribesur.org` (which hosts other production sites).
@@ -209,13 +249,19 @@ is no promotional first year that renews at a cliff.
 
 ## 4. Recommended combination
 
-- **Static** → Cloudflare Pages on `sindarvueltas.org`.
-- **Interactive** → `demo.sindarvueltas.org`. Use **Render free** (via `render.yaml`) unless you want to put
-  a card on file: it cannot bill you, at the cost of a ~1-minute wake after 15 minutes idle, which the
-  static site already warns about next to every portal link. **Cloud Run** in `us-central1` is the swap if
-  you would rather have no cold start; both run the same image and switching is one `CNAME` edit.
-- Set `VITE_PORTAL_URL=https://demo.sindarvueltas.org` on the Pages build so the two halves link up, and
-  pre-warm the container before any live walkthrough.
+**What is deployed** — and, having now been measured, what to keep:
+
+- **Static** → Cloudflare Pages project `sindarvueltas`, on the apex and `www`.
+- **Interactive** → **Cloudflare Containers** (option C) on `demo.sindarvueltas.org`: `lite`, 79 MiB measured
+  against a 256 MiB instance, `max_instances: 1`, `sleepAfter: 10m`, 20 s cold start. The two limits are what
+  keep the $5 predictable — remove either and a traffic spike becomes a bill.
+- Keep `VITE_PORTAL_URL=https://demo.sindarvueltas.org` on the Pages build so the two halves link up, and
+  pre-warm the container before any live walkthrough — 20 s is short, but it is not zero.
+
+**Render (option A) and Cloud Run (option B) stay documented as fallbacks**, not recommendations. They run
+the same image, so switching is a DNS change plus a redeploy. Take Render if the $5 ever has to go: it cannot
+bill you, at the cost of a ~1-minute wake. Take Cloud Run only with a budget alert and a `max-instances` cap,
+since it needs a card and a misconfiguration bills instead of stopping.
 
 ## 5. What CI already proves
 
