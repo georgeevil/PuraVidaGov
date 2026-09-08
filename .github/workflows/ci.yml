@@ -35,3 +35,50 @@ jobs:
         run: docker compose -f infra/docker-compose.yml logs --no-color | tail -200
       - if: always()
         run: docker compose -f infra/docker-compose.yml down -v
+
+  # The two free-tier deployment targets. Compose above stays the reference architecture;
+  # these prove the same code also ships as one container and as a static site.
+  allinone:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f infra/Dockerfile.allinone -t puravidagov-allinone .
+      - name: Run the single container and drive the full journey through it
+        run: |
+          docker run -d --name pvg -p 8080:8080 -e AGENCY_LATENCY_MS=50 puravidagov-allinone
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8080/healthz && break
+            sleep 2
+          done
+          curl -sSf http://localhost:8080/healthz | grep -q '"mode":"all-in-one"'
+          curl -sSf http://localhost:8080/ | grep -q PuraVidaGov
+          curl -sSf http://localhost:8080/por-que | grep -q PuraVidaGov
+          node scripts/smoke.mjs http://localhost:8080
+      - if: always()
+        run: docker logs pvg 2>&1 | tail -100
+      - if: always()
+        run: docker rm -f pvg
+
+  static:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:static
+      - name: The static bundle must stand alone
+        run: |
+          test -f apps/web/dist-static/index.html
+          test -f apps/web/dist-static/_redirects
+          for f in workflows legal registry benefits activities; do
+            test -s "apps/web/dist-static/api-static/$f.json"
+            node -e "JSON.parse(require('fs').readFileSync('apps/web/dist-static/api-static/$f.json','utf8'))"
+          done
+          node -e "const w=require('./apps/web/dist-static/api-static/workflows.json'); if(w.length!==7) throw new Error('expected 7 life events, got '+w.length)"
+          node -e "const l=require('./apps/web/dist-static/api-static/legal.json'); if(!l.refs||!l.workflows) throw new Error('legal.json shape')"
+          ! grep -rl "require('express')\|from\"express\"" apps/web/dist-static/assets/*.js
