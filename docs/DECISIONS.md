@@ -106,3 +106,65 @@ Gosuslugi is referenced for its 2010 statutory once-only rule (210-FZ art. 7) an
 grouping, with a note that it is not a political endorsement. The Nordic and Estonian sources include their own
 audits (Rigsrevisionen 2015, Riigikontroll 2024), which is why the case page repeats that the law comes before the
 platform.
+
+## D-023 · The domain is sindarvueltas.org, and deliberately not a `puravida*` one
+Registered at Cloudflare Registrar on 8 September 2026. "Sin dar vueltas" is the Costa Rican idiom for the
+bureaucratic runaround, so it reads as a citizen complaint rather than as a ministry.
+
+The `puravida*` family was rejected on a finding: **`puravidadigital.go.cr` is the real Costa Rican national
+trámites portal**, launched by MICITT with IDB support as the single digital window for state procedures —
+close to the same function this demo depicts. A name collision plus a function collision, in front of
+legislators and press, would be read as the official portal however large the DEMOSTRACIÓN banner is.
+`gobiernoabierto.go.cr` is a live government initiative too, and anything containing `gov`/`gob` reads as
+official. None of the collisions the earlier legal research was watching for (SICOP, TRIBU-CR, EDUS, APC,
+SINPE, Crear Empresa, Pase Digital/IDC, Ventanilla Única) were the problem; this one was, and it was found
+only by checking.
+
+The project keeps the name **PuraVidaGov**: the repo, the product and the three merged PRs stay as they are,
+and the domain carries the disambiguation instead. Revisit if anyone actually mistakes the demo for the real
+portal.
+
+`.cr` was never an option — Cloudflare Registrar does not support it, and NIC.cr is the only path. Not
+registering anything under `.go.cr`, and staying visibly outside the government namespace, is itself a
+credibility asset for a project arguing that the government should change.
+
+## D-024 — PolyForm Noncommercial for the code, CC BY-NC-SA for the research
+
+**Status:** accepted · **Supersedes:** the MIT licence, which was never itself a recorded decision — the
+repository simply carried an MIT `LICENSE` from its first commit
+
+The demo was MIT. MIT lets a systems integrator take the whole thing, bill a ministry to deploy it, and owe
+nothing to anyone. That is precisely the outcome the project should not subsidise, and it is also the only
+leverage a single author has.
+
+**PolyForm Noncommercial 1.0.0** for the code, because it is the only reviewed licence surveyed in
+`docs/research/licensing-options.md` that both forbids commercial delivery *and* names the intended users in
+its own operative text: use by a government institution, educational institution, public research
+organization, public safety or health organization, environmental protection organization or charity is a
+permitted purpose "regardless of the source of funding". A ministry never has to read a FAQ to know it is
+allowed. Every other candidate — Elastic License, BUSL, FSL, AGPL, CC BY-NC — either permits paid delivery,
+converts to permissive on a timer, or is unsuited to software.
+
+**CC BY-NC-SA 4.0** for the research and the Spanish page copy, because they are prose, not software, and
+because ShareAlike is the point: adapting the analysis into a real policy document is the best thing that
+could happen to it, and the derived analysis should stay open in turn. The program's *technical*
+documentation stays under the code licence — Ley 6683 art. 4 treats it as part of the program.
+
+**The honest costs, recorded so nobody has to rediscover them.** PolyForm is not OSI-approved, so this is
+not open source and should never be called that. The project therefore fails the
+[Standard for Public Code](https://standard.publiccode.net/), which requires an OSI licence *and* that
+contributors not be asked to assign copyright — and `CONTRIBUTING.md` asks for exactly that, because the
+ability to sell a commercial licence dies the moment one outside contributor keeps their copyright. There is
+a real counter-argument in §6.7 of the research: X-Road itself is MIT and defends its position with a
+trademark rather than a licence, every government reference implementation verified is OSI-licensed, and
+both Elastic and Redis eventually reversed their relicensing. The trade is deliberate: a demo whose purpose
+is to be adopted by a government loses little from a licence that governments may freely use, and gains the
+only negotiating position its author has.
+
+**The MIT history is not withdrawn** and cannot be. Every version up to and including commit `7efbf07` was
+MIT; anyone may fork it. `COMMERCIAL.md` says so in public rather than leaving a lawyer to discover it.
+
+**The boundary is a commit, not a date.** An earlier draft of `NOTICE` said "published before 8 September
+2026", which the relicensing commit itself contradicted: it is dated 7 September in Costa Rica and 8
+September in UTC. A licence boundary that depends on the reader's time zone is exactly the kind of defect
+that is free to fix now and expensive to argue about later.

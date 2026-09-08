@@ -7,3 +7,6 @@ coverage/
 .vite/
 memory/
 /tmp/
+
+# macOS
+.DS_Store
