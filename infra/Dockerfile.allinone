@@ -1,6 +1,7 @@
-# All-in-one image (docs/CONTRACTS.md v4 → "All-in-one image"): the ten agencies, the bus, the
-# portal API and the built SPA in ONE Node process on ONE port. Free-tier target (Render, Koyeb,
-# Fly). The reference architecture is still infra/docker-compose.yml — one container per institution.
+# All-in-one image (docs/CONTRACTS.md v4 → "All-in-one image"): the thirteen agencies, the bus, the
+# portal API and the built SPA in ONE Node process on ONE port. This is what runs on
+# demo.sindarvueltas.org (Cloudflare Containers, `lite`); Render and Cloud Run run the same image.
+# The reference architecture is still infra/docker-compose.yml — one container per institution.
 #
 #   docker build -f infra/Dockerfile.allinone -t puravidagov .
 #   docker run -p 8080:8080 puravidagov
