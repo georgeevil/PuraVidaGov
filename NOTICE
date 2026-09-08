@@ -1,11 +1,11 @@
 PuraVidaGov
 Copyright (c) 2026 George Chigrichenko. All rights reserved.
 
-Required Notice: Copyright (c) 2026 George Chigrichenko — https://sindarvueltas.org
-
-That line is the notice the PolyForm Noncommercial License requires under its
-"Notices" clause. Anyone who passes on any part of this software must pass it on
-too, along with these terms or the URL for them.
+The PolyForm licence's "Notices" clause requires that a plain-text line beginning
+`Required Notice:` travel with every copy. This project's is the last line of
+LICENSE. Keep it there and pass it on; do not restate it with different wording
+here, because a licensee must propagate every such line and two variants of the
+same notice only invite argument about which one governs.
 
 Source code in this repository is licensed under the PolyForm Noncommercial
 License 1.0.0 — see LICENSE. That licence permits use by any government
