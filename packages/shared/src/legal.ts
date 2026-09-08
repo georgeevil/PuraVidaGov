@@ -244,7 +244,9 @@ export const LEGAL_REFS: Record<string, LegalRef> = {
     name: 'Noruega, estrategia «Én digital offentlig sektor» (2019): siete eventos de vida prioritarios (tener un hijo, hijo gravemente enfermo, perder y encontrar trabajo, nuevo en Noruega, fallecimiento y herencia, iniciar y operar una empresa, iniciar y operar una organización voluntaria)',
     short: 'Noruega, 7 livshendelser (2019)',
     year: 2019,
-    url: 'https://www.regjeringen.no/no/dokumenter/en-digital-offentlig-sektor/id2653874/',
+    // regjeringen.no y digdir.no responden 403 a toda petición automatizada (gestor de bots); el conteo de
+    // los siete eventos está además en el informe de DIGG (Suecia) de 2026, que sí es accesible.
+    url: 'https://www.digg.se/analys-och-uppfoljning/publikationer/publikationer/2026-03-31-uppdrag-att-analysera-och-beskriva-mojligheter-och-utmaningar-kopplade-till-att-etablera-en-digital-ingang-till-det-offentliga',
     what: 'El gobierno noruego eligió siete eventos de vida y asignó un ministerio responsable de cada uno (Digdir coordina y lleva «fallecimiento y herencia»). Es el modelo de gobernanza que este demo asume: un dueño por evento, no por institución. Un estudio de Digdir de 2025 cuenta 7 eventos priorizados en Noruega, 40 en Alemania y 70 en Finlandia.',
     whatEn: 'The Norwegian government chose seven life events and gave each a responsible ministry (Digdir coordinates and owns "death and inheritance"). The governance model this demo assumes: an owner per event, not per institution. A 2025 Digdir study counts 7 prioritised events in Norway, 40 in Germany and 70 in Finland.',
   },

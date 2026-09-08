@@ -556,6 +556,20 @@ Suggested order for the demo: **1 (death) → 7 (vehicle) → 4 (marriage) → 6
 reuse existing bus actions; **2 (residency)**, **3 (school)** and **5 (disability)** each need one new mock (DGME,
 MEP, CONAPDIS) and give the best story for agencies the demo does not yet show.
 
+## 10b. Link check (8 September 2026)
+
+Every URL cited by `packages/shared/src/legal.ts` from this file was re-fetched on 8 Sept 2026. Reachable (HTTP 200):
+borger.dk/livssituationer, suomi.fi/citizen, efterlevandeguiden.se, justdigi.ee proactive-services, x-tee.ee factsheet,
+government.ru/news/57420, consultant.ru 210-FZ, life.gov.sg/guides, eur-lex 2018/1724.
+
+**Blocked to automation:** `regjeringen.no` and `digdir.no` return 403 to every automated request and serve a
+bot-verification interstitial even to a driven browser — the same situation as `tse.go.cr` and `migracion.go.cr` in
+`legal-cr.md`. This is a bot-manager, not a dead link; the documents exist and open normally in an ordinary browser.
+Because the demo's `LegalRef` for Norway must carry a link a reader can follow, it cites the **DIGG (Sweden) 2026
+report** instead, which is reachable and states the count directly: "Norge har 7, Tyskland har 40 och Finland har 70
+prioriterade livshändelser" (footnote: Digdir, 2025). The Norwegian strategy itself remains the primary source for the
+verbatim list of the seven events, quoted in section 3.
+
 ## 11. Could not verify — roll-up
 
 - RU: on-portal list of the 70 federal life situations; ESIA account/user counts; most-used everyday services;
