@@ -92,3 +92,24 @@ Chrome translates the Spanish portal for visitors whose browser is in another la
 (the standard workaround for React issue #11538) so translation keeps working, and an `ErrorBoundary` shows a reload
 button instead of a blank page if anything else goes wrong. Blocking translation with `notranslate` was rejected: the
 audience is often English-speaking.
+
+## D-021 · The domain is sindarvueltas.org, and deliberately not a `puravida*` one
+Registered at Cloudflare Registrar on 8 September 2026. "Sin dar vueltas" is the Costa Rican idiom for the
+bureaucratic runaround, so it reads as a citizen complaint rather than as a ministry.
+
+The `puravida*` family was rejected on a finding: **`puravidadigital.go.cr` is the real Costa Rican national
+trámites portal**, launched by MICITT with IDB support as the single digital window for state procedures —
+close to the same function this demo depicts. A name collision plus a function collision, in front of
+legislators and press, would be read as the official portal however large the DEMOSTRACIÓN banner is.
+`gobiernoabierto.go.cr` is a live government initiative too, and anything containing `gov`/`gob` reads as
+official. None of the collisions the earlier legal research was watching for (SICOP, TRIBU-CR, EDUS, APC,
+SINPE, Crear Empresa, Pase Digital/IDC, Ventanilla Única) were the problem; this one was, and it was found
+only by checking.
+
+The project keeps the name **PuraVidaGov**: the repo, the product and the three merged PRs stay as they are,
+and the domain carries the disambiguation instead. Revisit if anyone actually mistakes the demo for the real
+portal.
+
+`.cr` was never an option — Cloudflare Registrar does not support it, and NIC.cr is the only path. Not
+registering anything under `.go.cr`, and staying visibly outside the government namespace, is itself a
+credibility asset for a project arguing that the government should change.
