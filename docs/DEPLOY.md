@@ -76,7 +76,7 @@ generated `_redirects` (`/*  /index.html  200`) covers it explicitly, so do not 
 
 ## 2. The interactive portal — one container
 
-`scripts/serve-all.mjs` runs the bus and all ten agencies on `127.0.0.1` (ports 4000–4010, shift with
+`scripts/serve-all.mjs` runs the bus and all thirteen agencies on `127.0.0.1` (ports 4000–4010, shift with
 `INTERNAL_PORT_BASE`), mounts the portal API, and serves the built SPA. **Only `PORT` is exposed.** The
 API → bus → agency calls stay real HTTP, so the audit trail is exactly what the Compose stack produces.
 

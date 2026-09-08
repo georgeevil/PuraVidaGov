@@ -118,3 +118,169 @@ describe('registro-nacional', () => {
     expect(props.body).toHaveLength(2);
   });
 });
+
+// ---------------------------------------------------------------- v4
+
+const ANA = '2-0987-0654';
+const JOSE = '7-0123-0456';
+const LUIS = '7-0100-0300';
+const DIEGO = '1-1111-2222';
+const year = Number(new Date().toISOString().slice(0, 4));
+
+const vehicleSale = { plate: 'BCR-123', sellerId: ANA, buyerId: DIEGO, taxReceipt: `HAC-${year}-000001`, priceCrc: 8000000 };
+const propertySale = { folio: '2-111222-000', sellerId: ANA, buyerId: DIEGO, taxReceipt: `HAC-${year}-000002`, priceCrc: 45000000 };
+
+describe('registro-nacional v4: vehicles', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('serves the three seed vehicles by plate (case-insensitive)', async () => {
+    const ana = await request(app).get('/registro-nacional/vehicle/BCR-123').set('x-api-key', KEY).expect(200);
+    expect(ana.body).toEqual({ plate: 'BCR-123', ownerId: ANA, make: 'Toyota', model: 'Yaris', year: 2019, fiscalValueCrc: 7500000, encumbrances: [] });
+    const jose = await request(app).get('/registro-nacional/vehicle/sjb-456').set('x-api-key', KEY).expect(200);
+    expect(jose.body).toMatchObject({ ownerId: JOSE, make: 'Hyundai', model: 'Tucson', year: 2021, fiscalValueCrc: 14000000, encumbrances: ['Prenda Banco Popular'] });
+    const luis = await request(app).get('/registro-nacional/vehicle/LAV-777').set('x-api-key', KEY).expect(200);
+    expect(luis.body).toMatchObject({ ownerId: LUIS, make: 'Nissan', model: 'Frontier', year: 2015, fiscalValueCrc: 6200000, encumbrances: [] });
+  });
+
+  it('404 VEHICLE_NOT_FOUND for an unknown plate', async () => {
+    const r = await request(app).get('/registro-nacional/vehicle/ZZZ-999').set('x-api-key', KEY).expect(404);
+    expect(r.body.error.code).toBe('VEHICLE_NOT_FOUND');
+  });
+
+  it('lists vehicles by ownerId and validates the query', async () => {
+    const r = await request(app).get('/registro-nacional/vehicles').query({ ownerId: JOSE }).set('x-api-key', KEY).expect(200);
+    expect(r.body.map((v: { plate: string }) => v.plate)).toEqual(['SJB-456']);
+    const none = await request(app).get('/registro-nacional/vehicles').query({ ownerId: '1-2345-6789' }).set('x-api-key', KEY).expect(200);
+    expect(none.body).toEqual([]);
+    const bad = await request(app).get('/registro-nacional/vehicles').set('x-api-key', KEY).expect(400);
+    expect(bad.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('Luis owns the seeded property 7-077888-000 (Talamanca, mixto, 2 000 m², clean)', async () => {
+    const r = await request(app).get('/registro-nacional/property/7-077888-000').set('x-api-key', KEY).expect(200);
+    expect(r.body).toMatchObject({ ownerId: LUIS, province: 'Limón', canton: 'Talamanca', district: 'Cahuita', areaM2: 2000, landUse: 'mixto', encumbrances: [] });
+    const list = await request(app).get('/registro-nacional/properties').query({ ownerId: LUIS }).set('x-api-key', KEY).expect(200);
+    expect(list.body).toHaveLength(1);
+  });
+});
+
+describe('registro-nacional v4: transferVehicle', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('transfers BCR-123 from Ana to Diego with a BM number and updates the owner', async () => {
+    const r = await request(app).post('/registro-nacional/transferVehicle').set('x-api-key', KEY).send(vehicleSale).expect(200);
+    expect(r.body).toEqual({ plate: 'BCR-123', newOwnerId: DIEGO, registrationNumber: `BM-${year}-000001`, registeredAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) });
+    const v = await request(app).get('/registro-nacional/vehicle/BCR-123').set('x-api-key', KEY).expect(200);
+    expect(v.body.ownerId).toBe(DIEGO);
+    const diego = await request(app).get('/registro-nacional/vehicles').query({ ownerId: DIEGO }).set('x-api-key', KEY).expect(200);
+    expect(diego.body).toHaveLength(1);
+    const list = await request(app).get('/registro-nacional/vehicleTransfers').set('x-api-key', KEY).expect(200);
+    expect(list.body[0]).toMatchObject({ sellerId: ANA, taxReceipt: vehicleSale.taxReceipt, priceCrc: 8000000 });
+  });
+
+  it('is idempotent per (plate, taxReceipt): the repeat does not hit SELLER_MISMATCH', async () => {
+    const a = await request(app).post('/registro-nacional/transferVehicle').set('x-api-key', KEY).send(vehicleSale).expect(200);
+    const b = await request(app).post('/registro-nacional/transferVehicle').set('x-api-key', KEY).send(vehicleSale).expect(200);
+    expect(b.body).toEqual(a.body);
+    const other = await request(app)
+      .post('/registro-nacional/transferVehicle')
+      .set('x-api-key', KEY)
+      .send({ ...vehicleSale, taxReceipt: 'HAC-OTHER' })
+      .expect(409);
+    expect(other.body.error.code).toBe('SELLER_MISMATCH');
+  });
+
+  it('409 SELLER_MISMATCH, 422 ENCUMBERED, 404 VEHICLE_NOT_FOUND, 400 on a bad body', async () => {
+    const mismatch = await request(app).post('/registro-nacional/transferVehicle').set('x-api-key', KEY).send({ ...vehicleSale, sellerId: JOSE }).expect(409);
+    expect(mismatch.body.error.code).toBe('SELLER_MISMATCH');
+    const enc = await request(app).post('/registro-nacional/transferVehicle').set('x-api-key', KEY).send({ ...vehicleSale, plate: 'SJB-456', sellerId: JOSE }).expect(422);
+    expect(enc.body.error.code).toBe('ENCUMBERED');
+    expect(enc.body.error.message).toContain('Prenda Banco Popular');
+    const nf = await request(app).post('/registro-nacional/transferVehicle').set('x-api-key', KEY).send({ ...vehicleSale, plate: 'ZZZ-999' }).expect(404);
+    expect(nf.body.error.code).toBe('VEHICLE_NOT_FOUND');
+    const bad = await request(app).post('/registro-nacional/transferVehicle').set('x-api-key', KEY).send({ ...vehicleSale, priceCrc: 0, buyerId: 'x' }).expect(400);
+    expect(bad.body.error.code).toBe('VALIDATION_ERROR');
+    const v = await request(app).get('/registro-nacional/vehicle/BCR-123').set('x-api-key', KEY).expect(200);
+    expect(v.body.ownerId).toBe(ANA);
+  });
+
+  it('reset restores the seeded owner', async () => {
+    await request(app).post('/registro-nacional/transferVehicle').set('x-api-key', KEY).send(vehicleSale).expect(200);
+    await request(app).post('/__demo/reset').expect(200);
+    const v = await request(app).get('/registro-nacional/vehicle/BCR-123').set('x-api-key', KEY).expect(200);
+    expect(v.body.ownerId).toBe(ANA);
+    expect((await request(app).get('/registro-nacional/vehicleTransfers').set('x-api-key', KEY)).body).toEqual([]);
+  });
+});
+
+describe('registro-nacional v4: transferProperty', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('transfers 2-111222-000 from Ana to Diego with a BI number and updates the owner', async () => {
+    const r = await request(app).post('/registro-nacional/transferProperty').set('x-api-key', KEY).send(propertySale).expect(200);
+    expect(r.body).toEqual({ folio: '2-111222-000', newOwnerId: DIEGO, registrationNumber: `BI-${year}-000001`, registeredAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) });
+    const p = await request(app).get('/registro-nacional/property/2-111222-000').set('x-api-key', KEY).expect(200);
+    expect(p.body.ownerId).toBe(DIEGO);
+    const ana = await request(app).get('/registro-nacional/properties').query({ ownerId: ANA }).set('x-api-key', KEY).expect(200);
+    expect(ana.body).toEqual([]);
+  });
+
+  it('is idempotent per (folio, taxReceipt)', async () => {
+    const a = await request(app).post('/registro-nacional/transferProperty').set('x-api-key', KEY).send(propertySale).expect(200);
+    const b = await request(app).post('/registro-nacional/transferProperty').set('x-api-key', KEY).send({ ...propertySale, priceCrc: 1 }).expect(200);
+    expect(b.body).toEqual(a.body);
+    expect((await request(app).get('/registro-nacional/propertyTransfers').set('x-api-key', KEY)).body).toHaveLength(1);
+  });
+
+  it('409 SELLER_MISMATCH, 422 ENCUMBERED (María\'s mortgaged lot), 404 PROPERTY_NOT_FOUND', async () => {
+    const mismatch = await request(app).post('/registro-nacional/transferProperty').set('x-api-key', KEY).send({ ...propertySale, sellerId: JOSE }).expect(409);
+    expect(mismatch.body.error.code).toBe('SELLER_MISMATCH');
+    const enc = await request(app)
+      .post('/registro-nacional/transferProperty')
+      .set('x-api-key', KEY)
+      .send({ ...propertySale, folio: '1-654321-000', sellerId: '1-2345-6789' })
+      .expect(422);
+    expect(enc.body.error.code).toBe('ENCUMBERED');
+    const nf = await request(app).post('/registro-nacional/transferProperty').set('x-api-key', KEY).send({ ...propertySale, folio: '9-999999-000' }).expect(404);
+    expect(nf.body.error.code).toBe('PROPERTY_NOT_FOUND');
+  });
+});
+
+describe('registro-nacional v4: listEstate', () => {
+  beforeEach(async () => {
+    await request(app).post('/__demo/reset').expect(200);
+  });
+
+  it('lists Luis\'s property, vehicle and companies with the succession annotation', async () => {
+    await request(app)
+      .post('/registro-nacional/registerCompany')
+      .set('x-api-key', KEY)
+      .send({ citizenId: LUIS, fullName: 'Luis Ángel Vargas Mora', legalName: 'Cacao Vargas Sociedad Anónima', activityCode: '5610', address: 'Cahuita' })
+      .expect(200);
+    const r = await request(app)
+      .post('/registro-nacional/listEstate')
+      .set('x-api-key', KEY)
+      .send({ deceasedId: LUIS, deathCertificate: `DEF-${year}-000001` })
+      .expect(200);
+    expect(r.body.properties).toEqual([{ folio: '7-077888-000', canton: 'Talamanca', areaM2: 2000 }]);
+    expect(r.body.vehicles).toEqual([{ plate: 'LAV-777', make: 'Nissan', model: 'Frontier', year: 2015 }]);
+    expect(r.body.companies).toHaveLength(1);
+    expect(r.body.companies[0]).toMatchObject({ legalName: 'Cacao Vargas Sociedad Anónima' });
+    expect(r.body.companies[0].cedulaJuridica).toMatch(/^3-101-\d{6}$/);
+    expect(r.body.annotation).toBe(`Sucesión abierta — certificado DEF-${year}-000001`);
+    expect(Object.keys(r.body).sort()).toEqual(['annotation', 'companies', 'properties', 'vehicles']);
+  });
+
+  it('returns empty lists for someone without assets and 400 on a bad body', async () => {
+    const r = await request(app).post('/registro-nacional/listEstate').set('x-api-key', KEY).send({ deceasedId: DIEGO, deathCertificate: 'DEF-X' }).expect(200);
+    expect(r.body).toEqual({ properties: [], vehicles: [], companies: [], annotation: 'Sucesión abierta — certificado DEF-X' });
+    const bad = await request(app).post('/registro-nacional/listEstate').set('x-api-key', KEY).send({ deceasedId: LUIS }).expect(400);
+    expect(bad.body.error.code).toBe('VALIDATION_ERROR');
+  });
+});

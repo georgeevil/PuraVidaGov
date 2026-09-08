@@ -6,20 +6,48 @@ import {
   niteFor,
   simulatedLatency,
   todayIso,
+  transferTaxSchema,
   updateAddressSchema,
+  updateCivilStatusSchema,
   type AddressUpdateResponse,
+  type CivilStatusUpdateResponse,
   type TaxResponse,
+  type TransferTaxResponse,
 } from '@pvg/shared';
 import type { Express } from 'express';
 import type { z } from 'zod';
 import { requireApiKey, validateBody, wrap } from './middleware.js';
-import { store, type Taxpayer } from './store.js';
+import { store, type Taxpayer, type TransferTaxReceipt } from './store.js';
 
 export const SERVICE_NAME = 'tributacion';
 export const ADDRESS_REGISTRY = 'Tributación (domicilio fiscal)';
+export const CIVIL_STATUS_REGISTRY = 'Tributación (RUT)';
+
+/**
+ * Impuesto de traspaso (docs/CONTRACTS.md v4 → Tributación): 2.5 % on vehicles (Ley 7088 art. 13 — rate from a
+ * secondary source, see docs/research), 1.5 % on real estate (Ley 6999); timbres 0.5 % of the base.
+ */
+export const TRANSFER_TAX_RATE_PCT: Record<'vehiculo' | 'inmueble', number> = { vehiculo: 2.5, inmueble: 1.5 };
+export const TRANSFER_STAMPS_RATE = 0.005;
 
 type CreateTaxIdBody = z.infer<typeof createTaxIdSchema>;
 type UpdateAddressBody = z.infer<typeof updateAddressSchema>;
+type TransferTaxBody = z.infer<typeof transferTaxSchema>;
+type UpdateCivilStatusBody = z.infer<typeof updateCivilStatusSchema>;
+
+/** Tax figures for a transfer: base = max(price, fiscal value). */
+export function transferTax(kind: 'vehiculo' | 'inmueble', priceCrc: number, fiscalValueCrc: number) {
+  const taxableBaseCrc = Math.max(priceCrc, fiscalValueCrc);
+  const ratePct = TRANSFER_TAX_RATE_PCT[kind];
+  const taxCrc = Math.round((taxableBaseCrc * ratePct) / 100);
+  const stampsCrc = Math.round(taxableBaseCrc * TRANSFER_STAMPS_RATE);
+  return { taxableBaseCrc, ratePct, taxCrc, stampsCrc, totalCrc: taxCrc + stampsCrc };
+}
+
+function transferToResponse(t: TransferTaxReceipt): TransferTaxResponse {
+  const { receiptNumber, taxableBaseCrc, ratePct, taxCrc, stampsCrc, totalCrc } = t;
+  return { receiptNumber, taxableBaseCrc, ratePct, taxCrc, stampsCrc, totalCrc };
+}
 
 function toResponse(t: Taxpayer): TaxResponse {
   const { nite, taxRegime, status, activityCode, activityDescription, registrationDate } = t;
@@ -104,6 +132,62 @@ export function createApp(): Express {
         effectiveDate: body.effectiveDate,
       });
       const response: AddressUpdateResponse = { updated: true, registry: ADDRESS_REGISTRY, effectiveDate: body.effectiveDate };
+      res.json(response);
+    }),
+  );
+
+  // ---------------------------------------------------------------- v4
+
+  app.get('/tributacion/transferTaxes', (_req, res) => {
+    res.json(store.listTransferTaxes());
+  });
+
+  app.get('/tributacion/civilStatuses', (_req, res) => {
+    res.json(store.listCivilStatuses());
+  });
+
+  app.post(
+    '/tributacion/transferTax',
+    validateBody(transferTaxSchema),
+    wrap(async (req, res) => {
+      const body = req.body as TransferTaxBody;
+      await simulatedLatency();
+
+      const existing = store.findTransferTax(body.kind, body.reference, body.buyerId);
+      if (existing) return res.json(transferToResponse(existing));
+
+      const issuedAt = todayIso();
+      const year = Number(issuedAt.slice(0, 4));
+      const receipt = store.saveTransferTax({
+        buyerId: body.buyerId,
+        sellerId: body.sellerId,
+        kind: body.kind,
+        reference: body.reference.trim(),
+        priceCrc: body.priceCrc,
+        fiscalValueCrc: body.fiscalValueCrc,
+        issuedAt,
+        receiptNumber: `HAC-${year}-${String(store.nextTransferSequence(year)).padStart(6, '0')}`,
+        ...transferTax(body.kind, body.priceCrc, body.fiscalValueCrc),
+      });
+      res.json(transferToResponse(receipt));
+    }),
+  );
+
+  app.post(
+    '/tributacion/updateCivilStatus',
+    validateBody(updateCivilStatusSchema),
+    wrap(async (req, res) => {
+      const body = req.body as UpdateCivilStatusBody;
+      await simulatedLatency();
+      store.saveCivilStatus({
+        citizenId: body.citizenId,
+        certificate: body.certificate,
+        updatedAt: todayIso(),
+        updated: true,
+        registry: CIVIL_STATUS_REGISTRY,
+        maritalStatus: body.maritalStatus,
+      });
+      const response: CivilStatusUpdateResponse = { updated: true, registry: CIVIL_STATUS_REGISTRY, maritalStatus: body.maritalStatus };
       res.json(response);
     }),
   );

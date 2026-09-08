@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { runMariaJourney, waitForHealth } from './lib/flow.mjs';
 
 const base = Number(process.env.E2E_BASE_PORT ?? 45000);
-const ports = { registro: base + 1, tributacion: base + 2, ccss: base + 3, municipalidad: base + 4, bus: base + 5, api: base + 6, registroNacional: base + 7, salud: base + 8, cfia: base + 9, supen: base + 10, mtss: base + 11, cosevi: base + 12 };
+const ports = { registro: base + 1, tributacion: base + 2, ccss: base + 3, municipalidad: base + 4, bus: base + 5, api: base + 6, registroNacional: base + 7, salud: base + 8, cfia: base + 9, supen: base + 10, mtss: base + 11, cosevi: base + 12, ins: base + 13, mep: base + 14, imas: base + 15 };
 const env = {
   ...process.env,
   LOG_SILENT: process.env.E2E_VERBOSE ? '' : '1',
@@ -20,6 +20,9 @@ const env = {
   SUPEN_PORT: String(ports.supen),
   MTSS_PORT: String(ports.mtss),
   COSEVI_PORT: String(ports.cosevi),
+  INS_PORT: String(ports.ins),
+  MEP_PORT: String(ports.mep),
+  IMAS_PORT: String(ports.imas),
   BUS_PORT: String(ports.bus),
   API_PORT: String(ports.api),
   REGISTRO_URL: `http://127.0.0.1:${ports.registro}`,
@@ -32,6 +35,9 @@ const env = {
   SUPEN_URL: `http://127.0.0.1:${ports.supen}`,
   MTSS_URL: `http://127.0.0.1:${ports.mtss}`,
   COSEVI_URL: `http://127.0.0.1:${ports.cosevi}`,
+  INS_URL: `http://127.0.0.1:${ports.ins}`,
+  MEP_URL: `http://127.0.0.1:${ports.mep}`,
+  IMAS_URL: `http://127.0.0.1:${ports.imas}`,
   BUS_URL: `http://127.0.0.1:${ports.bus}`,
 };
 
@@ -46,6 +52,9 @@ const entries = [
   'services/supen',
   'services/mtss',
   'services/cosevi',
+  'services/ins',
+  'services/mep',
+  'services/imas',
   'services/bus',
   'apps/api',
 ];

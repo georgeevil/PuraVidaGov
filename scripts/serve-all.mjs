@@ -2,8 +2,8 @@
 /**
  * All-in-one server (docs/CONTRACTS.md v4 → "All-in-one server").
  *
- * One Node process that runs the same twelve Express apps the Compose stack runs in twelve
- * containers: the ten agencies and the bus listen on loopback-only ports, and the citizen-portal
+ * One Node process that runs the same fifteen Express apps the Compose stack runs in fifteen
+ * containers: the thirteen agencies and the bus listen on loopback-only ports, and the citizen-portal
  * API is mounted directly on the public front app together with the built SPA.
  *
  * The bus→agency and API→bus hops stay real HTTP calls, so the audit log is unchanged.
@@ -22,7 +22,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const publicPort = Number(process.env.PORT ?? 8080) || 8080;
 const base = Number(process.env.INTERNAL_PORT_BASE ?? 4000) || 4000;
 
-/** The ten agencies, in registry order; the bus takes the base port itself. */
+/** The thirteen agencies, in registry order; the bus takes the base port itself. */
 const AGENCIES = [
   { dir: 'services/registro-civil', urlEnv: 'REGISTRO_URL' },
   { dir: 'services/tributacion', urlEnv: 'TRIBUTACION_URL' },
@@ -34,6 +34,9 @@ const AGENCIES = [
   { dir: 'services/supen', urlEnv: 'SUPEN_URL' },
   { dir: 'services/mtss', urlEnv: 'MTSS_URL' },
   { dir: 'services/cosevi', urlEnv: 'COSEVI_URL' },
+  { dir: 'services/ins', urlEnv: 'INS_URL' },
+  { dir: 'services/mep', urlEnv: 'MEP_URL' },
+  { dir: 'services/imas', urlEnv: 'IMAS_URL' },
 ];
 
 /** Only set a default: a real deployment may point any of these somewhere else. */
