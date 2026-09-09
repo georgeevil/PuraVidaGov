@@ -7,6 +7,7 @@
  * Everything it writes is derived from the same data the running services use — no second copy of the
  * catalogue lives here.
  */
+import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -79,5 +80,51 @@ const redirects = '/*  /index.html  200\n';
 const redirectsPath = join(outDir, '_redirects');
 await writeFile(redirectsPath, redirects, 'utf8');
 written.push([redirectsPath, Buffer.byteLength(redirects)]);
+
+// ---------------------------------------------------------------- sitemap.xml and robots.txt
+//
+// The URL list comes from apps/web/src/content/rutas-publicas.ts, the same array the public navigation is
+// built from, so a new page appears in both or neither. `/login` and everything behind requireAuth are not
+// in it by design — see that file.
+//
+// SITE_URL exists because this bundle is served from more than one host. Only the canonical one should
+// carry a sitemap; a second host advertising the same six URLs asks Google to pick a winner between two
+// copies of the same site.
+const siteUrl = (process.env.SITE_URL ?? 'https://sindarvueltas.org').replace(/\/+$/, '');
+const { RUTAS_PUBLICAS } = await import(join(root, 'apps/web/src/content/rutas-publicas.ts'));
+
+/**
+ * Last commit that touched anything the page renders. Dating every URL with the build time would tell a
+ * crawler that all six pages change on every deploy, which is false and is exactly how a lastmod stops
+ * being believed. If git is unavailable (a tarball build), omit the date rather than invent one.
+ */
+function ultimoCambio(fuentes) {
+  try {
+    const fechas = fuentes
+      .map((f) => execFileSync('git', ['log', '-1', '--format=%cI', '--', f], { cwd: root, encoding: 'utf8' }).trim())
+      .filter(Boolean);
+    return fechas.sort().at(-1) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+const urls = RUTAS_PUBLICAS.map((r) => {
+  const loc = `${siteUrl}${r.to === '/' ? '/' : r.to}`;
+  const lastmod = ultimoCambio(r.fuentes);
+  return ['  <url>', `    <loc>${loc}</loc>`, ...(lastmod ? [`    <lastmod>${lastmod}</lastmod>`] : []), '  </url>'].join(
+    '\n',
+  );
+});
+
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
+const sitemapPath = join(outDir, 'sitemap.xml');
+await writeFile(sitemapPath, sitemap, 'utf8');
+written.push([sitemapPath, Buffer.byteLength(sitemap)]);
+
+const robots = `User-agent: *\nAllow: /\n\n# Nothing behind here is reachable without a session, and on this host there is no backend at all.\nDisallow: /login\nDisallow: /tramite/\nDisallow: /mis-tramites\nDisallow: /auditoria\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
+const robotsPath = join(outDir, 'robots.txt');
+await writeFile(robotsPath, robots, 'utf8');
+written.push([robotsPath, Buffer.byteLength(robots)]);
 
 for (const [path, bytes] of written) console.log(`${relative(root, path)}  ${bytes} bytes`);
