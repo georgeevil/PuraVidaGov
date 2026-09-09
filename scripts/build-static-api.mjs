@@ -8,7 +8,7 @@
  * catalogue lives here.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -121,6 +121,68 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://w
 const sitemapPath = join(outDir, 'sitemap.xml');
 await writeFile(sitemapPath, sitemap, 'utf8');
 written.push([sitemapPath, Buffer.byteLength(sitemap)]);
+
+// ---------------------------------------------------------------- one HTML document per public route
+//
+// Setting document.title from React covers Googlebot, which renders JavaScript. It does not cover the
+// crawlers that matter for a link somebody pastes into WhatsApp, Slack or Twitter: those read the raw HTML
+// and stop, so a client-set title is invisible to them and every link would preview as the same generic
+// page. So each public route also gets a real file with its own head already filled in.
+//
+// The SPA then boots over it exactly as before — same bundle, same root div, same _redirects fallback for
+// deep links like /tramite/:id that have no file here.
+const plantilla = await readFile(join(outDir, 'index.html'), 'utf8');
+
+/** Anything going into an HTML attribute or a title. These strings are ours, but a stray & still breaks XML-ish parsers. */
+const esc = (t) =>
+  t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+function documentoDe(ruta) {
+  const url = `${siteUrl}${ruta.to}`;
+  const social = [
+    `    <meta property="og:type" content="website" />`,
+    `    <meta property="og:site_name" content="PuraVidaGov" />`,
+    `    <meta property="og:title" content="${esc(ruta.titulo)}" />`,
+    `    <meta property="og:description" content="${esc(ruta.descripcion)}" />`,
+    `    <meta property="og:url" content="${url}" />`,
+    `    <meta name="twitter:card" content="summary" />`,
+    // Two hosts serve this bundle. Without this every page exists at both addresses and a search engine has
+    // to guess which is the real one; the guess is not always the one you want ranked.
+    `    <link rel="canonical" href="${url}" />`,
+  ].join('\n');
+
+  // Each substitution is checked on its own. Checking only the final result against the template would pass
+  // whenever *either* one worked, so a renamed <title> would ship seven pages with seven descriptions and
+  // one shared title — the exact silent success this change exists to remove. (It did, until this was fixed.)
+  const sustituir = (html, patron, reemplazo, que) => {
+    const salida = html.replace(patron, reemplazo);
+    if (salida === html) throw new Error(`index.html: no se encontró ${que}; el head cambió de forma (${ruta.to})`);
+    return salida;
+  };
+
+  const conTitulo = sustituir(
+    plantilla,
+    /<title>[\s\S]*?<\/title>/,
+    `<title>${esc(ruta.titulo)}</title>\n${social}`,
+    'el <title>',
+  );
+  return sustituir(
+    conTitulo,
+    /<meta name="description" content="[^"]*" \/>/,
+    `<meta name="description" content="${esc(ruta.descripcion)}" />`,
+    'el <meta name="description">',
+  );
+}
+
+for (const ruta of RUTAS_PUBLICAS) {
+  // "/" is index.html itself; every other route becomes <ruta>/index.html, which is what a static host
+  // serves for a directory-style URL.
+  const destino = ruta.to === '/' ? join(outDir, 'index.html') : join(outDir, ruta.to.slice(1), 'index.html');
+  await mkdir(dirname(destino), { recursive: true });
+  const cuerpo = documentoDe(ruta);
+  await writeFile(destino, cuerpo, 'utf8');
+  written.push([destino, Buffer.byteLength(cuerpo)]);
+}
 
 const robots = `User-agent: *\nAllow: /\n\n# Nothing behind here is reachable without a session, and on this host there is no backend at all.\nDisallow: /login\nDisallow: /tramite/\nDisallow: /mis-tramites\nDisallow: /auditoria\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
 const robotsPath = join(outDir, 'robots.txt');

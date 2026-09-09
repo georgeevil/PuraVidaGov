@@ -4,6 +4,7 @@ import { useAuth } from '../auth';
 import { PortalLink } from './Portal';
 import { Feedback } from './Feedback';
 import { RUTAS_PUBLICAS } from '../content/rutas-publicas';
+import { useMetaDeRuta } from '../meta';
 
 interface NavItem {
   to: string;
@@ -84,6 +85,10 @@ export function Layout() {
 
   // Close the small-screen menu on navigation.
   useEffect(() => setOpen(false), [location.pathname]);
+
+  // In-app navigation never fetches a document, so the title would otherwise keep describing the page the
+  // reader first landed on. The prerendered head is in scripts/build-static-api.mjs; see src/meta.ts.
+  useMetaDeRuta();
 
   async function handleLogout() {
     await signOut();

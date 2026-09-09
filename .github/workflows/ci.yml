@@ -82,3 +82,7 @@ jobs:
           node -e "const w=require('./apps/web/dist-static/api-static/workflows.json'); if(w.length!==12) throw new Error('expected 12 life events, got '+w.length)"
           node -e "const l=require('./apps/web/dist-static/api-static/legal.json'); if(!l.refs||!l.workflows) throw new Error('legal.json shape')"
           ! grep -rl "require('express')\|from\"express\"" apps/web/dist-static/assets/*.js
+          test -s apps/web/dist-static/sitemap.xml
+          test -s apps/web/dist-static/robots.txt
+      - name: Every public route has its own head
+        run: node --import tsx scripts/check-static-head.mjs
