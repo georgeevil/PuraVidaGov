@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from '../auth';
 import { PortalLink } from './Portal';
 import { Feedback } from './Feedback';
+import { RUTAS_PUBLICAS } from '../content/rutas-publicas';
 
 interface NavItem {
   to: string;
@@ -23,14 +24,13 @@ const NAV: NavItem[] = [
   { to: '/quien-lo-hace', label: 'Quién lo hace', en: 'Who builds this, and why' },
 ];
 
-/** Public pages (v3): what an anonymous visitor can read without a session. */
-const PUBLIC_NAV: NavItem[] = [
-  { to: '/por-que', label: 'Por qué', en: 'Why — the case for a once-only government' },
-  { to: '/marco-legal', label: 'Marco legal', en: 'Legal framework — what is possible today' },
-  { to: '/arquitectura', label: 'Cómo funciona', en: 'How it works' },
-  { to: '/seguimiento', label: 'Seguimiento', en: 'Where this stands, and what you can do' },
-  { to: '/quien-lo-hace', label: 'Quién lo hace', en: 'Who builds this, and why' },
-];
+/**
+ * Public pages (v3): what an anonymous visitor can read without a session.
+ *
+ * Derived from `content/rutas-publicas.ts` rather than written out again, because the same list is what the
+ * build writes into `sitemap.xml`. Two copies would agree until the next page is added.
+ */
+const PUBLIC_NAV: NavItem[] = RUTAS_PUBLICAS.filter((r) => r.enNav);
 
 /**
  * `min-h-11` (44px) is the touch target, not decoration: measured at 390px the menu links were 32px, which

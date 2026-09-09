@@ -38,7 +38,11 @@ docker compose -f infra/docker-compose.yml up --build        # web :3000, https 
 npm run typecheck && npm test && npm run e2e                 # minimum before calling anything done
 npm start                                                    # all 15 apps in ONE process on $PORT (free-tier target)
 npm run build:static                                         # public pages only, no backend → apps/web/dist-static
+npm run enlaces                                              # source links: SCIJ ids resolve to the norm we claim
 ```
+`enlaces` is not in CI and must not be: it reads each SCIJ norm's own title from sinalevi.go.cr, and GitHub
+runners cannot reach several `.go.cr` hosts. Run it by hand after touching `packages/shared/src/legal.ts`.
+A SCIJ link that returns 200 proves nothing — four of them opened the wrong law until 8 Sept 2026.
 Three deployment targets, all in CI; see `docs/DEPLOY.md`. **Compose stays the reference architecture** — do
 not collapse it to fit a host. `apps/web/dist` is the default bundle the all-in-one serves; `dist-static` is
 the static one. Never let a static bundle end up in front of a live backend.
@@ -49,5 +53,7 @@ plus plain-data constants only.
 
 ## Demo login
 `1-2345-6789` / `demo` / OTP `123456` (shown on screen); José `7-0123-0456` for the pension; Rosa `7-0111-0222` for the bereavement; Diego `1-1111-2222` is María's fiancé. Reset: `POST /api/__demo/reset`.
-`/por-que`, `/marco-legal`, `/arquitectura` and the non-citizen API routes are public by design; keep everything about a
-citizen behind `requireAuth`.
+The public pages are listed in `apps/web/src/content/rutas-publicas.ts` — the one list the navigation, the
+sitemap and this sentence all defer to. Those and the non-citizen API routes are public by design; keep
+everything about a citizen behind `requireAuth`. Adding a public page means adding it there, or it will be
+reachable but absent from both the nav and `sitemap.xml`.

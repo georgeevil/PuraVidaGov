@@ -1,5 +1,5 @@
 {
-  "_comment": "Sources the daily seguimiento check watches. Configs are data (CLAUDE.md): add a source here, never in the script. `enCI: false` means the source is real but GitHub runners cannot reach it — it is checked manually and the script skips it unless run with --todas from a normal connection.",
+  "_comment": "Sources the daily seguimiento check watches. Configs are data (CLAUDE.md): add a source here, never in the script. `enCI: false` means the source is real but GitHub runners cannot reach it — it is checked manually and the script skips it unless run with --todas from a normal connection. `filtro` is a list of keywords: a source that has one is not hashed whole — the page is split into text lines and only the lines matching a keyword (accent- and case-insensitive) are hashed, so an index whose list rolls daily only raises an issue when a line worth reading appears.",
   "fuentes": [
     {
       "id": "micitt-sector-informa",
@@ -33,8 +33,22 @@
       "id": "delfino-asamblea",
       "nombre": "Delfino — Legislación",
       "url": "https://delfino.cr/asamblea/legislacion",
-      "porQue": "Reachable secondary index for Asamblea activity, since asamblea.go.cr is not reachable from CI.",
-      "enCI": true
+      "porQue": "Reachable secondary index for Asamblea activity, since asamblea.go.cr is not reachable from CI. Filtered, because the page lists only the ten newest expedientes and rolls most working days. Note the limit that follows: this source can say a matching bill has been FILED since we started watching; it can never say none exists. Answering that still needs asamblea.go.cr from an ordinary connection.",
+      "enCI": true,
+      "filtro": [
+        "interoperabilidad",
+        "interoperar",
+        "gobierno digital",
+        "gobierno electrónico",
+        "simplificación de trámites",
+        "trámites administrativos",
+        "8220",
+        "una sola vez",
+        "eficiencia digital",
+        "firma digital",
+        "datos abiertos",
+        "identidad digital"
+      ]
     },
     {
       "id": "asamblea",

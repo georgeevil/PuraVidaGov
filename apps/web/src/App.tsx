@@ -11,6 +11,7 @@ import { Audit } from './pages/Audit';
 import { Architecture } from './pages/Architecture';
 import { LegalFramework } from './pages/LegalFramework';
 import { Case } from './pages/Case';
+import { Contacto } from './pages/Contacto';
 import { Author } from './pages/Author';
 import { Seguimiento } from './pages/Seguimiento';
 import { Landing } from './pages/Landing';
@@ -55,6 +56,7 @@ export function App() {
         <Route path="/marco-legal" element={<LegalFramework />} />
         <Route path="/por-que" element={<Case />} />
         <Route path="/quien-lo-hace" element={<Author />} />
+        <Route path="/contacto" element={<Contacto />} />
         <Route path="/seguimiento" element={<Seguimiento />} />
         {/* Legacy v1 routes */}
         <Route path="/negocio/nuevo" element={<Navigate to="/tramite/start-business" replace />} />
