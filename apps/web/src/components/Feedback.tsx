@@ -1,47 +1,28 @@
-import { useLocation } from 'react-router-dom';
-import { CONTACTO } from '../content/contacto';
+import { Link, useLocation } from 'react-router-dom';
 
 /**
- * The feedback link, in the footer of every page.
+ * The footer link, on every page.
  *
- * Why `mailto:` and not a form. It stores nothing, which is the only option that cannot conflict with the
- * project's "no persistence, no analytics" rule; it needs no third party; and it behaves identically in the SPA
- * and in `dist-static`, which has no backend at all. The cost is that it opens the reader's mail client and
- * reveals their address — acceptable for a handful of early users, and revisit it if this ever goes wide.
+ * It used to compose a `mailto:` directly with three fixed questions. That was right while the only expected
+ * reader was someone confused by a page, and it is wrong now that four different kinds of person might write:
+ * a `mailto:` asking "¿qué le resultó confuso?" is the wrong opening for somebody reporting what a ventanilla
+ * did to them, and no opening at all for an institution. So the link now leads to /contacto, which asks the
+ * reader why they are writing before putting words in their mouth.
  *
- * **The prompts in the body are the point.** "Send feedback" gets nothing back; three concrete questions get
- * something usable. The first real reader found the site overwhelming and had no way to say so, which is what
- * this exists to fix — so the wording asks about confusion first and invites them to delete the scaffolding.
+ * `?desde=` preserves what the direct `mailto:` had and the page would otherwise lose: which page they were on
+ * when they decided to write. "Esta tabla no se entiende" is unanswerable without knowing which table.
  *
- * Do not offer this link if `CONTACTO` is ever not a live mailbox. `denuncia.cr` documents the trap in
- * `src/components/Redactor.astro`: a `mailto:` to an unverified address opens the mail program onto nothing and
- * the reader concludes the site is broken. Delivery is a Cloudflare Email Routing rule — see `docs/DEPLOY.md`.
+ * The reasons, the wording rules and the reason there is still no form: `content/contacto-motivos.ts`.
  */
 export function Feedback() {
   const { pathname } = useLocation();
 
-  const asunto = `PuraVidaGov — ${pathname}`;
-  const cuerpo = [
-    `Página: ${pathname}`,
-    '',
-    '¿Qué estaba tratando de hacer?',
-    '',
-    '',
-    '¿Qué le resultó confuso o de más?',
-    '',
-    '',
-    '¿Qué esperaba que pasara?',
-    '',
-    '',
-    '— Borre todo esto y escriba como quiera; lo que sirve es lo que a usted le pasó.',
-  ].join('\n');
-
   return (
-    <a
+    <Link
       className="underline decoration-slate-300 underline-offset-2 hover:text-primary-700"
-      href={`mailto:${CONTACTO}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`}
+      to={`/contacto?desde=${encodeURIComponent(pathname)}`}
     >
-      ¿Algo confuso o de más en esta página? Escríbame
-    </a>
+      ¿Algo confuso, algo mal, o algo que contar? Escríbame
+    </Link>
   );
 }

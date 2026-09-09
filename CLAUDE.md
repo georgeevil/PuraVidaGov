@@ -53,5 +53,7 @@ plus plain-data constants only.
 
 ## Demo login
 `1-2345-6789` / `demo` / OTP `123456` (shown on screen); José `7-0123-0456` for the pension; Rosa `7-0111-0222` for the bereavement; Diego `1-1111-2222` is María's fiancé. Reset: `POST /api/__demo/reset`.
-`/por-que`, `/marco-legal`, `/arquitectura` and the non-citizen API routes are public by design; keep everything about a
-citizen behind `requireAuth`.
+The public pages are listed in `apps/web/src/content/rutas-publicas.ts` — the one list the navigation, the
+sitemap and this sentence all defer to. Those and the non-citizen API routes are public by design; keep
+everything about a citizen behind `requireAuth`. Adding a public page means adding it there, or it will be
+reachable but absent from both the nav and `sitemap.xml`.

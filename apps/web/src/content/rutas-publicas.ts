@@ -67,6 +67,15 @@ export const RUTAS_PUBLICAS: RutaPublica[] = [
     fuentes: ['apps/web/src/pages/Seguimiento.tsx', 'apps/web/src/content/seguimiento.ts'],
   },
   {
+    to: '/contacto',
+    label: 'Escríbame',
+    en: 'Write to me',
+    // Reached from the footer of every page. A sixth nav item costs every reader attention to serve the few
+    // who write, so it is in the sitemap and out of the navigation.
+    enNav: false,
+    fuentes: ['apps/web/src/pages/Contacto.tsx', 'apps/web/src/content/contacto-motivos.ts'],
+  },
+  {
     to: '/quien-lo-hace',
     label: 'Quién lo hace',
     en: 'Who builds this, and why',
