@@ -1,33 +1,33 @@
 {
   "micitt-sector-informa": {
-    "hash": "3a73888828184210",
-    "largo": 6546,
-    "visto": "2026-10-09",
+    "hash": "93d7264b49ce3ad5",
+    "largo": 6545,
+    "visto": "2026-10-10",
     "fallos": 0,
-    "cambio": "2026-10-09"
+    "cambio": "2026-10-10"
   },
   "micitt-angd": {
     "hash": "aea32f299cf870ff",
     "largo": 11045,
-    "visto": "2026-10-09",
+    "visto": "2026-10-10",
     "fallos": 0
   },
   "micitt-gobernanza-digital": {
     "hash": "31ba0eed846d4e01",
     "largo": 11852,
-    "visto": "2026-10-09",
+    "visto": "2026-10-10",
     "fallos": 0
   },
   "cgr-itd": {
     "hash": "f2fe8756790d4fe0",
     "largo": 2762,
-    "visto": "2026-10-09",
+    "visto": "2026-10-10",
     "fallos": 0
   },
   "delfino-asamblea": {
     "hash": "e3b0c44298fc1c14",
     "largo": 0,
-    "visto": "2026-10-09",
+    "visto": "2026-10-10",
     "fallos": 0,
     "coincidencias": []
   }
