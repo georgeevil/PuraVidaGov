@@ -1,32 +1,35 @@
 {
   "micitt-sector-informa": {
-    "hash": "b8c821e27af66fde",
-    "largo": 6730,
-    "visto": "2026-11-08",
-    "fallos": 0
+    "hash": "4cec38ee3b29d0b6",
+    "largo": 6746,
+    "visto": "2026-11-09",
+    "fallos": 0,
+    "cambio": "2026-11-09"
   },
   "micitt-angd": {
-    "hash": "d3f25d9ce0c876b0",
-    "largo": 11171,
-    "visto": "2026-11-08",
-    "fallos": 0
+    "hash": "c4c623fc75c0389b",
+    "largo": 11187,
+    "visto": "2026-11-09",
+    "fallos": 0,
+    "cambio": "2026-11-09"
   },
   "micitt-gobernanza-digital": {
-    "hash": "a97e21a13d65a991",
-    "largo": 11978,
-    "visto": "2026-11-08",
-    "fallos": 0
+    "hash": "bdcb853fdb8570c4",
+    "largo": 11994,
+    "visto": "2026-11-09",
+    "fallos": 0,
+    "cambio": "2026-11-09"
   },
   "cgr-itd": {
     "hash": "f2fe8756790d4fe0",
     "largo": 2762,
-    "visto": "2026-11-08",
+    "visto": "2026-11-09",
     "fallos": 0
   },
   "delfino-asamblea": {
     "hash": "d21a5a677a207faf",
     "largo": 1,
-    "visto": "2026-11-08",
+    "visto": "2026-11-09",
     "fallos": 0,
     "coincidencias": [
       "Ley para proteger la micro y pequeña ganadería y garantizar la simplificación de trámites en la movilización y trazabilidad del ganado"
